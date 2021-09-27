@@ -14,7 +14,7 @@
 
 import AndroidAutoLogger
 import Foundation
-import third_party_companion_protos_companion_protos
+import AndroidAutoCompanionProtos
 
 /// Possible errors that can result from creating a BLE packet.
 enum MessagePacketFactoryError: Error {

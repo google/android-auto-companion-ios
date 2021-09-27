@@ -17,7 +17,7 @@
 import AndroidAutoLogger
 import CoreBluetooth
 import Foundation
-@_implementationOnly import third_party_companion_protos_companion_protos
+@_implementationOnly import AndroidAutoCompanionProtos
 
 /// Channel for maintaining BLE streams for communication.
 class CBPeripheralChannel: TransportChannel {

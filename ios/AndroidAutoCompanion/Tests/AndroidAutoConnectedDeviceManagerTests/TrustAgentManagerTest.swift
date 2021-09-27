@@ -19,8 +19,7 @@ import CoreBluetooth
 import LocalAuthentication
 import XCTest
 import AndroidAutoConnectedDeviceManagerMocks
-import third_party_swift_AndroidAutoCompanion_phone_auth_proto
-import third_party_swift_AndroidAutoCompanion_trusted_device_message_proto
+import AndroidAutoTrustAgentProtos
 
 @testable import AndroidAutoConnectedDeviceManager
 

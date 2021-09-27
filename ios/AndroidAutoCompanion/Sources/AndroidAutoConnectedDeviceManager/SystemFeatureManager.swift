@@ -14,7 +14,7 @@
 
 import AndroidAutoLogger
 import UIKit
-@_implementationOnly import third_party_companion_protos_companion_protos
+@_implementationOnly import AndroidAutoCompanionProtos
 
 private typealias SystemQuery = Com_Google_Companionprotos_SystemQuery
 private typealias SystemQueryType = Com_Google_Companionprotos_SystemQueryType

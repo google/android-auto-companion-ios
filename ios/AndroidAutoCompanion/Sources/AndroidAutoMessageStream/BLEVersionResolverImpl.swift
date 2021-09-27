@@ -15,7 +15,7 @@
 import AndroidAutoCoreBluetoothProtocols
 import AndroidAutoLogger
 import Foundation
-import third_party_companion_protos_companion_protos
+import AndroidAutoCompanionProtos
 
 private typealias VersionExchange = Com_Google_Companionprotos_VersionExchange
 

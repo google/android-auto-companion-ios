@@ -15,7 +15,7 @@
 import Foundation
 
 /// Delegate for handling logging events.
-@available(iOS 10.0, *)
+@available(iOS 10.0, macOS 10.15.0, *)
 public protocol LoggerDelegate: AnyObject {
   /// The logger did record a message which means the delegate should process the record (e.g.
   /// persisting the record) according to its policy.
@@ -29,7 +29,7 @@ public protocol LoggerDelegate: AnyObject {
 /// Instances can be used like functions to directly log message and metadata. This struct follows
 /// the modifier pattern so modifiers may be used to return copies with modified properties. So,
 /// effectively they can be considered like configurable functions.
-@available(iOS 10.0, *)
+@available(iOS 10.0, macOS 10.15.0, *)
 public struct Logger {
   /// Default logger with no subsystem or category.
   static public let `default` = Logger()
@@ -210,7 +210,7 @@ public struct Logger {
 ///
 /// A modifier returns a copy that matches the original logger except with a modified property. The
 /// modifiers do not mutate the original logger.
-@available(iOS 10.0, *)
+@available(iOS 10.0, macOS 10.15.0, *)
 extension Logger {
   /// Convenience modifier returning a copy using the `debug` logging level.
   public var debug: Logger { level(.debug) }
@@ -257,7 +257,7 @@ extension Logger {
 
 // MARK: - Logger Level
 
-@available(iOS 10.0, *)
+@available(iOS 10.0, macOS 10.15.0, *)
 extension Logger {
   /// Logging level which maps to the corresponding Apple logging types as shown here:
   /// https://developer.apple.com/documentation/os/oslogtype
@@ -289,7 +289,7 @@ extension Logger {
 }
 
 /// Support for fetching the thread number of the current thread.
-@available(iOS 10.0, *)
+@available(iOS 10.0, macOS 10.15, *)
 private enum ThreadInfo {
   /// Thread safe regular expression for extracting the thread number.
   static private let regex: NSRegularExpression = {

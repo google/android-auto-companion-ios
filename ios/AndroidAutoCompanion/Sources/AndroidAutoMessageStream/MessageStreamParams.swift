@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import Foundation
-import third_party_companion_protos_companion_protos
+import AndroidAutoCompanionProtos
 
 /// Possible operation types for a message.
 public enum StreamOperationType {

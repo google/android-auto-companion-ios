@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import Foundation
-@_implementationOnly import third_party_companion_protos_companion_protos
+@_implementationOnly import AndroidAutoCompanionProtos
 
 /// Represents a query response that can be sent to a remote car.
 public struct QueryResponse: Equatable {

@@ -18,8 +18,7 @@ import AndroidAutoLogger
 @_implementationOnly import AndroidAutoSecureChannel
 import CoreBluetooth
 import Foundation
-@_implementationOnly import third_party_swift_AndroidAutoCompanion_phone_auth_proto
-@_implementationOnly import third_party_swift_AndroidAutoCompanion_trusted_device_message_proto
+@_implementationOnly import AndroidAutoTrustAgentProtos
 
 #if canImport(UIKit)
   import UIKit

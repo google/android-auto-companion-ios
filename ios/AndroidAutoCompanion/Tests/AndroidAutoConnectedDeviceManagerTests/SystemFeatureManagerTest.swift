@@ -15,7 +15,7 @@
 import CoreBluetooth
 import XCTest
 import AndroidAutoConnectedDeviceManagerMocks
-import third_party_companion_protos_companion_protos
+import AndroidAutoCompanionProtos
 
 @testable import AndroidAutoConnectedDeviceManager
 

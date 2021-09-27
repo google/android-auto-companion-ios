@@ -16,7 +16,7 @@ import AndroidAutoCoreBluetoothProtocols
 import AndroidAutoCoreBluetoothProtocolsMocks
 import CoreBluetooth
 import XCTest
-import third_party_companion_protos_companion_protos
+import AndroidAutoCompanionProtos
 
 @testable import AndroidAutoMessageStream
 

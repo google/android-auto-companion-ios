@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import Foundation
-import third_party_companion_protos_companion_protos
+import AndroidAutoCompanionProtos
 
 /// Convenience extensions for `Aae_Blemessagestream_OperationType`.
 extension Com_Google_Companionprotos_OperationType {

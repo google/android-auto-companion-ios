@@ -19,7 +19,7 @@ import AndroidAutoMessageStream
 import AndroidAutoSecureChannel
 import CoreBluetooth
 import XCTest
-import third_party_swift_AndroidAutoCompanion_phone_auth_proto
+import AndroidAutoTrustAgentProtos
 
 @testable import AndroidAutoConnectedDeviceManager
 

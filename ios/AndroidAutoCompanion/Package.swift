@@ -24,32 +24,39 @@ let package = Package(
   products: [
     .library(
       name: "AndroidAutoConnectedDeviceManager",
-      targets: ["AndroidAutoConnectedDeviceManager"])
+      targets: ["AndroidAutoConnectedDeviceManager"]),
   ],
   dependencies: [
     .package(
       name: "SwiftProtobuf",
       url: "https://github.com/apple/swift-protobuf.git",
-      from: "1.6.0")
+      from: "1.6.0"),
   ],
   targets: [
+    .binaryTarget(
+      name: "AndroidAutoUKey2Wrapper",
+      path: "Binary/AndroidAutoUKey2Wrapper.xcframework"),
     .target(
       name: "AndroidAutoLogger",
       dependencies: []),
     .target(
       name: "AndroidAutoCoreBluetoothProtocols",
-      dependencies: []),
+      dependencies: ["AndroidAutoConnectedDeviceTransport"]),
+    .target(
+      name: "AndroidAutoCompanionProtos",
+      dependencies: ["SwiftProtobuf"]),
+    .target(
+      name: "AndroidAutoTrustAgentProtos",
+      dependencies: ["SwiftProtobuf"]),
     .target(
       name: "AndroidAutoMessageStream",
       dependencies: [
+        "AndroidAutoCompanionProtos",
         "AndroidAutoConnectedDeviceTransport",
         "AndroidAutoCoreBluetoothProtocols",
         "AndroidAutoLogger",
         "SwiftProtobuf",
       ]),
-    .target(
-      name: "AndroidAutoUKey2Wrapper",
-      dependencies: []),
     .target(
       name: "AndroidAutoSecureChannel",
       dependencies: [
@@ -63,7 +70,6 @@ let package = Package(
         "AndroidAutoCoreBluetoothProtocols",
         "AndroidAutoMessageStream",
         "AndroidAutoSecureChannel",
-        "AndroidAutoUKey2Wrapper",
       ]),
     .target(
       name: "AndroidAutoConnectedDeviceManagerMocks",
@@ -88,11 +94,6 @@ let package = Package(
         "AndroidAutoCoreBluetoothProtocols",
         "AndroidAutoCoreBluetoothProtocolsMocks",
         "AndroidAutoMessageStream",
-      ]),
-    .testTarget(
-      name: "AndroidAutoUKey2WrapperTests",
-      dependencies: [
-        "AndroidAutoUKey2Wrapper"
       ]),
     .testTarget(
       name: "AndroidAutoSecureChannelTests",

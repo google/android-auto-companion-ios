@@ -15,7 +15,7 @@
 import Foundation
 
 /// Provides the standard log handlers which implement LoggerDelegate.
-@available(iOS 10.0, *)
+@available(iOS 10.0, macOS 10.15, *)
 public struct LoggingHandlers {
   /// Compound handler that feeds the standard log handlers.
   static let standard: LoggerDelegate = {
@@ -39,7 +39,7 @@ public struct LoggingHandlers {
 ///
 /// This log handler is thread safe, but it does not guarantee that its child log handlers are, so
 /// it is only as thread safe as its children are collectively.
-@available(iOS 10.0, *)
+@available(iOS 10.0, macOS 10.15, *)
 public class CompoundLogHandler: LoggerDelegate {
   /// Child handlers.
   private let handlers: [LoggerDelegate]

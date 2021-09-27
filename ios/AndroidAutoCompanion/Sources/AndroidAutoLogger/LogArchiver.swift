@@ -16,7 +16,7 @@ import Foundation
 import os.log
 
 /// Archive logs to persistent storage.
-@available(iOS 10.0, *)
+@available(iOS 10.0, macOS 10.15, *)
 public class LogArchiver: LoggerDelegate {
   /// Log for reporting logging errors.
   static private let log = OSLog(
@@ -107,8 +107,12 @@ public class LogArchiver: LoggerDelegate {
   public func loggerDidRecordMessage(_ record: LogRecord) {
     os_unfair_lock_assert_not_owner(&lock)
 
+    // Unless the `DEBUG` flag is set, only archive messages with level greater than debug.
+    // If the `DEBUG` flag is set, ignore the level and schedule all messages to be archived.
+    #if !DEBUG
     // Only persist records with level greater than debug.
     guard record.level > .debug else { return }
+    #endif
 
     os_unfair_lock_lock(&lock)
     defer { os_unfair_lock_unlock(&lock) }

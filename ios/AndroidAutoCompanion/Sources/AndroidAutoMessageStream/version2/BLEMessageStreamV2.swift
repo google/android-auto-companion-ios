@@ -16,7 +16,7 @@ import AndroidAutoCoreBluetoothProtocols
 import AndroidAutoLogger
 import CoreBluetooth
 import Foundation
-import third_party_companion_protos_companion_protos
+import AndroidAutoCompanionProtos
 
 private typealias BleDeviceMessage = Com_Google_Companionprotos_Message
 private typealias MessagePacket = Com_Google_Companionprotos_Packet

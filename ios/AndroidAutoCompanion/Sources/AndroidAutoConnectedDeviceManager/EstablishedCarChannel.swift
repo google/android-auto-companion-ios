@@ -17,7 +17,7 @@
 import AndroidAutoLogger
 @_implementationOnly import AndroidAutoMessageStream
 import Foundation
-@_implementationOnly import third_party_companion_protos_companion_protos
+@_implementationOnly import AndroidAutoCompanionProtos
 
 private typealias QueryProto = Com_Google_Companionprotos_Query
 private typealias QueryResponseProto = Com_Google_Companionprotos_QueryResponse

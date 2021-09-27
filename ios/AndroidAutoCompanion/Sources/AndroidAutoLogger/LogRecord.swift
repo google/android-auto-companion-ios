@@ -17,7 +17,7 @@ import Foundation
 /// `LogRecord` is a snapshot for a log message.
 ///
 /// All properties are values captured when the snapshot was recorded.
-@available(iOS 10.0, *)
+@available(iOS 10.0, macOS 10.15, *)
 @dynamicMemberLookup
 public struct LogRecord {
   /// The logger which recorded this record.
@@ -66,7 +66,7 @@ public struct LogRecord {
 }
 
 // MARK - Implement `Encodable` conformance.
-@available(iOS 10.0, *)
+@available(iOS 10.0, macOS 10.15, *)
 extension LogRecord: Encodable {
   /// Coding keys for the record's properties.
   enum CodingKeys: String, CodingKey {

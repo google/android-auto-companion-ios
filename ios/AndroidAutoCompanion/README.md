@@ -10,6 +10,12 @@ The main library that supplies the ability to associate and connect to an
 Android Auto vehicle. Full usage instructions, can be found on the
 [Phone SDK Integration Guide](https://docs.partner.android.com/gas/integrate/companion_app/cd_phone_sdk).
 
+### AndroidAutoUKey2Wrapper
+
+This helper library wraps the [ukey2](https://github.com/google/ukey2) library.
+It is included as a prebuilt `.xcframework` file in order to allow for
+easier compilation via Swift Package Manager.
+
 ## Message Stream Module
 
 Helper library for chunking data to be sent over BLE. BLE defines a maximum

@@ -23,7 +23,7 @@ import os.log
 ///
 /// This protocol is only intended for private use, but is marked internal here to accommodate
 /// unit testing.
-@available(iOS 10, *)
+@available(iOS 10, macOS 10.15, *)
 protocol SignpostMetricsHandler {
   /// Indicates whether this handler is valid for posting metrics.
   var isValid: Bool { get }
@@ -52,7 +52,7 @@ protocol SignpostMetricsHandler {
 /// provides a fallback that logs error messages if not.
 ///
 /// An instance represents a single category and role used for posting named signposts.
-@available(iOS 10, *)
+@available(iOS 10, macOS 10.15, *)
 public struct SignpostMetrics {
   /// Indicates whether signpost metric logging is available on the current system.
   public static let isSystemSupported: Bool = {
@@ -136,7 +136,7 @@ public struct SignpostMetrics {
 
   // MARK: - Role Conversions
 
-  @available(iOS 13, *)
+  @available(iOS 13, macOS 10.15, *)
   extension SignpostMarker.Role {
     /// Convert the role to the corresponding `OSSignpostType`.
     fileprivate var systemType: OSSignpostType {
@@ -153,7 +153,7 @@ public struct SignpostMetrics {
 ///
 /// Calling methods on this implementation do not log any metrics. Rather they provide a safe
 /// implementation that simply logs errors for such attempts.
-@available(iOS 10, *)
+@available(iOS 10, macOS 10.15, *)
 private struct UnavailableSignpostMetrics: SignpostMetricsHandler {
   static let logger = Logger(subsystem: "Logging", category: "MetricLogger")
 
