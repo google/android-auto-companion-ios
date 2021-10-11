@@ -70,6 +70,7 @@ let package = Package(
         "AndroidAutoCoreBluetoothProtocols",
         "AndroidAutoMessageStream",
         "AndroidAutoSecureChannel",
+        "AndroidAutoTrustAgentProtos",
       ]),
     .target(
       name: "AndroidAutoConnectedDeviceManagerMocks",
