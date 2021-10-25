@@ -38,21 +38,30 @@ public enum SecureBLEChannelState {
   case failed
 }
 
+/// Token used for verification when securing a channel.
+public protocol SecurityVerificationToken {
+  /// Full backing data.
+  var data: Data { get }
+
+  /// Visual pairing code derived from the raw data.
+  var pairingCode: String { get }
+}
+
 /// The delegate that will be notified of various events during the establishment of a secure
 /// channel.
 public protocol SecureBLEChannelDelegate: AnyObject {
-  /// Invoked when a pairing code should be displayed and confirmed by the user.
+  /// Invoked when a verification code from the peripheral needs to be verified on device.
   ///
-  /// After the user has given an explicit confirmation of the pairing code, notify this secure
-  /// channel of that event by calling `notifyPairingCodeAccepted()`.
+  /// After confirmation of the verification token, notify this secure channel of that event by
+  /// calling `notifyPairingCodeAccepted()`.
   ///
   /// - Parameters:
   ///   - secureBLEChannel: The secure channel requiring the pairing code to be confirmed.
-  ///   - pairingCode: The pairing code that should be displayed to the user.
+  ///   - verificationToken: Token to verify either visually or out of band channel.
   ///   - messageStream: The stream that was used to send messages.
   func secureBLEChannel(
     _ secureBLEChannel: SecureBLEChannel,
-    requiresVerificationOf pairingCode: String,
+    requiresVerificationOf verificationToken: SecurityVerificationToken,
     messageStream: MessageStream
   )
 

@@ -165,20 +165,22 @@ class UKey2ChannelTest: XCTestCase {
     clientMessage = peripheralMock.writtenData[1]
     server.parseHandshakeMessage(clientMessage)
     let verificationBytes = server.verificationData(withByteLength: 32)
-    let pairingCodeStr = ukey2Channel.readablePairingCode(fromBytes: verificationBytes!)
+    let token = UKey2Channel.VerificationToken(verificationBytes!)
+    let pairingCodeStr = token.pairingCode
 
+    XCTAssertEqual(delegateMock.requiredVerificationData, verificationBytes)
     XCTAssertEqual(delegateMock.requiredPairingCode, pairingCodeStr)
   }
 
-  func testReadablePairingCode_modsBytesAcrossRange() {
+  func testVerificationTokenReadablePairingCode_modsBytesAcrossRange() {
     // 194 is an example of a value that would fail if using signed instead of unsigned ints
     // 194 -> 11000010
     // 11000010 -> 194 (unsigned 8-bit int)
     // 11000010 -> -62 (signed 8-bit int)
     let bytes = Data.init(bytes: [0, 7, 161, 194, 196, 255] as [UInt8], count: 6)
-    let pairingCode = ukey2Channel.readablePairingCode(fromBytes: bytes)
+    let token = UKey2Channel.VerificationToken(bytes)
 
-    XCTAssertEqual(pairingCode, "071465")
+    XCTAssertEqual(token.pairingCode, "071465")
   }
 
   // MARK: - Notify pairing code called tests.
@@ -426,6 +428,7 @@ class UKey2ChannelTest: XCTestCase {
 /// have been called.
 class SecureBLEChannelDelegateMock: SecureBLEChannelDelegate {
   var requiresVerificationCalled = false
+  var requiredVerificationData: Data?
   var requiredPairingCode: String?
   var verificationStream: MessageStream?
 
@@ -437,11 +440,12 @@ class SecureBLEChannelDelegateMock: SecureBLEChannelDelegate {
 
   func secureBLEChannel(
     _ secureBLEChannel: SecureBLEChannel,
-    requiresVerificationOf pairingCode: String,
+    requiresVerificationOf verificationToken: SecurityVerificationToken,
     messageStream: MessageStream
   ) {
     requiresVerificationCalled = true
-    requiredPairingCode = pairingCode
+    requiredVerificationData = verificationToken.data
+    requiredPairingCode = verificationToken.pairingCode
     verificationStream = messageStream
   }
 

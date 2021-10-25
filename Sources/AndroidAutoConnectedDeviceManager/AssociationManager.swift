@@ -34,6 +34,9 @@ protocol Associator {
   /// notifies the delegate that association is complete.
   func completeAssociation(forCarId carId: String, messageStream: MessageStream)
 
+  /// Display the specified pairing code for visual verification.
+  func displayPairingCode(_ pairingCode: String)
+
   /// Notifies the delegate that an error has been encountered during the association process.
   func notifyDelegateOfError(_ error: AssociationError)
 
@@ -184,6 +187,7 @@ class AssociationManager: NSObject {
   ///   - secureBLEChannel: The channel to handle the establishment of a secure connection.
   ///   - messageStreamVersion: The version of the message stream to use.
   ///   - messageHelperFactory: The factory for making the message exchange helper.
+  ///   - outOfBandTokenProvider: Provider tokens for out of band association verification.
   init(
     overlay: Overlay,
     connectionHandle: ConnectionHandle,
@@ -372,6 +376,11 @@ class AssociationManager: NSObject {
     try secureBLEChannel.notifyPairingCodeAccepted()
   }
 
+  private func displayPairingCode(_ pairingCode: String) {
+    delegate?.associationManager(self, requiresDisplayOf: pairingCode)
+    messageHelper?.onPairingCodeDisplayed()
+  }
+
   /// Convenience method to notify an attached delegate of the given error.
   ///
   /// - Parameter error: The error to send to the delegate.
@@ -461,7 +470,8 @@ extension AssociationManager: BLEPeripheralDelegate {
     bleVersionResolver.resolveVersion(
       with: peripheral,
       readCharacteristic: readCharacteristic,
-      writeCharacteristic: writeCharacteristic
+      writeCharacteristic: writeCharacteristic,
+      allowsCapabilitiesExchange: true
     )
   }
 
@@ -484,15 +494,14 @@ extension AssociationManager: BLEPeripheralDelegate {
 extension AssociationManager: SecureBLEChannelDelegate {
   func secureBLEChannel(
     _ secureBLEChannel: SecureBLEChannel,
-    requiresVerificationOf pairingCode: String,
+    requiresVerificationOf verificationToken: SecurityVerificationToken,
     messageStream: MessageStream
   ) {
     // User input is required at this step, so the timeout is no longer needed.
     associationTimeout?.cancel()
 
     messageStream.delegate = self
-    delegate?.associationManager(self, requiresDisplayOf: pairingCode)
-    messageHelper?.onPairingCodeDisplayed()
+    messageHelper?.onRequiresPairingVerification(verificationToken)
   }
 
   func secureBLEChannel(
@@ -516,9 +525,9 @@ extension AssociationManager: MessageStreamDelegate {
     didReceiveMessage message: Data,
     params: MessageStreamParams
   ) {
-        Self.logger.debug.log(
-          "Received message from characteristic \(messageStream.readingDebugDescription)."
-        )
+    Self.logger.debug.log(
+      "Received message from characteristic \(messageStream.readingDebugDescription)."
+    )
 
     messageHelper?.handleMessage(message, params: params)
   }
@@ -528,12 +537,12 @@ extension AssociationManager: MessageStreamDelegate {
     didEncounterWriteError error: Error,
     to recipient: UUID
   ) {
-        Self.logger.error.log(
-          """
-          Error writing escrow token for characteristic \
-          (\(messageStream.writingDebugDescription)): \(error.localizedDescription)
-          """
-        )
+    Self.logger.error.log(
+      """
+      Error writing escrow token for characteristic \
+      (\(messageStream.writingDebugDescription)): \(error.localizedDescription)
+      """
+    )
 
     notifyDelegateOfError(.cannotSendMessages)
   }
@@ -553,7 +562,7 @@ extension AssociationManager: BLEVersionResolverDelegate {
   func bleVersionResolver(
     _ bleVersionResolver: BLEVersionResolver,
     didResolveStreamVersionTo streamVersion: MessageStreamVersion,
-    securityVersionTo securityVersion: BLEMessageSecurityVersion,
+    securityVersionTo securityVersion: MessageSecurityVersion,
     for peripheral: BLEPeripheral
   ) {
     // This shouldn't happen because the version exchange happens after characteristics are
@@ -625,6 +634,10 @@ extension AssociationManager: BLEVersionResolverDelegate {
         fatalError("MessageStream: \(messageStream) is expected to be a BLEMessageStream.")
       }
       manager.completeAssociation(forCarId: carId, messageStream: bleMessageStream)
+    }
+
+    func displayPairingCode(_ pairingCode: String) {
+      manager.displayPairingCode(pairingCode)
     }
 
     func notifyDelegateOfError(_ error: AssociationError) {

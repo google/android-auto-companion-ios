@@ -19,7 +19,7 @@ import Foundation
 @available(iOS 10.0, *)
 protocol ReconnectionHelper: AnyObject {
   /// Security version implemented by this helper.
-  var securityVersion: BLEMessageSecurityVersion { get }
+  var securityVersion: MessageSecurityVersion { get }
 
   /// The peripheral for which reconnection is being attempted.
   var peripheral: AnyPeripheral { get }

@@ -18,6 +18,39 @@ import Foundation
 import AndroidAutoCompanionProtos
 
 private typealias VersionExchange = Com_Google_Companionprotos_VersionExchange
+private typealias CapabilitiesExchange = Com_Google_Companionprotos_CapabilitiesExchange
+
+/// Result of successful resolution.
+private struct ExchangeResolution {
+  let streamVersion: MessageStreamVersion
+  let securityVersion: MessageSecurityVersion
+}
+
+/// Result of a resolver exchange.
+private enum ResolutionExchange {
+  /// The exchange yielded a new exchange phase to execute.
+  case nextPhase(ResolutionExchangeHandler)
+
+  /// The exchange has been successfully resolved.
+  case resolved(ExchangeResolution)
+
+  /// The exchange has failed.
+  case failure(BLEVersionResolverError)
+}
+
+/// Processes one resolution exchange in a sequence of exchanges.
+private protocol ResolutionExchangeHandler {
+  /// Resolve the received message.
+  func resolveMessage(_: Data)
+}
+
+/// Processes message exchange.
+private protocol MessageExchangeDelegate: AnyObject {
+  var allowsCapabilitiesExchange: Bool { get }
+
+  func writeMessage(_: Data)
+  func process(_: ResolutionExchange)
+}
 
 /// Resolver of the messaging protocol to use.
 @available(iOS 10.0, *)
@@ -26,18 +59,13 @@ public class BLEVersionResolverImpl: NSObject, BLEVersionResolver {
     subsystem: "com.google.ios.aae.trustagentclient",
     category: "BLEVersionResolverImpl"
   )
-  // The supported versions for the communication and security protocol.
-  //
-  // Note: using Int32 because this is what is defined in the proto.
-  private static let minMessagingVersion: Int32 = 2
-  private static let maxMessagingVersion: Int32 = 3
-
-  private static let minSecurityVersion: Int32 = 1
-  private static let maxSecurityVersion: Int32 = 2
 
   private var peripheral: BLEPeripheral?
   private var readCharacteristic: BLECharacteristic?
   private var writeCharacteristic: BLECharacteristic?
+  private var exchangeHandler: ResolutionExchangeHandler?
+
+  fileprivate var allowsCapabilitiesExchange = false
 
   public weak var delegate: BLEVersionResolverDelegate?
 
@@ -48,62 +76,245 @@ public class BLEVersionResolverImpl: NSObject, BLEVersionResolver {
   ///   - peripheral: The peripheral to resolve versions with.
   ///   - readCharacteristic: The characteristic on the peripheral it will write to.
   ///   - writeCharacteristic: The characteristic on the peripheral to write to.
+  ///   - allowsCapabilitiesExchange: Whether capabilities exchange is allowed (e.g. associating).
   public func resolveVersion(
     with peripheral: BLEPeripheral,
     readCharacteristic: BLECharacteristic,
-    writeCharacteristic: BLECharacteristic
+    writeCharacteristic: BLECharacteristic,
+    allowsCapabilitiesExchange: Bool
   ) {
     self.peripheral = peripheral
     self.readCharacteristic = readCharacteristic
     self.writeCharacteristic = writeCharacteristic
+    self.allowsCapabilitiesExchange = allowsCapabilitiesExchange
+
+    let versionExchangeHandler = VersionExchangeHandler(
+      peripheral: peripheral,
+      delegate: self
+    )
+    self.exchangeHandler = versionExchangeHandler
 
     peripheral.delegate = self
     peripheral.setNotifyValue(true, for: readCharacteristic)
 
-    sendVersionExchangeProto(to: peripheral, writeCharacteristic: writeCharacteristic)
+    versionExchangeHandler.sendVersionExchangeProto()
+  }
+}
+
+// MARK: - MessageExchangeDelegate
+
+extension BLEVersionResolverImpl: MessageExchangeDelegate {
+  fileprivate func writeMessage(_ message: Data) {
+    guard let writeCharacteristic = self.writeCharacteristic else {
+      // This shouldn't ever happen as the characteristic gets set with `resolveVersion`.
+      fatalError("Sending message for `nil` writeCharacteristic")
+    }
+    peripheral?.writeValue(message, for: writeCharacteristic)
   }
 
-  /// Verifies the version exchange from the given message and notifies any delegates of the result.
-  private func resolveVersion(_ versionExchange: VersionExchange, for peripheral: BLEPeripheral) {
-    guard
-      let securityVersion = try? resolveSecurityVersion(from: versionExchange, for: peripheral)
-    else {
-      delegate?.bleVersionResolver(self, didEncounterError: .versionNotSupported, for: peripheral)
-      return
+  fileprivate func process(_ exchange: ResolutionExchange) {
+    guard let peripheral = self.peripheral else {
+      // This shouldn't ever happen as the peripheral gets set with `resolveVersion`.
+      fatalError("Processing exchange without a peripheral.")
     }
 
-    guard
-      let streamVersion = try? resolveMessagingVersion(from: versionExchange, for: peripheral)
-    else {
-      delegate?.bleVersionResolver(self, didEncounterError: .versionNotSupported, for: peripheral)
+    // Process the next phase if there is one.
+    if case let .nextPhase(nextHandler) = exchange {
+      self.exchangeHandler = nextHandler
       return
     }
 
     peripheral.delegate = nil
 
     // This shouldn't be nil, but double-check because it's optional.
-    if readCharacteristic != nil {
-      peripheral.setNotifyValue(false, for: readCharacteristic!)
+    if self.readCharacteristic != nil {
+      peripheral.setNotifyValue(false, for: self.readCharacteristic!)
     }
 
-    delegate?.bleVersionResolver(
-      self,
-      didResolveStreamVersionTo: streamVersion,
-      securityVersionTo: securityVersion,
-      for: peripheral
-    )
+    switch exchange {
+    case .resolved(let resolution):
+      Self.logger.log(
+        """
+        Resolved versions. Stream: \(resolution.streamVersion), \
+        Security: \(resolution.securityVersion)
+        """
+      )
+      self.delegate?.bleVersionResolver(
+        self,
+        didResolveStreamVersionTo: resolution.streamVersion,
+        securityVersionTo: resolution.securityVersion,
+        for: peripheral
+      )
+    case .failure(let error):
+      self.delegate?.bleVersionResolver(self, didEncounterError: error, for: peripheral)
+    case .nextPhase(_):
+      // The next phase is always handled up front and returns, so this line is unreachable.
+      fatalError("nextPhase should be unreachable.")
+    }
 
     self.peripheral = nil
-    readCharacteristic = nil
-    writeCharacteristic = nil
+    self.exchangeHandler = nil
+    self.readCharacteristic = nil
+    self.writeCharacteristic = nil
+  }
+}
+
+// MARK: - BLEPeripheralDelegate
+
+@available(iOS 10.0, *)
+extension BLEVersionResolverImpl: BLEPeripheralDelegate {
+  public func peripheral(
+    _ peripheral: BLEPeripheral,
+    didUpdateValueFor characteristic: BLECharacteristic,
+    error: Error?
+  ) {
+    guard error == nil else {
+      Self.logger.error.log("Error during update: \(error!.localizedDescription)")
+      delegate?.bleVersionResolver(self, didEncounterError: .failedToRead, for: peripheral)
+      return
+    }
+
+    guard let message = characteristic.value else {
+      Self.logger.error.log("Empty message from peripheral: \(peripheral.logName)")
+      delegate?.bleVersionResolver(self, didEncounterError: .emptyResponse, for: peripheral)
+      return
+    }
+
+    exchangeHandler?.resolveMessage(message)
+  }
+
+  public func peripheralIsReadyToWrite(_ peripheral: BLEPeripheral) {
+    // No-op. Only one message needs to be written.
+  }
+
+  public func peripheral(_ peripheral: BLEPeripheral, didDiscoverServices error: Error?) {
+    // No-op. Not discovering services.
+  }
+
+  public func peripheral(
+    _ peripheral: BLEPeripheral,
+    didDiscoverCharacteristicsFor service: BLEService,
+    error: Error?
+  ) {
+    // No-op. Not discovering characteristics.
+  }
+}
+
+private struct VersionExchangeHandler: ResolutionExchangeHandler {
+  private static let logger = Logger(
+    subsystem: "com.google.ios.aae.trustagentclient",
+    category: "VersionExchangeHandler"
+  )
+
+  // The supported versions for the communication and security protocol.
+  //
+  // Note: using Int32 because this is what is defined in the proto.
+  private static let minMessagingVersion: Int32 = 2
+  private static let maxMessagingVersion: Int32 = 3
+
+  private static let minSecurityVersion: Int32 = 1
+  private static let maxSecurityVersion: Int32 = 4
+
+  /// Only security version that supports capabilities exchange.
+  private static let capabilitiesExchangeSecurityVersion: Int32 = 3
+
+  private let peripheral: BLEPeripheral
+  private weak var delegate: MessageExchangeDelegate?
+
+  init(peripheral: BLEPeripheral, delegate: MessageExchangeDelegate) {
+    self.peripheral = peripheral
+    self.delegate = delegate
+  }
+
+  func sendVersionExchangeProto() {
+    guard let delegate = self.delegate else { return }
+
+    guard let serializedProto = try? Self.createVersionExchangeProto().serializedData() else {
+      // This shouldn't fail because nothing dynamic is going into the proto.
+      Self.logger.error.log("Could not serialize version exchange proto")
+      delegate.process(.failure(.failedToCreateProto))
+      return
+    }
+
+    Self.logger.log("Sending supported versions to car \(peripheral.logName)")
+
+    delegate.writeMessage(serializedProto)
+  }
+
+  // MARK: ResolutionExchangeHandler conformance
+  func resolveMessage(_ message: Data) {
+    guard let versionExchange = try? VersionExchange(serializedData: message) else {
+      Self.logger.error.log("Cannot serialize a version exchange proto from message")
+
+      delegate?.process(.failure(.failedToParseResponse))
+      return
+    }
+
+    resolveVersion(versionExchange)
+  }
+
+  // MARK: Private Methods
+
+  /// Returns the version exchange proto that should be sent to the vehicle or `nil` if there was
+  /// an error during the creation of the proto.
+  ///
+  /// If there was an error, the delegate is notified.
+  private static func createVersionExchangeProto() -> VersionExchange {
+    var versionExchange = VersionExchange()
+
+    versionExchange.maxSupportedMessagingVersion = maxMessagingVersion
+    versionExchange.minSupportedMessagingVersion = minMessagingVersion
+    versionExchange.maxSupportedSecurityVersion = maxSecurityVersion
+    versionExchange.minSupportedSecurityVersion = minSecurityVersion
+
+    return versionExchange
+  }
+
+  /// Verifies the version exchange from the given message and notifies any delegates of the result.
+  private func resolveVersion(_ versionExchange: VersionExchange) {
+    guard let delegate = self.delegate else { return }
+
+    guard
+      let securityVersion = try? resolveSecurityVersion(from: versionExchange)
+    else {
+      delegate.process(.failure(.versionNotSupported))
+      return
+    }
+
+    let allowsCapabilitiesExchange = delegate.allowsCapabilitiesExchange
+    let shouldExchangeCapabilities =
+      allowsCapabilitiesExchange
+      && securityVersion.rawValue == Self.capabilitiesExchangeSecurityVersion
+
+    guard
+      let streamVersion = try? resolveMessagingVersion(from: versionExchange)
+    else {
+      delegate.process(.failure(.versionNotSupported))
+      return
+    }
+
+    let resolution = ExchangeResolution(
+      streamVersion: streamVersion, securityVersion: securityVersion)
+    guard shouldExchangeCapabilities else {
+      delegate.process(.resolved(resolution))
+      return
+    }
+
+    // Exchange capabilities.
+    let capabilitiesExchanger = EmptyCapabilitiesExchangeHandler(
+      resolution: resolution,
+      peripheral: peripheral,
+      delegate: delegate
+    )
+    delegate.process(.nextPhase(capabilitiesExchanger))
+    capabilitiesExchanger.sendCapabilities()
   }
 
   /// Returns the maximum supported version for the given `peripheral` based off the given
   /// `versionExchange` or throw an error if no versions are supported.
   private func resolveSecurityVersion(
-    from versionExchange: VersionExchange,
-    for peripheral: BLEPeripheral
-  ) throws -> BLEMessageSecurityVersion {
+    from versionExchange: VersionExchange
+  ) throws -> MessageSecurityVersion {
     // Use the max security version supported by both sides.
     let maxJointlySupportedSecurityVersion =
       min(Self.maxSecurityVersion, versionExchange.maxSupportedSecurityVersion)
@@ -123,9 +334,9 @@ public class BLEVersionResolverImpl: NSObject, BLEVersionResolver {
     }
 
     // Get our security version that matches the max jointly supported security version. Guard that
-    // this max jointly supported version is one that exists as a BLEMessageSecurityVersion.
+    // this max jointly supported version is one that exists as a MessageSecurityVersion.
     guard
-      let securityVersion = BLEMessageSecurityVersion(rawValue: maxJointlySupportedSecurityVersion)
+      let securityVersion = MessageSecurityVersion(rawValue: maxJointlySupportedSecurityVersion)
     else {
       Self.logger.error.log(
         """
@@ -141,16 +352,15 @@ public class BLEVersionResolverImpl: NSObject, BLEVersionResolver {
   }
 
   private func resolveMessagingVersion(
-    from versionExchange: VersionExchange,
-    for peripheral: BLEPeripheral
+    from versionExchange: VersionExchange
   ) throws -> MessageStreamVersion {
     let maxVersion = min(
-      BLEVersionResolverImpl.maxMessagingVersion,
+      Self.maxMessagingVersion,
       versionExchange.maxSupportedMessagingVersion
     )
 
     let minVersion = max(
-      BLEVersionResolverImpl.minMessagingVersion,
+      Self.minMessagingVersion,
       versionExchange.minSupportedMessagingVersion
     )
 
@@ -184,90 +394,52 @@ public class BLEVersionResolverImpl: NSObject, BLEVersionResolver {
       throw BLEVersionResolverError.versionNotSupported
     }
   }
-
-  private func sendVersionExchangeProto(
-    to peripheral: BLEPeripheral,
-    writeCharacteristic: BLECharacteristic
-  ) {
-    guard let serializedProto = try? createVersionExchangeProto().serializedData() else {
-      // This shouldn't fail because nothing dynamic is going into the proto.
-      Self.logger.error.log("Could not serialized version exchange proto")
-      notifyDelegateOfError(.failedToCreateProto, for: peripheral)
-      return
-    }
-
-    Self.logger.log("Sending supported versions to car \(peripheral.logName)")
-
-    peripheral.writeValue(serializedProto, for: writeCharacteristic)
-  }
-
-  /// Returns the version exchange proto that should be sent to the vehicle or `nil` if there was
-  /// an error during the creation of the proto.
-  ///
-  /// If there was an error, the delegate is notified.
-  private func createVersionExchangeProto() -> VersionExchange {
-    var versionExchange = VersionExchange()
-
-    versionExchange.maxSupportedMessagingVersion = BLEVersionResolverImpl.maxMessagingVersion
-    versionExchange.minSupportedMessagingVersion = BLEVersionResolverImpl.minMessagingVersion
-    versionExchange.maxSupportedSecurityVersion = BLEVersionResolverImpl.maxSecurityVersion
-    versionExchange.minSupportedSecurityVersion = BLEVersionResolverImpl.minSecurityVersion
-
-    return versionExchange
-  }
-
-  private func notifyDelegateOfError(
-    _ error: BLEVersionResolverError,
-    for peripheral: BLEPeripheral
-  ) {
-    delegate?.bleVersionResolver(self, didEncounterError: .timedOut, for: peripheral)
-  }
 }
 
-// MARK: - BLEPeripheralDelegate
+/// Handles capabilities exchange.
+///
+/// Sends empty capabilities to satisify V3 security requirements. Since V4 deprecates capabilities
+/// exchange, we don't need to build it out any further.
+private struct EmptyCapabilitiesExchangeHandler: ResolutionExchangeHandler {
+  private static let logger = Logger(
+    subsystem: "com.google.ios.aae.trustagentclient",
+    category: "CapabilitiesExchangeHandler"
+  )
 
-@available(iOS 10.0, *)
-extension BLEVersionResolverImpl: BLEPeripheralDelegate {
-  public func peripheral(
-    _ peripheral: BLEPeripheral,
-    didUpdateValueFor characteristic: BLECharacteristic,
-    error: Error?
+  private let resolution: ExchangeResolution
+  private let peripheral: BLEPeripheral
+  private weak var delegate: MessageExchangeDelegate?
+
+  init(
+    resolution: ExchangeResolution,
+    peripheral: BLEPeripheral,
+    delegate: MessageExchangeDelegate
   ) {
-    guard error == nil else {
-      Self.logger.error.log("Error during update: \(error!.localizedDescription)")
-      delegate?.bleVersionResolver(self, didEncounterError: .failedToRead, for: peripheral)
+    self.resolution = resolution
+    self.peripheral = peripheral
+    self.delegate = delegate
+  }
+
+  func sendCapabilities() {
+    guard let delegate = self.delegate else { return }
+
+    // Sends empty capabilties to meet the minimal requirements for the exchange.
+    guard let serializedProto = try? CapabilitiesExchange().serializedData() else {
+      // This shouldn't fail because nothing dynamic is going into the proto.
+      Self.logger.error.log("Could not serialize capabilities exchange proto")
+      delegate.process(.failure(.failedToCreateProto))
       return
     }
 
-    guard let message = characteristic.value else {
-      Self.logger.error.log("Empty message from peripheral: \(peripheral.logName)")
-      delegate?.bleVersionResolver(self, didEncounterError: .emptyResponse, for: peripheral)
-      return
-    }
+    Self.logger.log("Sending empty capabilities to car \(peripheral.logName)")
 
-    guard let versionExchange = try? VersionExchange(serializedData: message) else {
-      Self.logger.error.log("Cannot serialize a version exchange proto from message")
-
-      delegate?.bleVersionResolver(self, didEncounterError: .failedToParseResponse, for: peripheral)
-      return
-    }
-
-    resolveVersion(versionExchange, for: peripheral)
+    delegate.writeMessage(serializedProto)
   }
 
-  public func peripheralIsReadyToWrite(_ peripheral: BLEPeripheral) {
-    // No-op. Only one message needs to be written.
-  }
+  // MARK: ResolutionExchangeHandler conformance
 
-  public func peripheral(_ peripheral: BLEPeripheral, didDiscoverServices error: Error?) {
-    // No-op. Not discovering services.
-  }
-
-  public func peripheral(
-    _ peripheral: BLEPeripheral,
-    didDiscoverCharacteristicsFor service: BLEService,
-    error: Error?
-  ) {
-    // No-op. Not discovering characteristics.
+  func resolveMessage(_ message: Data) {
+    // Ignoring capabilities, so just forward the previous resolution.
+    delegate?.process(.resolved(resolution))
   }
 }

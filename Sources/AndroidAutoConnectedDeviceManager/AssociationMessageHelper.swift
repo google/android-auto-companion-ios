@@ -35,6 +35,12 @@ protocol AssociationMessageHelper {
   ///   - params: Contextual info such as operation type and recipient.
   func handleMessage(_ message: Data, params: MessageStreamParams)
 
+  /// The encryption handshake requires verification using either the full verfication data to be
+  /// verified through a separate out of band channel or the visual pairing code.
+  ///
+  /// - Parameter verificationToken: Token with data to verify.
+  func onRequiresPairingVerification(_ verificationToken: SecurityVerificationToken)
+
   /// The helper is being notified that the pairing code has been displayed.
   func onPairingCodeDisplayed()
 

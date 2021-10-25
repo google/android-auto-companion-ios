@@ -128,7 +128,7 @@ class ReconnectionHelperV2 {
 @available(iOS 10.0, *)
 extension ReconnectionHelperV2: ReconnectionHelper {
   /// Security version implemented by this helper.
-  var securityVersion: BLEMessageSecurityVersion { .v2 }
+  var securityVersion: MessageSecurityVersion { .v2 }
 
   /// Indicates whether advertisement data is needed to begin the handshake.
   var isReadyForHandshake: Bool {

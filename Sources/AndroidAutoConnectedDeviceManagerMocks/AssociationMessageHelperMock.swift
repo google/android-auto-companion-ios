@@ -29,6 +29,7 @@ final public class AssociationMessageHelperMock {
   public var handleMessageCalled = false
   public var onEncryptionEstablishedCalled = false
   public var onPairingCodeDisplayedCalled = false
+  public var onRequiresPairingVerificationCalled = false
 
   // MARK: Basic Requirements
 
@@ -65,6 +66,11 @@ extension AssociationMessageHelperMock: AssociationMessageHelper {
 
   public func handleMessage(_ message: Data, params: MessageStreamParams) {
     handleMessageCalled = true
+  }
+
+  public func onRequiresPairingVerification(_ verificationToken: SecurityVerificationToken) {
+    associator.displayPairingCode(verificationToken.pairingCode)
+    onRequiresPairingVerificationCalled = true
   }
 
   public func onPairingCodeDisplayed() {

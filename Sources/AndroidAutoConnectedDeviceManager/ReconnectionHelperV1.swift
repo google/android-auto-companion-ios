@@ -36,7 +36,7 @@ class ReconnectionHelperV1 {
   var onReadyForHandshake: (() -> Void)?
 
   /// Security version implemented by this helper.
-  var securityVersion: BLEMessageSecurityVersion = .v1
+  var securityVersion: MessageSecurityVersion = .v1
 
   /// Indicates whether this helper is ready for handshake.
   var isReadyForHandshake = true

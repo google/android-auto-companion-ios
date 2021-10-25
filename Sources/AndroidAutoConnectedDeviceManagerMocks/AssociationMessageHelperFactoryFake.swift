@@ -25,7 +25,7 @@ public struct AssociationMessageHelperFactoryFake: AssociationMessageHelperFacto
 
   public func makeHelper(
     associator: Associator,
-    securityVersion: BLEMessageSecurityVersion,
+    securityVersion: MessageSecurityVersion,
     messageStream: MessageStream
   ) -> AssociationMessageHelper {
     return AssociationMessageHelperMock(
@@ -48,7 +48,7 @@ public class AssociationMessageHelperFactoryProxy: AssociationMessageHelperFacto
 
   public func makeHelper(
     associator: Associator,
-    securityVersion: BLEMessageSecurityVersion,
+    securityVersion: MessageSecurityVersion,
     messageStream: MessageStream
   ) -> AssociationMessageHelper {
     let factory: AssociationMessageHelperFactory

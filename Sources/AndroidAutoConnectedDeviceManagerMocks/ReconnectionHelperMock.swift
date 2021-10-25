@@ -23,7 +23,7 @@ final public class ReconnectionHelperMock {
   // MARK: - Configuration
   public var shouldThrowInvalidMessage = false
   public var shouldCompleteHandshake = true
-  public var securityVersion: BLEMessageSecurityVersion = .v2
+  public var securityVersion: MessageSecurityVersion = .v2
   public var isReadyForHandshake = true
   public var prepareForHandshakeShouldSucceed = true
 

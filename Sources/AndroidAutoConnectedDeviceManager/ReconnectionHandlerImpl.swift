@@ -106,7 +106,7 @@ class ReconnectionHandlerImpl: NSObject, ReconnectionHandler {
 extension ReconnectionHandlerImpl: SecureBLEChannelDelegate {
   public func secureBLEChannel(
     _ secureBLEChannel: SecureBLEChannel,
-    requiresVerificationOf pairingCode: String,
+    requiresVerificationOf verificationToken: SecurityVerificationToken,
     messageStream: MessageStream
   ) {
     // Since we're resuming a session, this method should never be called.

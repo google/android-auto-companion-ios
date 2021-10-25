@@ -313,7 +313,8 @@ class CommunicationManager: NSObject {
     bleVersionResolver.resolveVersion(
       with: peripheral,
       readCharacteristic: readCharacteristic,
-      writeCharacteristic: writeCharacteristic
+      writeCharacteristic: writeCharacteristic,
+      allowsCapabilitiesExchange: false
     )
   }
 
@@ -535,7 +536,7 @@ extension CommunicationManager: BLEVersionResolverDelegate {
   func bleVersionResolver(
     _ bleVersionResolver: BLEVersionResolver,
     didResolveStreamVersionTo streamVersion: MessageStreamVersion,
-    securityVersionTo securityVersion: BLEMessageSecurityVersion,
+    securityVersionTo securityVersion: MessageSecurityVersion,
     for peripheral: BLEPeripheral
   ) {
     // This shouldn't happen because this case should have been vetted for when characteristics are

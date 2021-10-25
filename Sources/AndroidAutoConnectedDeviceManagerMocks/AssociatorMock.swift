@@ -29,6 +29,7 @@ final public class AssociatorMock {
   // MARK: - Method call checks
   public var establishEncryptionCalled = false
   public var completeAssociationCalled = false
+  public var displayPairingCodeCalled = false
   public var notifyPairingCodeAcceptedCalled = false
   public var notifyDelegateOfErrorCalled = false
   public var associationError: AssociationError?
@@ -48,6 +49,11 @@ extension AssociatorMock: Associator {
 
   public func completeAssociation(forCarId carId: String, messageStream: MessageStream) {
     completeAssociationCalled = true
+  }
+
+  /// Display the specified pairing code for visual verification.
+  public func displayPairingCode(_ pairingCode: String) {
+    displayPairingCodeCalled = true
   }
 
   public func notifyDelegateOfError(_ error: AssociationError) {

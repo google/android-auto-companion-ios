@@ -55,7 +55,8 @@ class BLEVersionResolverImplTest: XCTestCase {
     bleVersionResolver.resolveVersion(
       with: peripheralMock,
       readCharacteristic: readCharacteristic,
-      writeCharacteristic: writeCharacteristic
+      writeCharacteristic: writeCharacteristic,
+      allowsCapabilitiesExchange: false
     )
 
     XCTAssertTrue(peripheralMock.notifyEnabled)
@@ -67,7 +68,8 @@ class BLEVersionResolverImplTest: XCTestCase {
     bleVersionResolver.resolveVersion(
       with: peripheralMock,
       readCharacteristic: readCharacteristic,
-      writeCharacteristic: writeCharacteristic
+      writeCharacteristic: writeCharacteristic,
+      allowsCapabilitiesExchange: false
     )
 
     XCTAssert(peripheralMock.delegate === bleVersionResolver)
@@ -79,7 +81,8 @@ class BLEVersionResolverImplTest: XCTestCase {
     bleVersionResolver.resolveVersion(
       with: peripheralMock,
       readCharacteristic: readCharacteristic,
-      writeCharacteristic: writeCharacteristic
+      writeCharacteristic: writeCharacteristic,
+      allowsCapabilitiesExchange: false
     )
 
     // Assert proto has been written to the peripheral.
@@ -91,7 +94,7 @@ class BLEVersionResolverImplTest: XCTestCase {
 
     XCTAssertEqual(versionProto.maxSupportedMessagingVersion, 3)
     XCTAssertEqual(versionProto.minSupportedMessagingVersion, 2)
-    XCTAssertEqual(versionProto.maxSupportedSecurityVersion, 2)
+    XCTAssertEqual(versionProto.maxSupportedSecurityVersion, 4)
     XCTAssertEqual(versionProto.minSupportedSecurityVersion, 1)
   }
 
@@ -101,7 +104,8 @@ class BLEVersionResolverImplTest: XCTestCase {
     bleVersionResolver.resolveVersion(
       with: peripheralMock,
       readCharacteristic: readCharacteristic,
-      writeCharacteristic: writeCharacteristic
+      writeCharacteristic: writeCharacteristic,
+      allowsCapabilitiesExchange: false
     )
 
     // A version exchange proto whose messaging and security versions have the same max and min.
@@ -119,7 +123,8 @@ class BLEVersionResolverImplTest: XCTestCase {
     bleVersionResolver.resolveVersion(
       with: peripheralMock,
       readCharacteristic: readCharacteristic,
-      writeCharacteristic: writeCharacteristic
+      writeCharacteristic: writeCharacteristic,
+      allowsCapabilitiesExchange: false
     )
 
     let versionExchangeProto = makeVersionExchangeProto(
@@ -142,7 +147,8 @@ class BLEVersionResolverImplTest: XCTestCase {
     bleVersionResolver.resolveVersion(
       with: peripheralMock,
       readCharacteristic: readCharacteristic,
-      writeCharacteristic: writeCharacteristic
+      writeCharacteristic: writeCharacteristic,
+      allowsCapabilitiesExchange: false
     )
 
     let versionExchangeProto = makeVersionExchangeProto(
@@ -161,11 +167,90 @@ class BLEVersionResolverImplTest: XCTestCase {
     XCTAssertNil(delegateMock.encounteredError)
   }
 
+  func testResolveVersion_correctlyResolvesSecurityVersionToThree() {
+    bleVersionResolver.resolveVersion(
+      with: peripheralMock,
+      readCharacteristic: readCharacteristic,
+      writeCharacteristic: writeCharacteristic,
+      allowsCapabilitiesExchange: false
+    )
+
+    let versionExchangeProto = makeVersionExchangeProto(
+      maxSupportedMessagingVersion: 2,
+      minSupportedMessagingVersion: 2,
+      maxSupportedSecurityVersion: 3,
+      minSupportedSecurityVersion: 1
+    )
+
+    notify(from: peripheralMock, withValue: versionExchangeProto)
+
+    XCTAssertEqual(delegateMock.resolvedSecurityVersion, .v3)
+    XCTAssertEqual(delegateMock.resolvedStreamVersion, .v2(false))
+    XCTAssert(delegateMock.resolvedPeripheral === peripheralMock)
+
+    XCTAssertNil(delegateMock.encounteredError)
+  }
+
+  func testResolveVersion_correctlyResolvesWithCapabilitiesExchange() {
+    bleVersionResolver.resolveVersion(
+      with: peripheralMock,
+      readCharacteristic: readCharacteristic,
+      writeCharacteristic: writeCharacteristic,
+      allowsCapabilitiesExchange: true
+    )
+
+    let versionExchangeProto = makeVersionExchangeProto(
+      maxSupportedMessagingVersion: 2,
+      minSupportedMessagingVersion: 2,
+      maxSupportedSecurityVersion: 3,  // Only version 3 exchanges capabilities.
+      minSupportedSecurityVersion: 1
+    )
+
+    notify(from: peripheralMock, withValue: versionExchangeProto)
+
+    // Any response from the peripheral for capabilities response will do as payload is ignored.
+    notify(from: peripheralMock, withValue: Data())
+
+    // Version + capabilities responses.
+    XCTAssertEqual(peripheralMock.writtenData.count, 2)
+
+    XCTAssertEqual(delegateMock.resolvedSecurityVersion, .v3)
+    XCTAssertEqual(delegateMock.resolvedStreamVersion, .v2(false))
+    XCTAssert(delegateMock.resolvedPeripheral === peripheralMock)
+
+    XCTAssertNil(delegateMock.encounteredError)
+  }
+
+  func testResolveVersion_correctlyResolvesSecurityVersionToFour() {
+    bleVersionResolver.resolveVersion(
+      with: peripheralMock,
+      readCharacteristic: readCharacteristic,
+      writeCharacteristic: writeCharacteristic,
+      allowsCapabilitiesExchange: true
+    )
+
+    let versionExchangeProto = makeVersionExchangeProto(
+      maxSupportedMessagingVersion: 2,
+      minSupportedMessagingVersion: 2,
+      maxSupportedSecurityVersion: 4,
+      minSupportedSecurityVersion: 1
+    )
+
+    notify(from: peripheralMock, withValue: versionExchangeProto)
+
+    XCTAssertEqual(delegateMock.resolvedSecurityVersion, .v4)
+    XCTAssertEqual(delegateMock.resolvedStreamVersion, .v2(false))
+    XCTAssert(delegateMock.resolvedPeripheral === peripheralMock)
+
+    XCTAssertNil(delegateMock.encounteredError)
+  }
+
   func testResolveVersion_correctlyResolvesIfMinimumVersionMatches() {
     bleVersionResolver.resolveVersion(
       with: peripheralMock,
       readCharacteristic: readCharacteristic,
-      writeCharacteristic: writeCharacteristic
+      writeCharacteristic: writeCharacteristic,
+      allowsCapabilitiesExchange: false
     )
 
     let maxVersion: Int32 = 10
@@ -183,7 +268,7 @@ class BLEVersionResolverImplTest: XCTestCase {
 
     // Should now take the highest available version
     XCTAssertEqual(delegateMock.resolvedStreamVersion, .v2(true))
-    XCTAssertEqual(delegateMock.resolvedSecurityVersion, .v2)
+    XCTAssertEqual(delegateMock.resolvedSecurityVersion, .v4)
     XCTAssert(delegateMock.resolvedPeripheral === peripheralMock)
 
     XCTAssertNil(delegateMock.encounteredError)
@@ -191,16 +276,67 @@ class BLEVersionResolverImplTest: XCTestCase {
 
   // MARK: - Invalid version resolution test.
 
+  func testResolveVersion_MessageStreamVersionNotSupported() {
+    bleVersionResolver.resolveVersion(
+      with: peripheralMock,
+      readCharacteristic: readCharacteristic,
+      writeCharacteristic: writeCharacteristic,
+      allowsCapabilitiesExchange: false
+    )
+
+    // A version exchange proto that does not support message stream version 1 or 2.
+    let versionExchangeProto = makeVersionExchangeProto(
+      maxSupportedMessagingVersion: 20,
+      minSupportedMessagingVersion: 10,
+      maxSupportedSecurityVersion: 4,
+      minSupportedSecurityVersion: 1
+    )
+
+    notify(from: peripheralMock, withValue: versionExchangeProto)
+
+    // Delegate should be notified of error.
+    XCTAssertEqual(delegateMock.encounteredError, .versionNotSupported)
+    XCTAssertNil(delegateMock.resolvedStreamVersion)
+    XCTAssertNil(delegateMock.resolvedSecurityVersion)
+    XCTAssertNil(delegateMock.resolvedPeripheral)
+  }
+
+  func testResolveVersion_SecurityVersionNotSupported() {
+    bleVersionResolver.resolveVersion(
+      with: peripheralMock,
+      readCharacteristic: readCharacteristic,
+      writeCharacteristic: writeCharacteristic,
+      allowsCapabilitiesExchange: false
+    )
+
+    // A version exchange proto that does not support security version between 1 and 4.
+    let versionExchangeProto = makeVersionExchangeProto(
+      maxSupportedMessagingVersion: 2,
+      minSupportedMessagingVersion: 1,
+      maxSupportedSecurityVersion: 20,
+      minSupportedSecurityVersion: 10
+    )
+
+    notify(from: peripheralMock, withValue: versionExchangeProto)
+
+    // Delegate should be notified of error.
+    XCTAssertEqual(delegateMock.encounteredError, .versionNotSupported)
+    XCTAssertNil(delegateMock.resolvedStreamVersion)
+    XCTAssertNil(delegateMock.resolvedSecurityVersion)
+    XCTAssertNil(delegateMock.resolvedPeripheral)
+  }
+
   func testResolveVersion_invalidIfNoSupportedVersionPresent() {
     bleVersionResolver.resolveVersion(
       with: peripheralMock,
       readCharacteristic: readCharacteristic,
-      writeCharacteristic: writeCharacteristic
+      writeCharacteristic: writeCharacteristic,
+      allowsCapabilitiesExchange: false
     )
 
     // A version exchange proto that does not support version 1 or 2.
-    let maxVersion: Int32 = 10
-    let minVersion: Int32 = 5
+    let maxVersion: Int32 = 20
+    let minVersion: Int32 = 10
 
     let versionExchangeProto = makeVersionExchangeProto(
       maxSupportedMessagingVersion: maxVersion,
@@ -224,7 +360,8 @@ class BLEVersionResolverImplTest: XCTestCase {
     bleVersionResolver.resolveVersion(
       with: peripheralMock,
       readCharacteristic: readCharacteristic,
-      writeCharacteristic: writeCharacteristic
+      writeCharacteristic: writeCharacteristic,
+      allowsCapabilitiesExchange: false
     )
 
     // Error when updating a value on a characteristic.
@@ -244,7 +381,8 @@ class BLEVersionResolverImplTest: XCTestCase {
     bleVersionResolver.resolveVersion(
       with: peripheralMock,
       readCharacteristic: readCharacteristic,
-      writeCharacteristic: writeCharacteristic
+      writeCharacteristic: writeCharacteristic,
+      allowsCapabilitiesExchange: false
     )
 
     // Empty response for the read characteristic.
@@ -303,7 +441,7 @@ class BLEVersionResolverImplTest: XCTestCase {
 
 private class BLEVersionResolverDelegateMock: BLEVersionResolverDelegate {
   var resolvedStreamVersion: MessageStreamVersion?
-  var resolvedSecurityVersion: BLEMessageSecurityVersion?
+  var resolvedSecurityVersion: MessageSecurityVersion?
   var resolvedPeripheral: BLEPeripheral?
 
   var encounteredError: BLEVersionResolverError?
@@ -311,7 +449,7 @@ private class BLEVersionResolverDelegateMock: BLEVersionResolverDelegate {
   func bleVersionResolver(
     _ bleVersionResolver: BLEVersionResolver,
     didResolveStreamVersionTo streamVersion: MessageStreamVersion,
-    securityVersionTo securityVersion: BLEMessageSecurityVersion,
+    securityVersionTo securityVersion: MessageSecurityVersion,
     for peripheral: BLEPeripheral
   ) {
     resolvedStreamVersion = streamVersion

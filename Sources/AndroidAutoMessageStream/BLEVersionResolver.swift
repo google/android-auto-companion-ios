@@ -25,7 +25,7 @@ public protocol BLEVersionResolverDelegate: AnyObject {
   func bleVersionResolver(
     _ bleVersionResolver: BLEVersionResolver,
     didResolveStreamVersionTo streamVersion: MessageStreamVersion,
-    securityVersionTo securityVersion: BLEMessageSecurityVersion,
+    securityVersionTo securityVersion: MessageSecurityVersion,
     for peripheral: BLEPeripheral
   )
 
@@ -67,6 +67,7 @@ public protocol BLEVersionResolver: AnyObject {
   func resolveVersion(
     with peripheral: BLEPeripheral,
     readCharacteristic: BLECharacteristic,
-    writeCharacteristic: BLECharacteristic
+    writeCharacteristic: BLECharacteristic,
+    allowsCapabilitiesExchange: Bool
   )
 }

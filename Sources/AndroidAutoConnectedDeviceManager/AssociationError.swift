@@ -49,6 +49,9 @@ public enum AssociationError: Error {
   /// and the flow should be canceled.
   case pairingCodeRejected
 
+  /// Failed to generate or send the verification code.
+  case verificationCodeFailed
+
   /// Attempt to save the authentication key in the keychain failed.
   case authenticationKeyStorageFailed
 

@@ -27,10 +27,8 @@ import XCTest
 /// in the correct order.
 ///
 /// Encrypting and decrypting a message returns the same message.
-public class SecureBLEChannelMock: NSObject, SecureBLEChannel {
+final public class SecureBLEChannelMock: NSObject, SecureBLEChannel {
   public static let mockSavedSession = Data("SecureBLEChannelMockSavedSession".utf8)
-
-  static var defaultPairingCode = "000000"
 
   /// The state of the secure channel.
   private(set) public var state: SecureBLEChannelState = .uninitialized
@@ -41,8 +39,8 @@ public class SecureBLEChannelMock: NSObject, SecureBLEChannel {
   /// A delegate that will be notified of various events with the secure channel.
   public var delegate: SecureBLEChannelDelegate?
 
-  // The pairing code that should be displayed to the user.
-  var pairingCode = SecureBLEChannelMock.defaultPairingCode
+  // Token used for verification.
+  var verificationToken: SecurityVerificationToken = FakeVerificationToken()
 
   public var notifyPairingCodeAcceptedCalled = false
 
@@ -78,7 +76,7 @@ public class SecureBLEChannelMock: NSObject, SecureBLEChannel {
     if establishShouldInstantlyNotify {
       delegate?.secureBLEChannel(
         self,
-        requiresVerificationOf: pairingCode,
+        requiresVerificationOf: verificationToken,
         messageStream: messageStream
       )
     }
@@ -157,7 +155,7 @@ public class SecureBLEChannelMock: NSObject, SecureBLEChannel {
 
   public func reset() {
     messageStream = nil
-    pairingCode = SecureBLEChannelMock.defaultPairingCode
+    verificationToken = FakeVerificationToken()
 
     notifyPairingCodeAcceptedCalled = false
     establishShouldInstantlyNotify = false
@@ -187,4 +185,21 @@ extension SecureBLEChannelMock: MessageStreamDelegate {
   ) {}
 
   public func messageStreamEncounteredUnrecoverableError(_ messageStream: MessageStream) {}
+}
+
+/// Fake verification token.
+private struct FakeVerificationToken: SecurityVerificationToken {
+  static let defaultPairingCode = "000000"
+  static let defaultOutOfBandVerificationData = Data(defaultPairingCode.utf8)
+
+  /// Full backing data.
+  let data: Data
+
+  /// Human-readable visual pairing code.
+  let pairingCode: String
+
+  init() {
+    self.data = Self.defaultOutOfBandVerificationData
+    self.pairingCode = Self.defaultPairingCode
+  }
 }

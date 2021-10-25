@@ -23,7 +23,7 @@ import Foundation
 protocol AssociationMessageHelperFactory {
   func makeHelper(
     associator: Associator,
-    securityVersion: BLEMessageSecurityVersion,
+    securityVersion: MessageSecurityVersion,
     messageStream: MessageStream
   ) -> AssociationMessageHelper
 }
@@ -33,16 +33,19 @@ protocol AssociationMessageHelperFactory {
 struct AssociationMessageHelperFactoryImpl: AssociationMessageHelperFactory {
   func makeHelper(
     associator: Associator,
-    securityVersion: BLEMessageSecurityVersion,
+    securityVersion: MessageSecurityVersion,
     messageStream: MessageStream
   ) -> AssociationMessageHelper {
+    // See go/aae-batmobile-versioning for details on the security versions.
     switch securityVersion {
     case .v1:
-      return AssociationMessageHelperV1(
-        associator, messageStream: messageStream)
-    case .v2:
+      return AssociationMessageHelperV1(associator, messageStream: messageStream)
+    case .v2, .v3:
       return AssociationMessageHelperV2(
-        associator, messageStream: messageStream)
+        associator, messageStream: messageStream, sendsVerificationCode: false)
+    case .v4:
+      return AssociationMessageHelperV2(
+        associator, messageStream: messageStream, sendsVerificationCode: true)
     }
   }
 }

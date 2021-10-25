@@ -102,6 +102,10 @@ extension AssociationMessageHelperV1: AssociationMessageHelper {
     }
   }
 
+  func onRequiresPairingVerification(_ verificationToken: SecurityVerificationToken) {
+    associator.displayPairingCode(verificationToken.pairingCode)
+  }
+
   func onPairingCodeDisplayed() {}
 
   func onEncryptionEstablished() {

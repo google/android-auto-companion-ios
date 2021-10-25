@@ -36,7 +36,14 @@ extension PassthroughSecureBLEChannelError: LocalizedError {
 ///
 /// Encrypting and decrypting a message returns the same message.
 class PassthroughSecureBLEChannel: SecureBLEChannel {
-  private static let pairingCode = "000000"
+  /// Token used for verification when establishing a UKey2 channel.
+  struct VerificationToken: SecurityVerificationToken {
+    /// Full backing data.
+    var data: Data { Data(pairingCode.utf8) }
+
+    /// Human-readable visual pairing code derived from the full data.
+    let pairingCode: String = "000000"
+  }
 
   private var messageStream: MessageStream?
 
@@ -59,7 +66,7 @@ class PassthroughSecureBLEChannel: SecureBLEChannel {
 
     delegate?.secureBLEChannel(
       self,
-      requiresVerificationOf: PassthroughSecureBLEChannel.pairingCode,
+      requiresVerificationOf: VerificationToken(),
       messageStream: messageStream
     )
   }

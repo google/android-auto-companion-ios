@@ -24,6 +24,36 @@ import Foundation
 /// UKey2 is a Diffie-Hellman based authenticated key exchange protocol.
 @available(iOS 10.0, *)
 class UKey2Channel: SecureBLEChannel {
+  /// Token used for verification when establishing a UKey2 channel.
+  struct VerificationToken: SecurityVerificationToken {
+    private static let logger = Logger(
+      subsystem: "com.google.ios.aae.trustagentclient",
+      category: "UKey2Channel.VerificationToken"
+    )
+
+    /// Length of the visual pairing code.
+    private static var pairingCodeLength: Int { UKey2Channel.pairingCodeLength }
+
+    /// Full backing data.
+    let data: Data
+
+    /// Human-readable visual pairing code derived from the full data.
+    var pairingCode: String {
+      // TODO(b/133236104): Remove this when the lib is fixed to respect the pairing code length.
+      // Currently, it always returns 32 bytes since ukey2 c++ lib ignores the length parameter
+      let digits: [Character] = data.prefix(Self.pairingCodeLength).map {
+        Character("\($0 % 10)")
+      }
+      let code = String(digits)
+      Self.logger.log("Generated pairing code: \(code)")
+      return code
+    }
+
+    init(_ data: Data) {
+      self.data = data
+    }
+  }
+
   private static let logger = Logger(
     subsystem: "com.google.ios.aae.trustagentclient",
     category: "UKey2Channel"
@@ -200,32 +230,6 @@ class UKey2Channel: SecureBLEChannel {
     delegate?.secureBLEChannel(self, encounteredError: error)
   }
 
-  /// Returns a human-readable pairing code string generated from the verification bytes.
-  ///
-  /// Converts each byte into a digit with a simple modulo. Details can be found at
-  /// go/pairing-code.
-  ///
-  /// If the logic in this method is changed, then the IHU's encryption logic
-  /// (encryptionrunner/Ukey2EncryptionRunner.java) should be changed to match.
-  func readablePairingCode(fromBytes verificationBytes: Data) -> String {
-    var pairingCode = ""
-    // Data is implicitly cast into [UInt8]
-    for byte in verificationBytes {
-      let digit = byte % 10
-      pairingCode += String(digit)
-
-      // TODO(b/133236104): Remove this when the lib is fixed to respect the pairing code length.
-      // Currently, it always returns 32 bytes since ukey2 c++ lib ignores the length parameter
-      if pairingCode.count == UKey2Channel.pairingCodeLength {
-        break
-      }
-    }
-
-    Self.logger.log("Generated pairing code: \(pairingCode)")
-
-    return pairingCode
-  }
-
   /// Performs actions based on the given state of `ukey2`.
   private func process(_ state: AAEState) {
     switch state {
@@ -295,9 +299,11 @@ class UKey2Channel: SecureBLEChannel {
       return
     }
 
+    let verificationToken = VerificationToken(verificationBytes)
+
     delegate?.secureBLEChannel(
       self,
-      requiresVerificationOf: readablePairingCode(fromBytes: verificationBytes),
+      requiresVerificationOf: verificationToken,
       messageStream: messageStream
     )
   }

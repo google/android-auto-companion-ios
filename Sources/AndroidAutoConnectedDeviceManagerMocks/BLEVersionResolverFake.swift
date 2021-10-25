@@ -20,7 +20,7 @@ import Foundation
 ///  and the configurable security version.
 public class BLEVersionResolverFake: NSObject, BLEVersionResolver {
   // MARK: - Configuration
-  public var securityVersion = BLEMessageSecurityVersion.v1
+  public var securityVersion = MessageSecurityVersion.v1
 
   // MARK: - BLEVersionResolver
 
@@ -29,7 +29,8 @@ public class BLEVersionResolverFake: NSObject, BLEVersionResolver {
   public func resolveVersion(
     with peripheral: BLEPeripheral,
     readCharacteristic: BLECharacteristic,
-    writeCharacteristic: BLECharacteristic
+    writeCharacteristic: BLECharacteristic,
+    allowsCapabilitiesExchange: Bool
   ) {
     delegate?.bleVersionResolver(
       self,

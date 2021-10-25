@@ -24,7 +24,9 @@ public enum MessageStreamVersion: Equatable {
 }
 
 /// The supported message security versions.
-public enum BLEMessageSecurityVersion: Int32 {
+///
+/// See go/aae-batmobile-versioning for details.
+public enum MessageSecurityVersion: Int32 {
   /// Device IDs are exchanged during association before encryption. The head unit advertises the
   /// device ID as the service UUID for reconnection.
   case v1 = 1
@@ -32,4 +34,23 @@ public enum BLEMessageSecurityVersion: Int32 {
   /// Device IDs are exchanged during association after encryption. The head unit advertises a
   /// fixed service UUID for reconnection. See go/aae-batmobile-hide-device-ids for details.
   case v2 = 2
+
+  /// Capabilities are exchanged during association after version resolution. This implementation
+  /// just provides for empty capabilities as this version is being deprecated in favor of V4.
+  /// Device IDs are exchanged during association after encryption. The head unit advertises a
+  /// fixed service UUID for reconnection. See go/aae-batmobile-hide-device-ids for details.
+  case v3 = 3
+
+  /// This version allows for the remote device to provide an out of band token that can be used
+  /// to validate the UKey2 verification code exchanged during association. If the token is present
+  /// it will be used to verify the remote device and skip the visual pairing code confirmation. If
+  /// the token is not present, the user will be presented with the pairing code for visual
+  /// confirmation on the remote device.
+  ///
+  /// This device must send a `VerificationCodeState` to the remote device indicating how
+  /// the verification will be performed (visual or OOB token).
+  ///
+  /// Device IDs are exchanged during association after encryption. The head unit advertises a
+  /// fixed service UUID for reconnection. See go/aae-batmobile-hide-device-ids for details.
+  case v4 = 4
 }
