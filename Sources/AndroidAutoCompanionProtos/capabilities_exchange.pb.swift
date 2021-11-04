@@ -51,6 +51,7 @@ public struct Com_Google_Companionprotos_CapabilitiesExchange {
     public typealias RawValue = Int
     case oobChannelUnknown // = 0
     case btRfcomm // = 1
+    case preAssociation // = 2
     case UNRECOGNIZED(Int)
 
     public init() {
@@ -61,6 +62,7 @@ public struct Com_Google_Companionprotos_CapabilitiesExchange {
       switch rawValue {
       case 0: self = .oobChannelUnknown
       case 1: self = .btRfcomm
+      case 2: self = .preAssociation
       default: self = .UNRECOGNIZED(rawValue)
       }
     }
@@ -69,6 +71,7 @@ public struct Com_Google_Companionprotos_CapabilitiesExchange {
       switch self {
       case .oobChannelUnknown: return 0
       case .btRfcomm: return 1
+      case .preAssociation: return 2
       case .UNRECOGNIZED(let i): return i
       }
     }
@@ -116,6 +119,7 @@ extension Com_Google_Companionprotos_CapabilitiesExchange.OobChannelType: CaseIt
   public static var allCases: [Com_Google_Companionprotos_CapabilitiesExchange.OobChannelType] = [
     .oobChannelUnknown,
     .btRfcomm,
+    .preAssociation,
   ]
 }
 
@@ -182,6 +186,7 @@ extension Com_Google_Companionprotos_CapabilitiesExchange.OobChannelType: SwiftP
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "OOB_CHANNEL_UNKNOWN"),
     1: .same(proto: "BT_RFCOMM"),
+    2: .same(proto: "PRE_ASSOCIATION"),
   ]
 }
 
