@@ -34,6 +34,36 @@ class LoggerTest: XCTestCase {
     logger.delegate = nil
   }
 
+  /// Tests that the expected category is created given the mangled type name (for private types).
+  public func testInferredCategoryForPrivateType() {
+    let logger = Logger(for: PrivateSampleTarget.self)
+
+    let moduleName = "third_party_swift_AndroidAutoCompanion_LoggerTestsLib"
+
+    // Expect that type name should be mangled.
+    let typeName = String(reflecting: PrivateSampleTarget.self)
+    XCTAssertNotEqual("\(moduleName).PrivateSampleTarget", typeName)
+    XCTAssertTrue(typeName.contains(")"))
+
+    XCTAssertEqual(logger.subsystem, moduleName)
+    XCTAssertEqual(logger.category, "PrivateSampleTarget")
+  }
+
+  /// Tests that the expected category is created given the unmangled type names.
+  public func testInferredCategoryForInternalType() {
+    let logger = Logger(for: InternalSampleTarget.self)
+
+    let moduleName = "third_party_swift_AndroidAutoCompanion_LoggerTestsLib"
+
+    // Expect that type name shouldn't be mangled.
+    let typeName = String(reflecting: InternalSampleTarget.self)
+    XCTAssertEqual("\(moduleName).InternalSampleTarget", typeName)
+    XCTAssertFalse(typeName.contains(")"))
+
+    XCTAssertEqual(logger.subsystem, moduleName)
+    XCTAssertEqual(logger.category, "InternalSampleTarget")
+  }
+
   public func testLoggerLogsRecord() {
     let line = #line + 1  // This line must be kept right before the logger.log() call line.
     logger.log("Test")
@@ -182,3 +212,11 @@ private class LoggerDelegateMock: LoggerDelegate {
     lastRecord = record
   }
 }
+
+/// Private type for which we can test Logger category inference.
+@available(iOS 10.0, *)
+private enum PrivateSampleTarget {}
+
+/// Internal type for which we can test Logger category inference.
+@available(iOS 10.0, *)
+enum InternalSampleTarget {}

@@ -51,6 +51,10 @@ protocol AssociationMessageHelper {
 // MARK: - Common Methods
 @available(iOS 10.0, *)
 extension AssociationMessageHelper {
+  static var handshakeMessageParams: MessageStreamParams {
+    MessageStreamParams(recipient: Config.defaultRecipientUUID, operationType: .encryptionHandshake)
+  }
+
   /// Extract the Car ID from the message.
   ///
   /// - Returns: The car Id extracted from the message.
@@ -80,5 +84,20 @@ extension AssociationMessageHelper {
     }
 
     return true
+  }
+
+  /// Concatenate the device id with the authentication key and send it securely to the car.
+  ///
+  /// - Parameter keyData Data for the authentication key to send.
+  func sendDeviceIdPlusAuthenticationKey(keyData: Data, on messageStream: MessageStream) {
+    let deviceId = DeviceIdManager.deviceId
+    var payload = deviceId.data
+    payload.append(keyData)
+    try? messageStream.writeEncryptedMessage(
+      payload,
+      params: Self.handshakeMessageParams
+    )
+
+    Self.logger.log("Sent device id: <\(deviceId.uuidString)> plus authentication key.")
   }
 }

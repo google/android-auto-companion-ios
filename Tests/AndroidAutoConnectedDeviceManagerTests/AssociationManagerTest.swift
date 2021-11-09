@@ -79,6 +79,7 @@ class AssociationManagerTest: XCTestCase {
       secureSessionManager: secureSessionManagerMock,
       secureBLEChannel: secureBLEChannelMock,
       bleVersionResolver: bleVersionResolverFake,
+      outOfBandTokenProvider: FakeOutOfBandTokenProvider(),
       messageHelperFactory: messageHelperFactoryProxy
     )
   }
@@ -723,7 +724,8 @@ class AssociationManagerTest: XCTestCase {
       associatedCarsManager: associatedCarsManagerMock,
       secureSessionManager: secureSessionManagerMock,
       secureBLEChannel: secureBLEChannelMock,
-      bleVersionResolver: bleVersionResolverFake
+      bleVersionResolver: bleVersionResolverFake,
+      outOfBandTokenProvider: FakeOutOfBandTokenProvider()
     )
 
     associatePeripheral_securityV1(withIdentifier: identifier2)
@@ -752,7 +754,8 @@ class AssociationManagerTest: XCTestCase {
       associatedCarsManager: associatedCarsManagerMock,
       secureSessionManager: secureSessionManagerMock,
       secureBLEChannel: secureBLEChannelMock,
-      bleVersionResolver: bleVersionResolverFake
+      bleVersionResolver: bleVersionResolverFake,
+      outOfBandTokenProvider: FakeOutOfBandTokenProvider()
     )
 
     associatePeripheral_securityV2(withIdentifier: identifier2)
@@ -930,4 +933,32 @@ class AssociationDelegateMock: AssociationManagerDelegate {
     self.error = associationError
     errorExpectation?.fulfill()
   }
+}
+
+/// Fake Out-Of-Band Token Provider.
+class FakeOutOfBandTokenProvider: OutOfBandTokenProvider {
+  private var completion: ((OutOfBandToken?) -> Void)?
+  private var token: OutOfBandToken? = nil
+
+  func requestToken(completion: @escaping (OutOfBandToken?) -> Void) {
+    if let token = token {
+      completion(token)
+    } else {
+      self.completion = completion
+    }
+  }
+
+  func reset() {
+    token = nil
+    completion?(nil)
+    completion = nil
+  }
+
+  func postToken(_ token: OutOfBandToken?) {
+    self.token = token
+    completion?(token)
+    completion = nil
+  }
+
+  init() {}
 }

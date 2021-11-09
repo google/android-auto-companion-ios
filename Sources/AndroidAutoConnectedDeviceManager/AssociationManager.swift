@@ -27,6 +27,9 @@ import Foundation
 protocol Associator {
   var carId: String? { get nonmutating set }
 
+  /// Request an out of band token.
+  func requestOutOfBandToken(completion: @escaping (OutOfBandToken?) -> Void)
+
   /// Attempt to configure a secure channel using the specified messsage stream.
   func establishEncryption(using messageStream: MessageStream)
 
@@ -117,6 +120,7 @@ class AssociationManager: NSObject {
   private let associatedCarsManager: AssociatedCarsManager
   private let secureSessionManager: SecureSessionManager
   private let messageHelperFactory: AssociationMessageHelperFactory
+  private let outOfBandTokenProvider: OutOfBandTokenProvider
 
   /// The current car that is being associated.
   ///
@@ -185,9 +189,9 @@ class AssociationManager: NSObject {
   ///       associated with this device.
   ///   - secureSessionManager: Manager for retrieving and storing secure sessions.
   ///   - secureBLEChannel: The channel to handle the establishment of a secure connection.
-  ///   - messageStreamVersion: The version of the message stream to use.
-  ///   - messageHelperFactory: The factory for making the message exchange helper.
+  ///   - bleVersionResolver: The message stream version resolver.
   ///   - outOfBandTokenProvider: Provider tokens for out of band association verification.
+  ///   - messageHelperFactory: The factory for making the message exchange helper.
   init(
     overlay: Overlay,
     connectionHandle: ConnectionHandle,
@@ -196,6 +200,7 @@ class AssociationManager: NSObject {
     secureSessionManager: SecureSessionManager,
     secureBLEChannel: SecureBLEChannel,
     bleVersionResolver: BLEVersionResolver,
+    outOfBandTokenProvider: OutOfBandTokenProvider,
     messageHelperFactory: AssociationMessageHelperFactory =
       AssociationMessageHelperFactoryImpl()
   ) {
@@ -206,6 +211,7 @@ class AssociationManager: NSObject {
     self.secureSessionManager = secureSessionManager
     self.secureBLEChannel = secureBLEChannel
     self.bleVersionResolver = bleVersionResolver
+    self.outOfBandTokenProvider = outOfBandTokenProvider
     self.messageHelperFactory = messageHelperFactory
 
     isMessageCompressionAllowed = overlay.isMessageCompressionAllowed
@@ -297,6 +303,8 @@ class AssociationManager: NSObject {
     carToAssociate = nil
     carId = nil
     messageHelper = nil
+
+    outOfBandTokenProvider.reset()
   }
 
   /// Checks if the given peripheral has an association characteristic for registering an escrow
@@ -370,6 +378,11 @@ class AssociationManager: NSObject {
         messageStream: messageStream),
       peripheral: messageStream.peripheral
     )
+  }
+
+  /// Request an out of band token.
+  private func requestOutOfBandToken(completion: @escaping (OutOfBandToken?) -> Void) {
+    outOfBandTokenProvider.requestToken(completion: completion)
   }
 
   private func notifyPairingCodeAccepted() throws {
@@ -620,6 +633,10 @@ extension AssociationManager: BLEVersionResolverDelegate {
     var carId: String? {
       get { manager.carId }
       nonmutating set { manager.carId = newValue }
+    }
+
+    func requestOutOfBandToken(completion: @escaping (OutOfBandToken?) -> Void) {
+      manager.requestOutOfBandToken(completion: completion)
     }
 
     func establishEncryption(using messageStream: MessageStream) {

@@ -288,6 +288,67 @@ extension Logger {
   }
 }
 
+// MARK: - Convenience
+
+@available(iOS 10.0, macOS 10.15.0, *)
+extension Logger {
+  /// Creates a logger for the specified type.
+  ///
+  /// Initializer that infers the category from the specified type and the subsystem from the
+  /// context in which it was called.
+  ///
+  /// The subsystem is the module which is derived from the context in which the initializer is
+  /// called. The context defaults to `#fileID`
+  /// (https://docs.swift.org/swift-book/ReferenceManual/Expressions.html). The specification notes
+  /// that the module is the part of `#fileID` before the first "/".
+  ///
+  /// The type passed to the initializer will be used as the category with the textual category
+  /// being the full type name excluding the module prefix. Since both the module and the type may
+  /// generally contain components joined by periods, the module must first be extracted from the
+  /// calling context and then removed from the fully qualified type name. If the module of the
+  /// calling context doesn't match that of the type, then the category will be the simple type
+  /// name. In the case of mangled names (e.g. private types) the mangled prefix will be stripped.
+  ///
+  /// - Parameters:
+  ///   - type: Type for which the create the logger.
+  ///   - context: Don't specify as the default parameter is used to infer the subsystem.
+  public init(for type: Any.Type, context: String = #fileID) {
+    // Module is the part of fileID before the first "/".
+    let subsystem = String(context.prefix { $0 != "/" })
+    self.subsystem = subsystem
+
+    // Check whether the fully qualified category is prefixed by the subsystem. If not, just take
+    // the category to be the fully qualified category.
+    let typeName = String(reflecting: type)
+    let subystemPrefix = subsystem + "."
+
+    guard typeName.hasPrefix(subystemPrefix), typeName.endIndex != subystemPrefix.endIndex else {
+      // This would happen if the logger is instantiated outside of the type's module.
+      self.category = String(describing: type)
+      return
+    }
+    let baseTypeName = String(typeName.suffix(from: subystemPrefix.endIndex))
+
+    // Handle mangled type names which have a prefix in parentheses followed by a period.
+    guard let lastParenIndex = baseTypeName.lastIndex(of: ")") else {
+      // Type name isn't mangled, so we're done.
+      self.category = baseTypeName
+      return
+    }
+
+    // Prefix also includes the next "." so we need to shift by 2 to get to the name.
+    let prefixIndex = baseTypeName.index(lastParenIndex, offsetBy: 2)
+    guard prefixIndex != baseTypeName.endIndex else {
+      // We shouldn't hit this, but just in case fallback to the simple type name.
+      self.category = String(describing: type)
+      return
+    }
+    self.category = String(baseTypeName.suffix(from: prefixIndex))
+  }
+}
+
+// MARK: - Tracing
+
 /// Support for fetching the thread number of the current thread.
 @available(iOS 10.0, macOS 10.15, *)
 private enum ThreadInfo {

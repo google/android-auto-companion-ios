@@ -475,7 +475,8 @@ where CentralManager: SomeCentralManager {
       associatedCarsManager: associatedCarsManager,
       secureSessionManager: secureSessionManager,
       secureBLEChannel: secureBLEChannelFactory.makeChannel(),
-      bleVersionResolver: bleVersionResolver
+      bleVersionResolver: bleVersionResolver,
+      outOfBandTokenProvider: CoalescingOutOfBandTokenProvider()
     )
 
     communicationManager = CommunicationManager(

@@ -41,11 +41,9 @@ struct AssociationMessageHelperFactoryImpl: AssociationMessageHelperFactory {
     case .v1:
       return AssociationMessageHelperV1(associator, messageStream: messageStream)
     case .v2, .v3:
-      return AssociationMessageHelperV2(
-        associator, messageStream: messageStream, sendsVerificationCode: false)
+      return AssociationMessageHelperV2(associator, messageStream: messageStream)
     case .v4:
-      return AssociationMessageHelperV2(
-        associator, messageStream: messageStream, sendsVerificationCode: true)
+      return AssociationMessageHelperV4(associator, messageStream: messageStream)
     }
   }
 }

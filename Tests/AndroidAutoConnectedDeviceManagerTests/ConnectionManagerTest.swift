@@ -711,7 +711,8 @@ class ConnectionManagerTest: XCTestCase {
       associatedCarsManager: associatedCarsManager,
       secureSessionManager: SecureSessionManagerMock(),
       secureBLEChannel: SecureBLEChannelMock(),
-      bleVersionResolver: BLEVersionResolverFake()
+      bleVersionResolver: BLEVersionResolverFake(),
+      outOfBandTokenProvider: FakeOutOfBandTokenProvider()
     )
   }
 

@@ -29,6 +29,7 @@ final public class AssociatorMock {
   // MARK: - Method call checks
   public var establishEncryptionCalled = false
   public var completeAssociationCalled = false
+  public var requestOutOfBandTokenCalled = false
   public var displayPairingCodeCalled = false
   public var notifyPairingCodeAcceptedCalled = false
   public var notifyDelegateOfErrorCalled = false
@@ -36,6 +37,8 @@ final public class AssociatorMock {
 
   // MARK: - Associator Stored Properties
   public var carId: String?
+
+  public var outOfBandToken: OutOfBandToken?
 
   public init() {}
 }
@@ -49,6 +52,12 @@ extension AssociatorMock: Associator {
 
   public func completeAssociation(forCarId carId: String, messageStream: MessageStream) {
     completeAssociationCalled = true
+  }
+
+  /// Request an out of band token.
+  public func requestOutOfBandToken(completion: @escaping (OutOfBandToken?) -> Void) {
+    requestOutOfBandTokenCalled = true
+    completion(outOfBandToken)
   }
 
   /// Display the specified pairing code for visual verification.
