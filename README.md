@@ -32,12 +32,11 @@ The Logger struct is the main interface for configuration and logging.
 
 ### Usage
 
-The logger is initialized with a subsystem and category:
+When the logger is initialized, the subsystem is inferred from the calling
+context, and the category is derived from the type and the subsystem.
 
 ```swift
-let logger = Logger(
-  subsystem: "TestSystem",
-  category: "TestCat")
+let logger = Logger(for: TestType.self)
 ```
 
 It follows the modifier pattern in which a logger instance is immutable from
@@ -60,3 +59,14 @@ intrinsic to what the lagger does:
 ```swift
 logger.info("Test")
 ```
+
+#### Levels in order of increasing significance.
+
+Level    | Effect
+-------- | -------------------------------------------------------------
+debug    | In memory logging only.
+info     | Low importance. May get pruned from logs.
+standard | Default logging level.
+error    | Suitable for logging recoverable errors.
+fault    | Suitable for logging programming errors. Provides backtraces.
+

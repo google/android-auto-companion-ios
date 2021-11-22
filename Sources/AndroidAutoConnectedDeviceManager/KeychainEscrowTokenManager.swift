@@ -19,10 +19,7 @@ import Foundation
 /// device registration session.
 @available(iOS 10.0, *)
 class KeychainEscrowTokenManager: NSObject, EscrowTokenManager {
-  private static let logger = Logger(
-    subsystem: "com.google.ios.aae.trustagentclient",
-    category: "KeychainEscrowTokenManager"
-  )
+  private static let logger = Logger(for: KeychainEscrowTokenManager.self)
 
   /// Generates an escrow token that can be used to uniquely identify an association session.
   ///

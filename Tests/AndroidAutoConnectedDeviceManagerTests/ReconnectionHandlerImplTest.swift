@@ -164,7 +164,7 @@ class ReconnectionHandlerDelegateMock: ReconnectionHandlerDelegate {
 
   func reconnectionHandler(
     _ reconnectionHandler: ReconnectionHandler,
-    didEstablishSecureChannel securedCarChannel: SecuredCarChannel
+    didEstablishSecureChannel securedCarChannel: SecuredConnectedDeviceChannel
   ) {
     didEstablishSecureChannelCalled = true
     establishedChannel = securedCarChannel

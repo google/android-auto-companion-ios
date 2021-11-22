@@ -19,7 +19,7 @@ import XCTest
 /// Unit tests for `LogArchiver`.
 @available(iOS 10.0, *)
 class LogArchiverTest: XCTestCase {
-  private let logger = Logger(subsystem: "Test", category: "LogArchiverTest")
+  private let logger = Logger(for: LogArchiverTest.self)
 
   private var archiver: LogArchiver!
   private var storeFactory: MockLogStoreFactory!

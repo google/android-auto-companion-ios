@@ -28,12 +28,14 @@ class ConnectionManagerTest: XCTestCase {
   private var associatedCarsManager: AssociatedCarsManagerMock!
   private var associationDelegateMock: ConnectionManagerAssociationDelegateMock!
   private var uuidConfig: UUIDConfig!
+  private var versionResolverFake: BLEVersionResolverFake!
 
   override func setUp() {
     super.setUp()
     continueAfterFailure = false
 
     uuidConfig = UUIDConfig(plistLoader: PListLoaderFake())
+    versionResolverFake = BLEVersionResolverFake()
 
     centralManagerMock = CentralManagerMock()
 
@@ -451,7 +453,7 @@ class ConnectionManagerTest: XCTestCase {
     XCTAssert(servicesToScanFor.contains(uuidConfig.reconnectionUUID(for: .v2)))
   }
 
-  func testCentralManager_errorDuringReconnection_notifiesOberserver() {
+  func testCentralManager_errorDuringReconnection_notifiesObserver() {
     let peripheralMock = PeripheralMock(name: "associated")
     centralManagerMock.connectedPeripherals.insert(peripheralMock)
 
@@ -711,7 +713,7 @@ class ConnectionManagerTest: XCTestCase {
       associatedCarsManager: associatedCarsManager,
       secureSessionManager: SecureSessionManagerMock(),
       secureBLEChannel: SecureBLEChannelMock(),
-      bleVersionResolver: BLEVersionResolverFake(),
+      bleVersionResolver: versionResolverFake,
       outOfBandTokenProvider: FakeOutOfBandTokenProvider()
     )
   }

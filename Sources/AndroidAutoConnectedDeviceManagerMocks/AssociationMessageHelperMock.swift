@@ -27,16 +27,14 @@ final public class AssociationMessageHelperMock {
   // MARK: - Method call checks
   public var startCalled = false
   public var handleMessageCalled = false
+  public var messageDidSendSuccessfullyCalled = false
   public var onEncryptionEstablishedCalled = false
   public var onPairingCodeDisplayedCalled = false
   public var onRequiresPairingVerificationCalled = false
 
   // MARK: Basic Requirements
 
-  static public let logger = Logger(
-    subsystem: "com.google.ios.aae.trustagentclient",
-    category: "AssociationMessageHelperMock"
-  )
+  static public let logger = Logger(for: AssociationMessageHelperMock.self)
 
   private let messageStream: MessageStream
   public let associator: Associator
@@ -66,6 +64,10 @@ extension AssociationMessageHelperMock: AssociationMessageHelper {
 
   public func handleMessage(_ message: Data, params: MessageStreamParams) {
     handleMessageCalled = true
+  }
+
+  public func messageDidSendSuccessfully() {
+    messageDidSendSuccessfullyCalled = true
   }
 
   public func onRequiresPairingVerification(_ verificationToken: SecurityVerificationToken) {

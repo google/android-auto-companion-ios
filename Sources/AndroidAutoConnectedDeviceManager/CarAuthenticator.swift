@@ -276,10 +276,7 @@ struct CarAuthenticatorImpl: CarAuthenticator {
 
   /// Storage for saving and recovering authentication data.
   private enum KeyChainStorage {
-    static private let logger = Logger(
-      subsystem: "com.google.ios.aae.trustagentclient",
-      category: "CarAuthenticatorImpl.Storage"
-    )
+    static private let logger = Logger(for: KeyChainStorage.self)
 
     /// Label for the key query.
     static private let keyLabel = "com.google.ios.aae.trustagentclient.CarAuthenticatorImpl.key"

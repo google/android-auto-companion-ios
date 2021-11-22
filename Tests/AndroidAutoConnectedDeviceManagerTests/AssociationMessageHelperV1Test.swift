@@ -64,6 +64,9 @@ class AssociationMessageHelperV1Test: XCTestCase {
   func testHandleMessage_CarId_Encryption() {
     messageHelper.start()
 
+    // Calling start should send the device id. Acknowledge that the message has been sent.
+    messageHelper.messageDidSendSuccessfully()
+
     let params = MessageStreamParams(
       recipient: UUID(),
       operationType: .encryptionHandshake
@@ -88,6 +91,9 @@ class AssociationMessageHelperV1Test: XCTestCase {
   func testHandleMessage_BadPairing() {
     messageHelper.start()
 
+    // Calling start should send the device id. Acknowledge that the message has been sent.
+    messageHelper.messageDidSendSuccessfully()
+
     let params = MessageStreamParams(
       recipient: UUID(),
       operationType: .encryptionHandshake
@@ -111,6 +117,9 @@ class AssociationMessageHelperV1Test: XCTestCase {
     associatorMock.shouldThrowWhenNotifyingPairingCodeAccepted = true
     messageHelper.start()
 
+    // Calling start should send the device id. Acknowledge that the message has been sent.
+    messageHelper.messageDidSendSuccessfully()
+
     let params = MessageStreamParams(
       recipient: UUID(),
       operationType: .encryptionHandshake
@@ -132,6 +141,16 @@ class AssociationMessageHelperV1Test: XCTestCase {
   /// Test handling encryption established, but no carId.
   func testOnEncryptionEstablished_NoCarId() {
     associatorMock.carId = nil
+
+    messageHelper.onEncryptionEstablished()
+
+    XCTAssertNotNil(associatorMock.associationError)
+    XCTAssertEqual(associatorMock.associationError, AssociationError.cannotStoreAssociation)
+    XCTAssertFalse(associatorMock.completeAssociationCalled)
+  }
+
+  func testOnEncryptionEstablished_establishSecuredCarChannelFails() {
+    associatorMock.establishSecuredCarChannelSucceeds = false
 
     messageHelper.onEncryptionEstablished()
 

@@ -46,7 +46,7 @@ class CommunicationManagerDelegateFake: CommunicationManagerDelegate {
 
   func communicationManager(
     _ communicationManager: CommunicationManager,
-    didEstablishSecureChannel securedCarChannel: SecuredCarChannel
+    didEstablishSecureChannel securedCarChannel: SecuredConnectedDeviceChannel
   ) {
     didEstablishSecureChannelCalled = true
     self.securedCarChannel = securedCarChannel

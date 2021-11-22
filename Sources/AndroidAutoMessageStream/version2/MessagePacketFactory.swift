@@ -28,10 +28,7 @@ enum MessagePacketFactoryError: Error {
 /// A creator of `MessagePacket`s.
 @available(iOS 10.0, *)
 enum MessagePacketFactory {
-  private static let logger = Logger(
-    subsystem: "com.google.ios.aae.blemessagestream",
-    category: "MessagePacketFactory"
-  )
+  private static let logger = Logger(for: MessagePacketFactory.self)
 
   /// The size in bytes of a `fixed32` field in the proto.
   private static let fixed32Size = 4

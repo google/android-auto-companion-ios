@@ -74,10 +74,7 @@ extension BLEMessageStreamV2Error: LocalizedError {
 /// Version 2 of the message stream.
 @available(iOS 10.0, *)
 class BLEMessageStreamV2: NSObject {
-  private static let logger = Logger(
-    subsystem: "com.google.ios.aae.trustagentclient",
-    category: "BLEMessageStreamV2"
-  )
+  private static let logger = Logger(for: BLEMessageStreamV2.self)
 
   /// The maximum number of bytes that can be sent each time across BLE.
   ///

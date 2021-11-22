@@ -117,22 +117,22 @@ public struct SignpostMetrics {
 
 #if canImport(MetricKit)
   /// Signpost Metrics handler implemented using `MetricKit`.
-#if os(iOS)
-  @available(iOS 13, *)
-  private struct SystemSignpostMetrics: SignpostMetricsHandler {
-    private let logHandle: OSLog
+  #if os(iOS)
+    @available(iOS 13, *)
+    private struct SystemSignpostMetrics: SignpostMetricsHandler {
+      private let logHandle: OSLog
 
-    var isValid: Bool { true }
+      var isValid: Bool { true }
 
-    fileprivate init(category: String) {
-      logHandle = MXMetricManager.makeLogHandle(category: category)
+      fileprivate init(category: String) {
+        logHandle = MXMetricManager.makeLogHandle(category: category)
+      }
+
+      fileprivate func post(_ marker: SignpostMarker, dso: UnsafeRawPointer = #dsohandle) {
+        mxSignpost(marker.role.systemType, dso: dso, log: logHandle, name: marker.name)
+      }
     }
-
-    fileprivate func post(_ marker: SignpostMarker, dso: UnsafeRawPointer = #dsohandle) {
-      mxSignpost(marker.role.systemType, dso: dso, log: logHandle, name: marker.name)
-    }
-  }
-#endif
+  #endif
 
   // MARK: - Role Conversions
 
@@ -155,14 +155,14 @@ public struct SignpostMetrics {
 /// implementation that simply logs errors for such attempts.
 @available(iOS 10, macOS 10.15, *)
 private struct UnavailableSignpostMetrics: SignpostMetricsHandler {
-  static let logger = Logger(subsystem: "Logging", category: "MetricLogger")
+  static let logger = Logger(for: UnavailableSignpostMetrics.self)
 
   /// Just a placeholder since no valid handler is available.
   var isValid: Bool { false }
 
   fileprivate init(category: String) {
     Self.logger.error.log(
-      "Instantiating signpost metric for cateogry: [\(category)] on unsuppoted platform.")
+      "Instantiating signpost metric for category: [\(category)] on unsupported platform.")
   }
 
   fileprivate func post(_ marker: SignpostMarker, dso: UnsafeRawPointer = #dsohandle) {

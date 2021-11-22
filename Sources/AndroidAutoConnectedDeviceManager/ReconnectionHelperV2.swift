@@ -17,7 +17,6 @@ import AndroidAutoLogger
 @_implementationOnly import AndroidAutoMessageStream
 @_implementationOnly import AndroidAutoSecureChannel
 import CoreBluetooth
-import Foundation
 
 /// Reconnection Helper for security version 2 which implements an authentication mechanism
 /// to prevent device identifiers from being shared in the open.
@@ -53,16 +52,14 @@ class ReconnectionHelperV2 {
   /// Length of the salt we should send as a challenge.
   private static let challengeSaltLength = 16
 
-  private static let logger = Logger(
-    subsystem: "com.google.ios.aae.trustagentclient",
-    category: "ReconnectionHelperV2"
-  )
+  private static let logger = Logger(for: ReconnectionHelperV2.self)
 
   let authenticatorType: CarAuthenticator.Type
   let peripheral: AnyPeripheral
   var car: Car? = nil
   var carId: String? { car?.id }
   var onReadyForHandshake: (() -> Void)?
+  private var resolvedSecurityVersion: MessageSecurityVersion?
 
   private var phase: Phase
 
@@ -127,12 +124,13 @@ class ReconnectionHelperV2 {
 // MARK: - ReconnectionHelper
 @available(iOS 10.0, *)
 extension ReconnectionHelperV2: ReconnectionHelper {
-  /// Security version implemented by this helper.
-  var securityVersion: MessageSecurityVersion { .v2 }
-
   /// Indicates whether advertisement data is needed to begin the handshake.
   var isReadyForHandshake: Bool {
     return carId != nil
+  }
+
+  func discoveryUUID(from config: UUIDConfig) -> CBUUID {
+    config.reconnectionUUID(for: .v2)
   }
 
   /// Prepare for the handshake with the advertisment data to configure the helper as needed.
@@ -169,6 +167,17 @@ extension ReconnectionHelperV2: ReconnectionHelper {
     phase = .matchedAdvertisementHMAC(match.hmac)
 
     onReadyForHandshake?()
+  }
+
+  /// Handle the security version resolution.
+  func onResolvedSecurityVersion(_ version: MessageSecurityVersion) throws {
+    switch version {
+    case .v1:
+      Self.logger.error.log("Resolved mismatched security version: \(version)")
+      throw CommunicationManagerError.mismatchedSecurityVersion
+    case .v2, .v3, .v4:
+      resolvedSecurityVersion = version
+    }
   }
 
   /// Begin the reconnection handshake by sending a challenge.
@@ -263,5 +272,34 @@ extension ReconnectionHelperV2: ReconnectionHelper {
 
     Self.logger.log("Authenticated challenge for peripheral: \(peripheral.logName).")
     return true
+  }
+
+  func configureSecureChannel(
+    _ channel: SecuredConnectedDeviceChannel,
+    using connectionHandle: ConnectionHandle,
+    completion: @escaping (Bool) -> Void
+  ) {
+    guard let securityVersion = resolvedSecurityVersion else {
+      Self.logger.error.log("Missing resolved security version.")
+      completion(false)
+      return
+    }
+
+    switch securityVersion {
+    case .v1, .v2, .v3:
+      // No additional configuration needed, so we can indicate completion immediately.
+      completion(true)
+    case .v4:
+      connectionHandle.requestConfiguration(for: channel) { [weak self] in
+        guard let _ = self else {
+          completion(false)
+          return
+        }
+
+        Self.logger.log(
+          "Secure channel configured with user role: \(channel.userRole.debugDescription)")
+        completion(true)
+      }
+    }
   }
 }

@@ -31,10 +31,7 @@ public protocol TransportSessionDelegate: AnyObject {
 public class TransportSession<Provider: TransportPeripheralProvider> {
   public typealias Peripheral = Provider.Peripheral
 
-  private let logger = Logger(
-    subsystem: "com.google.ios.aae.trustagentclient",
-    category: "TransportSession"
-  )
+  private let logger = Logger(for: TransportSession.self)
 
   /// Monitor for peripheral discovery.
   private var peripheralDiscoveryMonitor: PeripheralActivityMonitor?

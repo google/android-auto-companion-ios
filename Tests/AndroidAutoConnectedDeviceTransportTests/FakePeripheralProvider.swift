@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import AndroidAutoConnectedDeviceTransportFakes
 import AndroidAutoLogger
 import XCTest
 
@@ -22,10 +23,7 @@ import XCTest
 class FakePeripheralProvider: TransportPeripheralProvider {
   typealias Peripheral = FakePeripheral
 
-  static let logger = Logger(
-    subsystem: "com.google.ios.aae.transporttests",
-    category: "FakePeripheralProvider"
-  )
+  static let logger = Logger(for: FakePeripheralProvider.self)
 
   /// Monitor for peripheral discovery.
   public var discoveryMonitor: PeripheralDiscoveryMonitor<FakePeripheral>?

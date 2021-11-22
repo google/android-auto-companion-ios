@@ -60,10 +60,7 @@ class TrustAgentConfigUserDefaults: TrustAgentConfig {
     private static let defaultPasscodeRequirement = true
   #endif
 
-  private static let logger = Logger(
-    subsystem: "com.google.ios.aae.trustagentclient",
-    category: "TrustAgentConfig"
-  )
+  private static let logger = Logger(for: TrustAgentConfigUserDefaults.self)
 
   static let unlockHistoryKey = "UnlockHistoryEnabled"
 

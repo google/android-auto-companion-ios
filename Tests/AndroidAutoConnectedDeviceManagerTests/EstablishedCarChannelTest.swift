@@ -313,6 +313,20 @@ class EstablishedCarChannelTest: XCTestCase {
     }
   }
 
+  func testConfiguresUsingFeatureProvider() {
+    let featureProvider = ChannelFeatureProviderMock(userRole: .driver)
+    var completed = false
+
+    channel.configure(using: featureProvider) { _ in
+      completed = true
+    }
+
+    XCTAssertTrue(completed)
+    XCTAssertTrue(featureProvider.requestUserRoleCalled)
+    XCTAssertNotNil(channel.userRole)
+    XCTAssertTrue(channel.userRole?.isDriver ?? false)
+  }
+
   // MARK: - Query response tests.
 
   func testQueryResponse_WithMatchingQueryID_notifiesCompletionHandler() {

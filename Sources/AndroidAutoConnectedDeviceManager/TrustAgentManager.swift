@@ -50,10 +50,7 @@ typealias TrustedDeviceState = Aae_Trustagent_TrustedDeviceState
 /// ```
 @available(iOS 10.0, *)
 public class TrustAgentManager: FeatureManager {
-  private static let logger = Logger(
-    subsystem: "com.google.ios.aae.trustagentclient",
-    category: "TrustAgentManager"
-  )
+  private static let logger = Logger(for: TrustAgentManager.self)
 
   private static let signpostMetrics = SignpostMetrics(category: "TrustAgentManager")
 

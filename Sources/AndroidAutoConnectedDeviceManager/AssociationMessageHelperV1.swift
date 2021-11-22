@@ -30,10 +30,7 @@ final class AssociationMessageHelperV1 {
   private static let encryptionSetUpParams = MessageStreamParams(
     recipient: Config.defaultRecipientUUID, operationType: .encryptionHandshake)
 
-  static let logger = Logger(
-    subsystem: "com.google.ios.aae.trustagentclient",
-    category: "AssociationMessageHelperV1"
-  )
+  static let logger = Logger(for: AssociationMessageHelperV1.self)
 
   private let messageStream: MessageStream
   private let associator: Associator
@@ -58,7 +55,7 @@ final class AssociationMessageHelperV1 {
       params: Self.encryptionSetUpParams
     )
 
-    Self.logger.log("Sent device id:", redacting: "\(deviceId.uuidString)")
+    Self.logger.log("Sending device id:", redacting: "\(deviceId.uuidString)")
   }
 }
 
@@ -67,7 +64,6 @@ final class AssociationMessageHelperV1 {
 extension AssociationMessageHelperV1: AssociationMessageHelper {
   func start() {
     sendDeviceId()
-    phase = .idSent
   }
 
   func handleMessage(_ message: Data, params: MessageStreamParams) {
@@ -102,6 +98,13 @@ extension AssociationMessageHelperV1: AssociationMessageHelper {
     }
   }
 
+  func messageDidSendSuccessfully() {
+    if phase == .none {
+      Self.logger.log("Device id successfully sent")
+      phase = .idSent
+    }
+  }
+
   func onRequiresPairingVerification(_ verificationToken: SecurityVerificationToken) {
     associator.displayPairingCode(verificationToken.pairingCode)
   }
@@ -117,6 +120,13 @@ extension AssociationMessageHelperV1: AssociationMessageHelper {
       return
     }
 
-    associator.completeAssociation(forCarId: carId, messageStream: messageStream)
+    guard
+      let channel = associator.establishSecuredCarChannel(
+        forCarId: carId, messageStream: messageStream)
+    else {
+      associator.notifyDelegateOfError(.cannotStoreAssociation)
+      return
+    }
+    associator.completeAssociation(channel: channel, messageStream: messageStream)
   }
 }

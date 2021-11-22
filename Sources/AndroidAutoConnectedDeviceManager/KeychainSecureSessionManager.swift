@@ -18,10 +18,7 @@ import Foundation
 /// A class that stores secure session information in the keychain.
 @available(iOS 10.0, *)
 class KeychainSecureSessionManager: NSObject {
-  private static let logger = Logger(
-    subsystem: "com.google.ios.aae.trustagentclient",
-    category: "KeychainSecureSessionManager"
-  )
+  private static let logger = Logger(for: KeychainSecureSessionManager.self)
 
   private func secureSessionKey(for identifier: String) -> Data {
     return Data("com.google.ios.aae.trustagentclient.secureSessionKey.\(identifier)".utf8)

@@ -35,6 +35,9 @@ protocol AssociationMessageHelper {
   ///   - params: Contextual info such as operation type and recipient.
   func handleMessage(_ message: Data, params: MessageStreamParams)
 
+  /// Invoked when a message that is requested to have been sent has succeeded.
+  func messageDidSendSuccessfully()
+
   /// The encryption handshake requires verification using either the full verfication data to be
   /// verified through a separate out of band channel or the visual pairing code.
   ///
@@ -98,6 +101,6 @@ extension AssociationMessageHelper {
       params: Self.handshakeMessageParams
     )
 
-    Self.logger.log("Sent device id: <\(deviceId.uuidString)> plus authentication key.")
+    Self.logger.log("Sending device id: <\(deviceId.uuidString)> plus authentication key.")
   }
 }

@@ -25,12 +25,15 @@ let package = Package(
     .library(
       name: "AndroidAutoConnectedDeviceManager",
       targets: ["AndroidAutoConnectedDeviceManager"]),
+    .library(
+      name: "AndroidAutoConnectedDeviceManagerMocks",
+      targets: ["AndroidAutoConnectedDeviceManagerMocks"]),
   ],
   dependencies: [
     .package(
       name: "SwiftProtobuf",
       url: "https://github.com/apple/swift-protobuf.git",
-      from: "1.6.0"),
+      from: "1.18.0"),
   ],
   targets: [
     .binaryTarget(
@@ -84,6 +87,9 @@ let package = Package(
       name: "AndroidAutoConnectedDeviceTransport",
       dependencies: ["AndroidAutoLogger"]),
     .target(
+      name: "AndroidAutoConnectedDeviceTransportFakes",
+      dependencies: ["AndroidAutoConnectedDeviceTransport"]),
+    .target(
       name: "AndroidAutoCoreBluetoothProtocolsMocks",
       dependencies: ["AndroidAutoCoreBluetoothProtocols"]),
     .testTarget(
@@ -99,8 +105,8 @@ let package = Package(
     .testTarget(
       name: "AndroidAutoSecureChannelTests",
       dependencies: [
-        "AndroidAutoCoreBluetoothProtocols",
-        "AndroidAutoCoreBluetoothProtocolsMocks",
+        "AndroidAutoConnectedDeviceTransport",
+        "AndroidAutoConnectedDeviceTransportFakes",
         "AndroidAutoMessageStream",
         "AndroidAutoSecureChannel",
         "AndroidAutoUKey2Wrapper",
@@ -118,6 +124,7 @@ let package = Package(
       name: "AndroidAutoConnectedDeviceTransportTests",
       dependencies: [
         "AndroidAutoConnectedDeviceTransport",
+        "AndroidAutoConnectedDeviceTransportFakes",
       ]),
   ]
 )

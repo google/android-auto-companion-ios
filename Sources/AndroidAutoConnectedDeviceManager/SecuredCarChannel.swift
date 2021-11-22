@@ -37,6 +37,11 @@ public protocol SecuredCarChannel: AnyObject {
   /// A car that messages are being sent to and from.
   var car: Car { get }
 
+  /// The user's role with the car.
+  ///
+  /// A `nil` value means the IHU has not successfully responded with a user role.
+  var userRole: UserRole? { get }
+
   /// Whether this secure channel is currently valid to send and receive messages through.
   var isValid: Bool { get }
 

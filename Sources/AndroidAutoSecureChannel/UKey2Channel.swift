@@ -26,10 +26,7 @@ import Foundation
 class UKey2Channel: SecureBLEChannel {
   /// Token used for verification when establishing a UKey2 channel.
   struct VerificationToken: SecurityVerificationToken {
-    private static let logger = Logger(
-      subsystem: "com.google.ios.aae.trustagentclient",
-      category: "UKey2Channel.VerificationToken"
-    )
+    private static let logger = Logger(for: VerificationToken.self)
 
     /// Length of the visual pairing code.
     private static var pairingCodeLength: Int { UKey2Channel.pairingCodeLength }
@@ -54,10 +51,7 @@ class UKey2Channel: SecureBLEChannel {
     }
   }
 
-  private static let logger = Logger(
-    subsystem: "com.google.ios.aae.trustagentclient",
-    category: "UKey2Channel"
-  )
+  private static let logger = Logger(for: UKey2Channel.self)
 
   /// An info that is prefixed to an HMAC from this phone to a car.
   private static let clientInfoPrefix = Data("CLIENT".utf8)
@@ -124,7 +118,8 @@ class UKey2Channel: SecureBLEChannel {
     Self.logger.log("Writing init handshake message.")
 
     state = .inProgress
-    try? messageStream.writeMessage(message, params: UKey2Channel.streamParams)
+
+    try messageStream.writeMessage(message, params: UKey2Channel.streamParams)
   }
 
   /// Reestablish a secure channel using the given data of a previously saved session.
@@ -275,7 +270,13 @@ class UKey2Channel: SecureBLEChannel {
 
     Self.logger.log("Sending next handshake message.")
 
-    try? messageStream.writeMessage(message, params: UKey2Channel.streamParams)
+    do {
+      try messageStream.writeMessage(message, params: UKey2Channel.streamParams)
+    } catch {
+      Self.logger.error.log("Cannot send next handshake message: \(error.localizedDescription).")
+      notifyDelegateOfError(SecureBLEChannelError.cannotSendMessage)
+      return
+    }
 
     // The handshake state is updated after a call to nextHandshakeMessage(). So, need to check
     // if we've progressed to a different state.
@@ -365,7 +366,15 @@ class UKey2Channel: SecureBLEChannel {
 
     Self.logger.log("Sending resumption information.")
 
-    try? messageStream.writeMessage(resumeHMAC!, params: UKey2Channel.streamParams)
+    do {
+      try messageStream.writeMessage(resumeHMAC!, params: UKey2Channel.streamParams)
+    } catch {
+      Self.logger.error.log(
+        "Encountered error sending resumption information: \(error.localizedDescription)")
+
+      notifyDelegateOfError(
+        SecureBLEChannelError.cannotResumeSession("Error sending resumption HMAC"))
+    }
   }
 
   /// Verifies that the server message has the correct HMAC.

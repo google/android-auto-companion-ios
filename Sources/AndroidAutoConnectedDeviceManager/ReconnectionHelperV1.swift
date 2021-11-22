@@ -26,17 +26,11 @@ import Foundation
 /// go/aae-batmobile-device-id-exchange for more details.
 @available(iOS 10.0, *)
 class ReconnectionHelperV1 {
-  private static let logger = Logger(
-    subsystem: "com.google.ios.aae.trustagentclient",
-    category: "ReconnectionHelperV1"
-  )
+  private static let logger = Logger(for: ReconnectionHelperV1.self)
 
   let peripheral: AnyPeripheral
   var carId: String?
   var onReadyForHandshake: (() -> Void)?
-
-  /// Security version implemented by this helper.
-  var securityVersion: MessageSecurityVersion = .v1
 
   /// Indicates whether this helper is ready for handshake.
   var isReadyForHandshake = true
@@ -50,6 +44,10 @@ class ReconnectionHelperV1 {
 // MARK: - ReconnectionHelper
 @available(iOS 10.0, *)
 extension ReconnectionHelperV1: ReconnectionHelper {
+  func discoveryUUID(from config: UUIDConfig) -> CBUUID {
+    config.reconnectionUUID(for: .v1)
+  }
+
   /// Prepare for the handshake with the advertisment data to configure the helper as needed.
   ///
   /// For V1, this is a NO-OP because it's ready for the handshake upon completing initialization.
@@ -58,6 +56,14 @@ extension ReconnectionHelperV1: ReconnectionHelper {
   /// - Throws: An error if the helper cannot be configured.
   func prepareForHandshake(withAdvertisementData data: Data) {
     // NO-OP because V1 is already ready for the reconnection handshake.
+  }
+
+  /// Handle the security version resolution.
+  func onResolvedSecurityVersion(_ version: MessageSecurityVersion) throws {
+    guard version == .v1 else {
+      Self.logger.error.log("Resolved mismatched security version: \(version)")
+      throw CommunicationManagerError.mismatchedSecurityVersion
+    }
   }
 
   /// Begin the reconnection handshake by sending the device id.
@@ -92,5 +98,14 @@ extension ReconnectionHelperV1: ReconnectionHelper {
     self.carId = carId
     Self.logger.log("Received device id from car.", redacting: "carId: \(carId)")
     return true
+  }
+
+  func configureSecureChannel(
+    _: SecuredConnectedDeviceChannel,
+    using connectionHandle: ConnectionHandle,
+    completion: (Bool) -> Void
+  ) {
+    // No additional configuration needed, so we can indicate completion immediately.
+    completion(true)
   }
 }

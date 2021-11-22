@@ -85,10 +85,7 @@ extension TransportPeripheralProvider {
     let success = startPeripheralScan(mode: mode)
 
     if !success {
-      Logger(
-        subsystem: "com.google.ios.aae.trustagentclient",
-        category: "PeripheralProvider"
-      ).error.log(
+      Logger(for: type(of: self)).error.log(
         """
         Request to scan for cars to associate, but this peripheral provider is not ready. \
         Will begin scan when possible.

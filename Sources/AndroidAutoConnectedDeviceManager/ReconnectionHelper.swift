@@ -13,14 +13,12 @@
 // limitations under the License.
 
 @_implementationOnly import AndroidAutoMessageStream
+import CoreBluetooth
 import Foundation
 
 /// Protocol implemented by helpers which manage the reconnection handshake.
 @available(iOS 10.0, *)
 protocol ReconnectionHelper: AnyObject {
-  /// Security version implemented by this helper.
-  var securityVersion: MessageSecurityVersion { get }
-
   /// The peripheral for which reconnection is being attempted.
   var peripheral: AnyPeripheral { get }
 
@@ -34,11 +32,24 @@ protocol ReconnectionHelper: AnyObject {
   /// Completion handler to call when ready for handshake.
   var onReadyForHandshake: (() -> Void)? { get set }
 
+  /// Get the appropriate discovery uuid from the config.
+  func discoveryUUID(from config: UUIDConfig) -> CBUUID
+
   /// Prepare for the handshake with the advertisment data to configure the helper as needed.
   ///
   /// - Parameter data: The advertisement data.
   /// - Throws: An error if the helper cannot be configured.
   func prepareForHandshake(withAdvertisementData data: Data) throws
+
+  /// Handle the security version resolution.
+  ///
+  /// A helper is associated with specific security versions, and the helper is instantiated
+  /// based on the advertisement before the security version is resolved. This method is called
+  /// when the security version has been resolved.
+  ///
+  /// - Parameter version: The resolved security version.
+  /// - Throws: An error if the resolved security version is inconsistent with the helper.
+  func onResolvedSecurityVersion(_ version: MessageSecurityVersion) throws
 
   /// Start the reconnection handshake.
   ///
@@ -54,4 +65,17 @@ protocol ReconnectionHelper: AnyObject {
   /// - Returns: `true` if the handshake has completed.
   /// - Throws: An error if the message does not match what is expected.
   func handleMessage(messageStream: MessageStream, message: Data) throws -> Bool
+
+  /// Configure the secure channel using the specified connection handle and call completion when
+  /// done.
+  ///
+  /// - Parameters:
+  ///   - channel: Channel to configure.
+  ///   - connectionHandle: Handles the configuration request.
+  ///   - completion: Handler to call upon configuration completion passing boolean for success.
+  func configureSecureChannel(
+    _ channel: SecuredConnectedDeviceChannel,
+    using connectionHandle: ConnectionHandle,
+    completion: @escaping (Bool) -> Void
+  )
 }

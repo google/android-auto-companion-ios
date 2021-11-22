@@ -21,10 +21,7 @@ import Foundation
 /// A car that can be used to send encrypted messages.
 @available(iOS 10.0, *)
 class ReconnectionHandlerImpl: NSObject, ReconnectionHandler {
-  private static let logger = Logger(
-    subsystem: "com.google.ios.aae.trustagentclient",
-    category: "ReconnectionHandlerImpl"
-  )
+  private static let logger = Logger(for: ReconnectionHandlerImpl.self)
 
   let messageStream: BLEMessageStream
 

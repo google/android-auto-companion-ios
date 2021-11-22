@@ -25,10 +25,7 @@ private typealias QueryResponseProto = Com_Google_Companionprotos_QueryResponse
 /// A car that can be used to send encrypted messages.
 @available(iOS 10.0, *)
 class EstablishedCarChannel: NSObject, SecuredCarChannelPeripheral {
-  private static let logger = Logger(
-    subsystem: "com.google.ios.aae.trustagentclient",
-    category: "EstablishedCarChannel"
-  )
+  private static let logger = Logger(for: EstablishedCarChannel.self)
 
   let messageStream: MessageStream
   private let connectionHandle: ConnectionHandle
@@ -76,6 +73,7 @@ class EstablishedCarChannel: NSObject, SecuredCarChannelPeripheral {
   var queryID: Int32 = 0
 
   public let car: Car
+  public private(set) var userRole: UserRole?
 
   var peripheral: AnyTransportPeripheral {
     return messageStream.peripheral
@@ -212,6 +210,9 @@ extension EstablishedCarChannel: SecuredCarChannel {
         params: MessageStreamParams(recipient: recipient, operationType: .query)
       )
 
+      // Add a no-op completion handler to be called when the query has finished sending. This
+      // ensures all out-standing messages have completion handlers.
+      writeCompletionHandlers.append(noop)
       queryResponseHandlers[queryID] = response
     } catch {
       Self.logger.error.log("Attempt to send query failed: \(error.localizedDescription)")
@@ -229,6 +230,10 @@ extension EstablishedCarChannel: SecuredCarChannel {
         try queryResponse.toProtoData(),
         params: MessageStreamParams(recipient: recipient, operationType: .queryResponse)
       )
+
+      // Add a no-op completion handler to be called when the response has finished sending. This
+      // ensures all out-standing messages have completion handlers.
+      writeCompletionHandlers.append(noop)
     } catch {
       Self.logger.error.log("Attempt to send query response failed: \(error.localizedDescription)")
       throw SecuredCarChannelError.cannotEncryptMessage
@@ -251,6 +256,27 @@ extension EstablishedCarChannel: SecuredCarChannel {
 
   /// Convenience method that performs no action.
   private func noop(_ value: Bool) {}
+}
+
+// MARK: - SecuredConnectedDeviceChannel
+@available(iOS 10.0, *)
+extension EstablishedCarChannel: SecuredConnectedDeviceChannel {
+  public func configure(
+    using provider: ChannelFeatureProvider,
+    completion: @escaping (SecuredConnectedDeviceChannel) -> Void
+  ) {
+    provider.requestUserRole(with: self) { [weak self] role in
+      guard let self = self else { return }
+
+      defer { completion(self) }
+      if let role = role {
+        Self.logger.info.log("requestUserRole completed with role: \(role)")
+        self.userRole = role
+      } else {
+        Self.logger.error.log("requestUserRole failed with no role.")
+      }
+    }
+  }
 }
 
 // MARK: - MessageStreamDelegate
@@ -368,7 +394,7 @@ extension EstablishedCarChannel: MessageStreamDelegate {
   ) {
     // This should not happen because a handler is always stored for every write.
     guard !writeCompletionHandlers.isEmpty else {
-      Self.logger.error.log(
+      Self.logger.fault.log(
         "Unexpected. No completion handler able to call after a successful message write.")
       return
     }

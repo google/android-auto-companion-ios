@@ -92,4 +92,22 @@ class ReconnectionHelperV1Test: XCTestCase {
       messageStream: messageStreamMock, message: Data("0123456789ABCDEF".utf8))
     XCTAssertTrue(completed)
   }
+
+  func testDoesNotRequestSecuredChannelConfiguration() throws {
+    let connectionHandler = ConnectionHandleFake()
+    let channel = SecuredCarChannelMock(id: "test", name: "test")
+
+    var completionCalled = false
+    var configurationSuccess = false
+
+    try testHelper.onResolvedSecurityVersion(.v1)
+    testHelper.configureSecureChannel(channel, using: connectionHandler) { success in
+      completionCalled = true
+      configurationSuccess = success
+    }
+
+    XCTAssertTrue(completionCalled)
+    XCTAssertTrue(configurationSuccess)
+    XCTAssertFalse(connectionHandler.requestConfigurationCalled)
+  }
 }

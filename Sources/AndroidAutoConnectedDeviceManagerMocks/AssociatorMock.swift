@@ -15,7 +15,6 @@
 import AndroidAutoCoreBluetoothProtocols
 import AndroidAutoMessageStream
 import AndroidAutoSecureChannel
-import CoreBluetooth
 import Foundation
 
 @testable import AndroidAutoConnectedDeviceManager
@@ -28,6 +27,7 @@ final public class AssociatorMock {
 
   // MARK: - Method call checks
   public var establishEncryptionCalled = false
+  public var establishSecuredCarChannelCalled = false
   public var completeAssociationCalled = false
   public var requestOutOfBandTokenCalled = false
   public var displayPairingCodeCalled = false
@@ -36,9 +36,14 @@ final public class AssociatorMock {
   public var associationError: AssociationError?
 
   // MARK: - Associator Stored Properties
+  public var connectionHandle: ConnectionHandle = ConnectionHandleFake()
   public var carId: String?
 
   public var outOfBandToken: OutOfBandToken?
+  public var securedChannel: SecuredConnectedDeviceChannel?
+
+  /// `true` if a call to `establishSecuredCarChannel(forCarId:messageStream:)` should succeed.
+  public var establishSecuredCarChannelSucceeds = true
 
   public init() {}
 }
@@ -50,7 +55,27 @@ extension AssociatorMock: Associator {
     establishEncryptionCalled = true
   }
 
-  public func completeAssociation(forCarId carId: String, messageStream: MessageStream) {
+  /// Saves the secure session and establishes a secured car channel.
+  public func establishSecuredCarChannel(
+    forCarId carId: String,
+    messageStream: MessageStream
+  ) -> SecuredConnectedDeviceChannel? {
+    guard establishSecuredCarChannelSucceeds else {
+      return nil
+    }
+
+    if let carId = self.carId {
+      securedChannel = SecuredCarChannelMock(id: carId, name: "test")
+    }
+    establishSecuredCarChannelCalled = true
+    return securedChannel
+  }
+
+  /// Completes any remaining association work and notifies the delegate that
+  /// association is complete.
+  public func completeAssociation(
+    channel: SecuredConnectedDeviceChannel, messageStream: MessageStream
+  ) {
     completeAssociationCalled = true
   }
 

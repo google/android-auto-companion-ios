@@ -27,10 +27,7 @@ import Foundation
 ///   3) Complete association.
 @available(iOS 10.0, *)
 final class AssociationMessageHelperV2 {
-  static let logger = Logger(
-    subsystem: "com.google.ios.aae.trustagentclient",
-    category: "AssociationMessageHelperV2"
-  )
+  static let logger = Logger(for: AssociationMessageHelperV2.self)
 
   private let messageStream: MessageStream
   private let associator: Associator
@@ -80,8 +77,6 @@ extension AssociationMessageHelperV2: AssociationMessageHelper {
       }
 
       sendDeviceIdPlusAuthenticationKey(keyData: authenticator.keyData, on: messageStream)
-      associator.completeAssociation(forCarId: carId, messageStream: messageStream)
-      phase = .done
     case .none:
       Self.logger.error.log("Invalid state of .none encountered.")
       associator.notifyDelegateOfError(.unknown)
@@ -89,6 +84,24 @@ extension AssociationMessageHelperV2: AssociationMessageHelper {
       Self.logger.error.log("Invalid state of .done encountered.")
       associator.notifyDelegateOfError(.unknown)
     }
+  }
+
+  func messageDidSendSuccessfully() {
+    guard phase == .encryptionEstablished else { return }
+
+    Self.logger.log("Device id and authentication key successfully sent.")
+
+    guard
+      let carId = associator.carId,
+      let channel = associator.establishSecuredCarChannel(
+        forCarId: carId, messageStream: messageStream)
+    else {
+      associator.notifyDelegateOfError(.cannotStoreAssociation)
+      return
+    }
+
+    associator.completeAssociation(channel: channel, messageStream: messageStream)
+    phase = .done
   }
 
   func onRequiresPairingVerification(_ verificationToken: SecurityVerificationToken) {

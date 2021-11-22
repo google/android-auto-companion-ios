@@ -38,6 +38,7 @@ class AssociationMessageHelperV2Test: XCTestCase {
 
   override func setUp() {
     super.setUp()
+    continueAfterFailure = false
 
     associatorMock = AssociatorMock()
     peripheralMock = PeripheralMock(name: "Test")
@@ -87,6 +88,8 @@ class AssociationMessageHelperV2Test: XCTestCase {
     XCTAssertTrue(associatorMock.notifyPairingCodeAcceptedCalled)
   }
 
+  // MARK: - Happy path test
+
   /// Test the good path for message handling.
   /// First we initiate encryption and send the pairing code.
   /// After encryption is established the next message is the carId.
@@ -105,12 +108,76 @@ class AssociationMessageHelperV2Test: XCTestCase {
     let carIdMessage = CBUUID(string: carId).data
     messageHelper.handleMessage(carIdMessage, params: params)
 
+    // This should trigger the sending of the deviceId and authentication key. Acknowledge that
+    // this completes successfully
+    messageHelper.messageDidSendSuccessfully()
+
     XCTAssertNotNil(associatorMock.carId)
     XCTAssertEqual(associatorMock.carId!, carId)
     XCTAssertNil(associatorMock.associationError)
     XCTAssertTrue(associatorMock.establishEncryptionCalled)
     XCTAssertNil(associatorMock.associationError)
+    XCTAssertTrue(associatorMock.establishSecuredCarChannelCalled)
     XCTAssertTrue(associatorMock.completeAssociationCalled)
+  }
+
+  // MARK: - messageDidSendSuccessfully tests
+
+  func testMessageDidSendSuccessfully_noCarId_notifiesDelegate() {
+    messageHelper.start()
+
+    let params = MessageStreamParams(
+      recipient: UUID(),
+      operationType: .encryptionHandshake
+    )
+
+    messageHelper.onEncryptionEstablished()
+    let carId = UUID().uuidString
+    let carIdMessage = CBUUID(string: carId).data
+    messageHelper.handleMessage(carIdMessage, params: params)
+
+    // Clear any set car id
+    associatorMock.carId = nil
+
+    // This should trigger the sending of the deviceId and authentication key. Acknowledge that
+    // this completes successfully
+    messageHelper.messageDidSendSuccessfully()
+
+    XCTAssertTrue(associatorMock.notifyDelegateOfErrorCalled)
+    XCTAssertEqual(associatorMock.associationError, .cannotStoreAssociation)
+  }
+
+  func testMessageDidSendSuccessfully_establishSecuredCarChannelFailed_notifiesDelegate() {
+    associatorMock.establishSecuredCarChannelSucceeds = false
+
+    messageHelper.start()
+
+    let params = MessageStreamParams(
+      recipient: UUID(),
+      operationType: .encryptionHandshake
+    )
+
+    messageHelper.onEncryptionEstablished()
+    let carId = UUID().uuidString
+    let carIdMessage = CBUUID(string: carId).data
+    messageHelper.handleMessage(carIdMessage, params: params)
+
+    // This should trigger the sending of the deviceId and authentication key. Acknowledge that
+    // this completes successfully
+    messageHelper.messageDidSendSuccessfully()
+
+    XCTAssertTrue(associatorMock.notifyDelegateOfErrorCalled)
+    XCTAssertEqual(associatorMock.associationError, .cannotStoreAssociation)
+  }
+
+  func testMessageDidSendSuccessfully_ignoredIfWrongState() {
+    messageHelper.start()
+    messageHelper.messageDidSendSuccessfully()
+
+    // No errors or completion should be present.
+    XCTAssertFalse(associatorMock.notifyDelegateOfErrorCalled)
+    XCTAssertFalse(associatorMock.establishSecuredCarChannelCalled)
+    XCTAssertFalse(associatorMock.completeAssociationCalled)
   }
 }
 

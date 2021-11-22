@@ -19,10 +19,7 @@ import Foundation
 /// Manager for a id that will uniquely identify the current device.
 @available(iOS 10.0, *)
 enum DeviceIdManager {
-  private static let logger = Logger(
-    subsystem: "com.google.ios.aae.trustagentclient",
-    category: "DeviceIdManager"
-  )
+  private static let logger = Logger(for: DeviceIdManager.self)
 
   private static let deviceIdKey = "deviceIdKey"
 

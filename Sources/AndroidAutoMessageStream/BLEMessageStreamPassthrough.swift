@@ -22,10 +22,7 @@ import Foundation
 /// initialized with. It will also assume all messages from the peripheral are complete messages.
 @available(iOS 10.0, *)
 class BLEMessageStreamPassthrough: NSObject, BLEMessageStream {
-  private static let logger = Logger(
-    subsystem: "com.google.ios.aae.trustagentclient",
-    category: "BLEMessageStreamPassthrough"
-  )
+  private static let logger = Logger(for: BLEMessageStreamPassthrough.self)
 
   // This force-unwrap is safe as the UUID string is valid and cannot change.
   private static let defaultRecipient = UUID(uuidString: "B75D6A81-635B-4560-BD8D-9CDF83F32AE7")!

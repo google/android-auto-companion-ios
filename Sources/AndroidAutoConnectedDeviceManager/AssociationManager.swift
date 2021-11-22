@@ -25,6 +25,8 @@ import Foundation
 /// which forwards these calls to the manager.
 @available(iOS 10.0, *)
 protocol Associator {
+  var connectionHandle: ConnectionHandle { get }
+
   var carId: String? { get nonmutating set }
 
   /// Request an out of band token.
@@ -33,9 +35,16 @@ protocol Associator {
   /// Attempt to configure a secure channel using the specified messsage stream.
   func establishEncryption(using messageStream: MessageStream)
 
-  /// Saves the secure session, updates the manager's state with the associated car and
-  /// notifies the delegate that association is complete.
-  func completeAssociation(forCarId carId: String, messageStream: MessageStream)
+  /// Saves the secure session and establishes a secured car channel.
+  func establishSecuredCarChannel(
+    forCarId carId: String,
+    messageStream: MessageStream
+  ) -> SecuredConnectedDeviceChannel?
+
+  /// Completes any remaining association work and notifies the delegate that
+  /// association is complete.
+  func completeAssociation(
+    channel: SecuredConnectedDeviceChannel, messageStream: MessageStream)
 
   /// Display the specified pairing code for visual verification.
   func displayPairingCode(_ pairingCode: String)
@@ -60,7 +69,7 @@ protocol AssociationManagerDelegate: AnyObject {
   func associationManager(
     _ associationManager: AssociationManager,
     didCompleteAssociationWithCar car: Car,
-    securedCarChannel: SecuredCarChannel,
+    securedCarChannel: SecuredConnectedDeviceChannel,
     peripheral: BLEPeripheral
   )
 
@@ -95,10 +104,7 @@ protocol AssociationManagerDelegate: AnyObject {
 /// be advertising that it supports the association of a companion phone.
 @available(iOS 10.0, *)
 class AssociationManager: NSObject {
-  private static let logger = Logger(
-    subsystem: "com.google.ios.aae.trustagentclient",
-    category: "AssociationManager"
-  )
+  private static let logger = Logger(for: AssociationManager.self)
 
   private static let streamParams = MessageStreamParams(
     recipient: Config.defaultRecipientUUID, operationType: .clientMessage)
@@ -360,22 +366,33 @@ class AssociationManager: NSObject {
     return true
   }
 
-  private func completeAssociation(forCarId carId: String, messageStream: BLEMessageStream) {
+  private func establishSecuredCarChannel(
+    forCarId carId: String,
+    messageStream: BLEMessageStream
+  ) -> SecuredConnectedDeviceChannel? {
     let name = messageStream.peripheral.name
     let car = Car(id: carId, name: name)
 
-    guard saveSecureSession(for: carId) else { return }
+    guard saveSecureSession(for: carId) else { return nil }
 
     associatedCarsManager.addAssociatedCar(identifier: carId, name: name)
-    resetInternalState()
 
+    return EstablishedCarChannel(
+      car: car,
+      connectionHandle: connectionHandle,
+      messageStream: messageStream
+    )
+  }
+
+  private func completeAssociation(
+    channel: SecuredConnectedDeviceChannel,
+    messageStream: BLEMessageStream
+  ) {
+    resetInternalState()
     delegate?.associationManager(
       self,
-      didCompleteAssociationWithCar: car,
-      securedCarChannel: EstablishedCarChannel(
-        car: car,
-        connectionHandle: connectionHandle,
-        messageStream: messageStream),
+      didCompleteAssociationWithCar: channel.car,
+      securedCarChannel: channel,
       peripheral: messageStream.peripheral
     )
   }
@@ -564,7 +581,7 @@ extension AssociationManager: MessageStreamDelegate {
     _ messageStream: MessageStream,
     to recipient: UUID
   ) {
-    // No-op.
+    messageHelper?.messageDidSendSuccessfully()
   }
 }
 
@@ -630,6 +647,8 @@ extension AssociationManager: BLEVersionResolverDelegate {
       self.manager = manager
     }
 
+    var connectionHandle: ConnectionHandle { manager.connectionHandle }
+
     var carId: String? {
       get { manager.carId }
       nonmutating set { manager.carId = newValue }
@@ -646,11 +665,23 @@ extension AssociationManager: BLEVersionResolverDelegate {
       manager.establishEncryption(using: bleMessageStream)
     }
 
-    func completeAssociation(forCarId carId: String, messageStream: MessageStream) {
+    func establishSecuredCarChannel(
+      forCarId carId: String,
+      messageStream: MessageStream
+    ) -> SecuredConnectedDeviceChannel? {
       guard let bleMessageStream = messageStream as? BLEMessageStream else {
         fatalError("MessageStream: \(messageStream) is expected to be a BLEMessageStream.")
       }
-      manager.completeAssociation(forCarId: carId, messageStream: bleMessageStream)
+      return manager.establishSecuredCarChannel(forCarId: carId, messageStream: bleMessageStream)
+    }
+
+    func completeAssociation(
+      channel: SecuredConnectedDeviceChannel, messageStream: MessageStream
+    ) {
+      guard let bleMessageStream = messageStream as? BLEMessageStream else {
+        fatalError("MessageStream: \(messageStream) is expected to be a BLEMessageStream.")
+      }
+      manager.completeAssociation(channel: channel, messageStream: bleMessageStream)
     }
 
     func displayPairingCode(_ pairingCode: String) {

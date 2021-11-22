@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoCoreBluetoothProtocolsMocks
+import AndroidAutoConnectedDeviceTransportFakes
 import AndroidAutoMessageStream
 import AndroidAutoUKey2Wrapper
 import CoreBluetooth
@@ -26,26 +25,14 @@ import XCTest
 class UKey2ChannelTest: XCTestCase {
   private static let recipientUUID = UUID(uuidString: "9f024256-06aa-423d-be60-93b086adce12")!
 
-  private let peripheralMock = PeripheralMock(name: "name")
-  private let readCharacteristicMock = CharacteristicMock(uuid: CBUUID(string: "bad1"), value: nil)
-  private let writeCharacteristicMock = CharacteristicMock(uuid: CBUUID(string: "bad2"), value: nil)
-  private var messageStream: MessageStream!
-
+  private var messageStream: FakeMessageStream!
   private var ukey2Channel: UKey2Channel!
 
   override func setUp() {
     super.setUp()
-
-    messageStream = BLEMessageStreamFactory.makeStream(
-      version: .passthrough,
-      peripheral: peripheralMock,
-      readCharacteristic: readCharacteristicMock,
-      writeCharacteristic: writeCharacteristicMock,
-      allowsCompression: true
-    )
-
     continueAfterFailure = false
-    peripheralMock.reset()
+
+    messageStream = FakeMessageStream(peripheral: FakePeripheral())
     ukey2Channel = UKey2Channel()
   }
 
@@ -64,16 +51,20 @@ class UKey2ChannelTest: XCTestCase {
 
   func testEstablish_sendsCorrectInitMessage() {
     XCTAssertNoThrow(try ukey2Channel.establish(using: messageStream))
-    XCTAssertEqual(peripheralMock.writeValueCalledCount, 1)
-    XCTAssertEqual(peripheralMock.writtenData.count, 1)
+    XCTAssertEqual(messageStream.writtenData.count, 1)
 
-    let server = UKey2Wrapper(role: .responder)
+    let car = UKey2Wrapper(role: .responder)
 
-    // Check that the server is able to decode the message generated from establish().
-    let clientMessage = peripheralMock.writtenData[0]
-    let result = server.parseHandshakeMessage(clientMessage)
+    // Check that the car is able to decode the message generated from establish().
+    let phoneMessage = messageStream.writtenData[0]
+    let result = car.parseHandshakeMessage(phoneMessage)
 
     XCTAssertTrue(result.isSuccessful)
+  }
+
+  func testEstablish_notifiesDelegateOfError() {
+    messageStream.writeMessageSucceeds = { false }
+    XCTAssertThrowsError(try ukey2Channel.establish(using: messageStream))
   }
 
   // MARK: - Continue handshake tests.
@@ -81,30 +72,51 @@ class UKey2ChannelTest: XCTestCase {
   func testHandshakeFlow_leadsToVerificationNeeded() {
     XCTAssertNoThrow(try ukey2Channel.establish(using: messageStream))
 
-    XCTAssertEqual(peripheralMock.writtenData.count, 1)
+    XCTAssertEqual(messageStream.writtenData.count, 1)
 
-    let server = UKey2Wrapper(role: .responder)
+    let car = UKey2Wrapper(role: .responder)
 
-    var clientMessage = peripheralMock.writtenData[0]
-    var result = server.parseHandshakeMessage(clientMessage)
+    var phoneMessage = messageStream.writtenData[0]
+    var result = car.parseHandshakeMessage(phoneMessage)
     XCTAssertTrue(result.isSuccessful)
 
-    let serverMesssage = server.nextHandshakeMessage()!
+    let carMessage = car.nextHandshakeMessage()!
 
-    // Send server message back down to client via the callback.
-    readCharacteristicMock.value = serverMesssage
-    simulateMessageFromServer(serverMesssage)
+    simulateMessageFromCar(carMessage)
 
-    // Client should send message to server to let it know it has received its message.
-    XCTAssertEqual(peripheralMock.writtenData.count, 2)
+    // phone should send message to car to let it know it has received its message.
+    XCTAssertEqual(messageStream.writtenData.count, 2)
 
-    clientMessage = peripheralMock.writtenData[1]
-    result = server.parseHandshakeMessage(clientMessage)
+    phoneMessage = messageStream.writtenData[1]
+    result = car.parseHandshakeMessage(phoneMessage)
     XCTAssertTrue(result.isSuccessful)
-    XCTAssertEqual(server.handshakeState, .verificationNeeded)
+    XCTAssertEqual(car.handshakeState, .verificationNeeded)
 
     // The UKey2Channel should also be in verification state.
     XCTAssertEqual(ukey2Channel.state, .verificationNeeded)
+  }
+
+  func testHandshakeFlow_errorNotifiesDelegate() {
+    let delegateMock = SecureBLEChannelDelegateMock()
+    ukey2Channel.delegate = delegateMock
+
+    XCTAssertNoThrow(try ukey2Channel.establish(using: messageStream))
+
+    XCTAssertEqual(messageStream.writtenData.count, 1)
+
+    let car = UKey2Wrapper(role: .responder)
+
+    let phoneMessage = messageStream.writtenData[0]
+    let result = car.parseHandshakeMessage(phoneMessage)
+    XCTAssertTrue(result.isSuccessful)
+
+    let carMessage = car.nextHandshakeMessage()!
+
+    // Simulate error writing the next handshake message.
+    messageStream.writeMessageSucceeds = { false }
+    simulateMessageFromCar(carMessage)
+
+    XCTAssertTrue(delegateMock.encounteredErrorCalled)
   }
 
   // MARK: - Verification code tests.
@@ -116,55 +128,42 @@ class UKey2ChannelTest: XCTestCase {
 
     XCTAssertNoThrow(try ukey2Channel.establish(using: messageStream))
 
-    XCTAssertEqual(peripheralMock.writtenData.count, 1)
+    XCTAssertEqual(messageStream.writtenData.count, 1)
 
-    let server = UKey2Wrapper(role: .responder)
+    let car = UKey2Wrapper(role: .responder)
 
-    let clientMessage = peripheralMock.writtenData[0]
-    server.parseHandshakeMessage(clientMessage)
+    let phoneMessage = messageStream.writtenData[0]
+    car.parseHandshakeMessage(phoneMessage)
 
-    let serverMesssage = server.nextHandshakeMessage()!
-
-    // Send server message back down to client via the callback.
-    readCharacteristicMock.value = serverMesssage
-    ukey2Channel.messageStream(
-      ukey2Channel.messageStream!,
-      didReceiveMessage: serverMesssage,
-      params: MessageStreamParams(
-        recipient: Self.recipientUUID,
-        operationType: .encryptionHandshake
-      )
-    )
+    let carMessage = car.nextHandshakeMessage()!
+    simulateMessageFromCar(carMessage)
 
     XCTAssertTrue(delegateMock.requiresVerificationCalled)
   }
 
-  func testHandshakeFlow_pairingCodePasssedToDelegateMatchesServer() {
+  func testHandshakeFlow_pairingCodePasssedToDelegateMatchesCar() {
     let delegateMock = SecureBLEChannelDelegateMock()
 
     ukey2Channel.delegate = delegateMock
 
     XCTAssertNoThrow(try ukey2Channel.establish(using: messageStream))
 
-    XCTAssertEqual(peripheralMock.writtenData.count, 1)
+    XCTAssertEqual(messageStream.writtenData.count, 1)
 
-    let server = UKey2Wrapper(role: .responder)
+    let car = UKey2Wrapper(role: .responder)
 
-    var clientMessage = peripheralMock.writtenData[0]
-    server.parseHandshakeMessage(clientMessage)
+    var phoneMessage = messageStream.writtenData[0]
+    car.parseHandshakeMessage(phoneMessage)
 
-    let serverMesssage = server.nextHandshakeMessage()!
+    let carMessage = car.nextHandshakeMessage()!
+    simulateMessageFromCar(carMessage)
 
-    // Send server message back down to client via the callback.
-    readCharacteristicMock.value = serverMesssage
-    simulateMessageFromServer(serverMesssage)
+    // phone should send message to car to let it know it has received its message.
+    XCTAssertEqual(messageStream.writtenData.count, 2)
 
-    // Client should send message to server to let it know it has received its message.
-    XCTAssertEqual(peripheralMock.writtenData.count, 2)
-
-    clientMessage = peripheralMock.writtenData[1]
-    server.parseHandshakeMessage(clientMessage)
-    let verificationBytes = server.verificationData(withByteLength: 32)
+    phoneMessage = messageStream.writtenData[1]
+    car.parseHandshakeMessage(phoneMessage)
+    let verificationBytes = car.verificationData(withByteLength: 32)
     let token = UKey2Channel.VerificationToken(verificationBytes!)
     let pairingCodeStr = token.pairingCode
 
@@ -186,7 +185,7 @@ class UKey2ChannelTest: XCTestCase {
   // MARK: - Notify pairing code called tests.
 
   func testNotifyPairingCodeAccepted_completesEstablishment() {
-    setUpHandshake(client: ukey2Channel)
+    setUpHandshake(phoneChannel: ukey2Channel)
 
     XCTAssertNoThrow(try ukey2Channel.notifyPairingCodeAccepted())
 
@@ -198,7 +197,7 @@ class UKey2ChannelTest: XCTestCase {
 
     ukey2Channel.delegate = delegateMock
 
-    setUpHandshake(client: ukey2Channel)
+    setUpHandshake(phoneChannel: ukey2Channel)
 
     XCTAssertNoThrow(try ukey2Channel.notifyPairingCodeAccepted())
 
@@ -211,7 +210,7 @@ class UKey2ChannelTest: XCTestCase {
 
     ukey2Channel.delegate = delegateMock
 
-    setUpHandshake(client: ukey2Channel)
+    setUpHandshake(phoneChannel: ukey2Channel)
 
     XCTAssertNoThrow(try ukey2Channel.notifyPairingCodeAccepted())
 
@@ -222,37 +221,37 @@ class UKey2ChannelTest: XCTestCase {
 
   // MARK: - Encrypt/Decrypt messages tests.
 
-  func testEncrypt_serverCanDecryptMessages() {
+  func testEncrypt_carCanDecryptMessages() {
     let delegateMock = SecureBLEChannelDelegateMock()
 
     ukey2Channel.delegate = delegateMock
 
-    let server = setUpHandshake(client: ukey2Channel)
+    let car = setUpHandshake(phoneChannel: ukey2Channel)
 
     // Verify to complete the secure channel setup.
     XCTAssertNoThrow(try ukey2Channel.notifyPairingCodeAccepted())
-    server.verifyHandshake()
+    car.verifyHandshake()
 
     let message = Data("Hello World".utf8)
     let encryptedMessage = try? ukey2Channel.encrypt(message)
 
     XCTAssertNotNil(encryptedMessage)
-    XCTAssertEqual(server.decode(encryptedMessage!), message)
+    XCTAssertEqual(car.decode(encryptedMessage!), message)
   }
 
-  func testDecrypt_clientCanDecryptServerMessage() {
+  func testDecrypt_phoneCanDecryptCarMessage() {
     let delegateMock = SecureBLEChannelDelegateMock()
 
     ukey2Channel.delegate = delegateMock
 
-    let server = setUpHandshake(client: ukey2Channel)
+    let car = setUpHandshake(phoneChannel: ukey2Channel)
 
     // Verify to complete the secure channel setup.
     XCTAssertNoThrow(try ukey2Channel.notifyPairingCodeAccepted())
-    server.verifyHandshake()
+    car.verifyHandshake()
 
     let message = Data("Hello World".utf8)
-    let encryptedMessage = server.encode(message)!
+    let encryptedMessage = car.encode(message)!
 
     XCTAssertEqual(try? ukey2Channel.decrypt(encryptedMessage), message)
   }
@@ -263,27 +262,14 @@ class UKey2ChannelTest: XCTestCase {
     let delegate = SecureBLEChannelDelegateMock()
     ukey2Channel.delegate = delegate
 
-    let v2Stream = BLEMessageStreamFactory.makeStream(
-      version: .v2(true),
-      peripheral: peripheralMock,
-      readCharacteristic: readCharacteristicMock,
-      writeCharacteristic: writeCharacteristicMock,
-      allowsCompression: true
-    )
+    let v2Stream = FakeMessageStream(peripheral: FakePeripheral(), version: .v2(true))
 
     XCTAssertNoThrow(try ukey2Channel.establish(using: v2Stream))
 
-    let serverMesssage = Data("message".utf8)
+    let carMessage = Data("message".utf8)
 
     // Sending message back with wrong operation type.
-    ukey2Channel.messageStream(
-      v2Stream,
-      didReceiveMessage: serverMesssage,
-      params: MessageStreamParams(
-        recipient: Self.recipientUUID,
-        operationType: .clientMessage
-      )
-    )
+    simulateMessageFromCar(carMessage, operationType: .clientMessage)
 
     // Delegate should be notified of error.
     XCTAssertTrue(delegate.encounteredErrorCalled)
@@ -300,41 +286,41 @@ class UKey2ChannelTest: XCTestCase {
   // MARK: - Reconnection flow tests
 
   func testReconnection() {
-    var server = setUpHandshake(client: ukey2Channel)
+    var car = setUpHandshake(phoneChannel: ukey2Channel)
 
     XCTAssertNoThrow(try ukey2Channel.notifyPairingCodeAccepted())
 
-    server.verifyHandshake()
+    car.verifyHandshake()
 
     // Runs through the reconnection flow as outlined by go/d2dsessionresumption.
     for _ in 1...1000 {
-      let serverSession = server.saveSession()!
-      let clientSession = try! ukey2Channel.saveSession()
+      let carSession = car.saveSession()!
+      let phoneSession = try! ukey2Channel.saveSession()
 
       // Reset messages to make for easier verification
-      peripheralMock.writtenData = []
+      messageStream.writtenData = []
 
-      server = UKey2Wrapper(savedSession: serverSession)!
-      let serverKey = server.uniqueSessionKey!
+      car = UKey2Wrapper(savedSession: carSession)!
+      let carKey = car.uniqueSessionKey!
 
       XCTAssertNoThrow(
-        try ukey2Channel.establish(using: messageStream, withSavedSession: clientSession))
+        try ukey2Channel.establish(using: messageStream, withSavedSession: phoneSession))
 
       XCTAssertEqual(ukey2Channel.state, .inProgress)
 
-      server = UKey2Wrapper(role: .responder)
-      var clientMessage = peripheralMock.writtenData[0]
-      server.parseHandshakeMessage(clientMessage)
+      car = UKey2Wrapper(role: .responder)
+      var phoneMessage = messageStream.writtenData[0]
+      car.parseHandshakeMessage(phoneMessage)
 
-      let serverMesssage = server.nextHandshakeMessage()!
+      let carMessage = car.nextHandshakeMessage()!
 
-      simulateMessageFromServer(serverMesssage)
+      simulateMessageFromCar(carMessage)
 
-      clientMessage = peripheralMock.writtenData[1]
-      server.parseHandshakeMessage(clientMessage)
+      phoneMessage = messageStream.writtenData[1]
+      car.parseHandshakeMessage(phoneMessage)
 
-      server.verificationData(withByteLength: 32)
-      server.verifyHandshake()
+      car.verificationData(withByteLength: 32)
+      car.verifyHandshake()
 
       XCTAssertEqual(ukey2Channel.state, .resumingSession)
 
@@ -342,83 +328,115 @@ class UKey2ChannelTest: XCTestCase {
         ukey2Channel.messageStream!, to: Self.recipientUUID)
 
       var combinedSessionKey = Data()
-      combinedSessionKey.append(serverKey)
-      combinedSessionKey.append(server.uniqueSessionKey!)
+      combinedSessionKey.append(carKey)
+      combinedSessionKey.append(car.uniqueSessionKey!)
 
       let resumptionSalt = Data("RESUME".utf8)
-      let clientInfoPrefix = Data("CLIENT".utf8)
+      let phoneInfoPrefix = Data("CLIENT".utf8)
 
       let resumeHMAC = CryptoOps.hkdf(
         inputKeyMaterial: combinedSessionKey,
         salt: resumptionSalt,
-        info: clientInfoPrefix
+        info: phoneInfoPrefix
       )
 
-      clientMessage = peripheralMock.writtenData[2]
-      XCTAssertEqual(clientMessage, resumeHMAC)
+      phoneMessage = messageStream.writtenData[2]
+      XCTAssertEqual(phoneMessage, resumeHMAC)
 
-      let serverInfoPrefix = Data("SERVER".utf8)
-      let serverHMAC = CryptoOps.hkdf(
+      let carInfoPrefix = Data("SERVER".utf8)
+      let carHMAC = CryptoOps.hkdf(
         inputKeyMaterial: combinedSessionKey,
         salt: resumptionSalt,
-        info: serverInfoPrefix
+        info: carInfoPrefix
       )!
 
-      simulateMessageFromServer(serverHMAC)
+      simulateMessageFromCar(carHMAC)
 
       XCTAssertEqual(ukey2Channel.state, .established)
     }
   }
 
+  func testReconnectionError_notifiesDelegate() {
+    let delegateMock = SecureBLEChannelDelegateMock()
+    ukey2Channel.delegate = delegateMock
+
+    var car = setUpHandshake(phoneChannel: ukey2Channel)
+
+    XCTAssertNoThrow(try ukey2Channel.notifyPairingCodeAccepted())
+
+    car.verifyHandshake()
+
+    let carSession = car.saveSession()!
+    let phoneSession = try! ukey2Channel.saveSession()
+
+    // Reset messages to make for easier verification
+    messageStream.writtenData = []
+
+    car = UKey2Wrapper(savedSession: carSession)!
+
+    XCTAssertNoThrow(
+      try ukey2Channel.establish(using: messageStream, withSavedSession: phoneSession))
+
+    XCTAssertEqual(ukey2Channel.state, .inProgress)
+
+    car = UKey2Wrapper(role: .responder)
+    let phoneMessage = messageStream.writtenData[0]
+    car.parseHandshakeMessage(phoneMessage)
+
+    let carMessage = car.nextHandshakeMessage()!
+
+    // Simulate an error writing the resumption message. There are two messages that will be sent
+    // consecutively by the phone after it receives a message from the car.
+    messageStream.writeMessageSucceeds = {
+      self.ukey2Channel.state != .resumingSession
+    }
+    simulateMessageFromCar(carMessage)
+
+    XCTAssertTrue(delegateMock.encounteredErrorCalled)
+  }
+
   // MARK: - Helper functions.
 
-  /// Simulates to the `UKey2Channel` that the given `message` has been sent from the server.
-  private func simulateMessageFromServer(_ message: Data) {
+  /// Simulates to the `UKey2Channel` that the given `message` has been sent from the car.
+  private func simulateMessageFromCar(
+    _ message: Data,
+    operationType: StreamOperationType = .encryptionHandshake
+  ) {
     ukey2Channel.messageStream(
       ukey2Channel.messageStream!,
       didReceiveMessage: message,
       params: MessageStreamParams(
         recipient: Self.recipientUUID,
-        operationType: .encryptionHandshake
+        operationType: operationType
       )
     )
   }
 
   /// Runs through the encryption flow and ensures a secure channel is set up between the given
-  /// client and peripheral.
+  /// phone and a car.
   ///
-  /// - Parameter:
-  ///   - client: The `UKey2Channel` that handles secure connections. Represents the phone.
-  ///   - operationType: The operation type to be used for messages from the peripheral.
-  /// - Returns: The server instance, which just needs verification of its pairing code.
+  /// - Parameter phoneChannel: The `UKey2Channel` that handles secure connection and
+  ///     represents the phone.
+  /// - Returns: The car instance, which just needs verification of its pairing code.
   @discardableResult
-  private func setUpHandshake(client: UKey2Channel) -> UKey2Wrapper {
+  private func setUpHandshake(phoneChannel: UKey2Channel) -> UKey2Wrapper {
     XCTAssertNoThrow(try ukey2Channel.establish(using: messageStream))
 
-    let server = UKey2Wrapper(role: .responder)
+    let car = UKey2Wrapper(role: .responder)
 
-    var clientMessage = peripheralMock.writtenData[0]
-    server.parseHandshakeMessage(clientMessage)
+    var phoneMessage = messageStream.writtenData[0]
+    car.parseHandshakeMessage(phoneMessage)
 
-    let serverMesssage = server.nextHandshakeMessage()!
+    let carMessage = car.nextHandshakeMessage()!
+    simulateMessageFromCar(carMessage)
 
-    // Send server message back down to client via the callback.
-    ukey2Channel.messageStream(
-      ukey2Channel.messageStream!,
-      didReceiveMessage: serverMesssage,
-      params: MessageStreamParams(
-        recipient: Self.recipientUUID,
-        operationType: .encryptionHandshake
-      )
-    )
+    phoneMessage = messageStream.writtenData[1]
+    car.parseHandshakeMessage(phoneMessage)
 
-    clientMessage = peripheralMock.writtenData[1]
-    server.parseHandshakeMessage(clientMessage)
+    // Ensure car is in verification mode.
+    car.verificationData(withByteLength: 32)
 
-    // Ensure server is in verification mode.
-    server.verificationData(withByteLength: 32)
-
-    return server
+    return car
   }
 }
 

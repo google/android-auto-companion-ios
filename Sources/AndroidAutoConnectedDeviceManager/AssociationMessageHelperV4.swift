@@ -120,14 +120,34 @@ extension AssociationMessageHelperV4: AssociationMessageHelper {
       }
 
       sendDeviceIdPlusAuthenticationKey(keyData: authenticator.keyData, on: messageStream)
-      associator.completeAssociation(forCarId: carId, messageStream: messageStream)
-      phase = .done
     case .none:
       Self.logger.error.log("Invalid state of .none encountered.")
       associator.notifyDelegateOfError(.unknown)
     case .done:
       Self.logger.error.log("Invalid state of .done encountered.")
       associator.notifyDelegateOfError(.unknown)
+    }
+  }
+
+  func messageDidSendSuccessfully() {
+    guard case .encryptionEstablished = phase else { return }
+
+    Self.logger.log("Device id and authentication key successfully sent.")
+
+    guard
+      let carId = associator.carId,
+      let channel = associator.establishSecuredCarChannel(
+        forCarId: carId, messageStream: messageStream)
+    else {
+      associator.notifyDelegateOfError(.cannotStoreAssociation)
+      return
+    }
+
+    associator.connectionHandle.requestConfiguration(for: channel) { [weak self] in
+      guard let self = self else { return }
+      Self.logger.log("Channel user role: \(channel.userRole.debugDescription)")
+      self.associator.completeAssociation(channel: channel, messageStream: self.messageStream)
+      self.phase = .done
     }
   }
 

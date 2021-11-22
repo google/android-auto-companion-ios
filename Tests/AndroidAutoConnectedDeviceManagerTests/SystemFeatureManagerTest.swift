@@ -12,15 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import AndroidAutoConnectedDeviceManagerMocks
 import CoreBluetooth
 import XCTest
-import AndroidAutoConnectedDeviceManagerMocks
 import AndroidAutoCompanionProtos
 
 @testable import AndroidAutoConnectedDeviceManager
 
 private typealias SystemQuery = Com_Google_Companionprotos_SystemQuery
 private typealias SystemQueryType = Com_Google_Companionprotos_SystemQueryType
+private typealias SystemUserRoleResponse = Com_Google_Companionprotos_SystemUserRoleResponse
+typealias SystemUserRole = Com_Google_Companionprotos_SystemUserRole
 
 /// Unit tests for `SystemFeatureManager`.
 class SystemFeatureManagerTest: XCTestCase {
@@ -110,6 +112,87 @@ class SystemFeatureManagerTest: XCTestCase {
   func testBundleExtension_looksUpAppName() {
     // If the `test_host` ever changes, this value will need to change.
     XCTAssertEqual(Bundle.main.appName, "TrustAgentSample")
+  }
+
+  // MARK: - User Role Request
+
+  func testRequestUserRole_callsCompletionWithDriverRole() throws {
+    connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
+
+    var completionCalled = false
+    let queryID = channel.queryID
+    var userRole: UserRole? = nil
+    manager.requestUserRole(with: channel) {
+      userRole = $0
+      completionCalled = true
+    }
+
+    var roleResponse = SystemUserRoleResponse()
+    roleResponse.role = .driver
+    let queryResponse = QueryResponse(
+      id: queryID,
+      isSuccessful: true,
+      response: try roleResponse.serializedData()
+    )
+    channel.triggerQueryResponse(queryResponse)
+
+    XCTAssertEqual(channel.writtenQueries.count, 1)
+    XCTAssertTrue(completionCalled)
+    XCTAssertNotNil(userRole)
+    XCTAssertTrue(userRole?.isDriver ?? false)
+    XCTAssertFalse(userRole?.isPassenger ?? false)
+  }
+
+  func testRequestUserRole_callsCompletionWithPassengerRole() throws {
+    connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
+
+    var completionCalled = false
+    let queryID = channel.queryID
+    var userRole: UserRole? = nil
+    manager.requestUserRole(with: channel) {
+      userRole = $0
+      completionCalled = true
+    }
+
+    var roleResponse = SystemUserRoleResponse()
+    roleResponse.role = .passenger
+    let queryResponse = QueryResponse(
+      id: queryID,
+      isSuccessful: true,
+      response: try roleResponse.serializedData()
+    )
+    channel.triggerQueryResponse(queryResponse)
+
+    XCTAssertEqual(channel.writtenQueries.count, 1)
+    XCTAssertTrue(completionCalled)
+    XCTAssertNotNil(userRole)
+    XCTAssertFalse(userRole?.isDriver ?? false)
+    XCTAssertTrue(userRole?.isPassenger ?? false)
+  }
+
+  func testRequestUserRole_unsuccessfulResponse() throws {
+    connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
+
+    var completionCalled = false
+    let queryID = channel.queryID
+    var userRole: UserRole? = nil
+    manager.requestUserRole(with: channel) {
+      userRole = $0
+      completionCalled = true
+    }
+
+    var roleResponse = SystemUserRoleResponse()
+    roleResponse.role = .passenger
+    let queryResponse = QueryResponse(
+      id: queryID,
+      isSuccessful: false,
+      response: try roleResponse.serializedData()
+    )
+    channel.triggerQueryResponse(queryResponse)
+
+    XCTAssertEqual(channel.writtenQueries.count, 1)
+    XCTAssertTrue(completionCalled)
+    XCTAssertNil(userRole)
   }
 
   // MARK: - Error path tests

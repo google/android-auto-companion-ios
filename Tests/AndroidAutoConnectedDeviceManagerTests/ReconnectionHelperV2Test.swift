@@ -94,14 +94,15 @@ class ReconnectionHelperV2Test: XCTestCase {
     super.tearDown()
   }
 
-  func testVersion() {
+  func testDiscoveryUUID() {
     let helper = ReconnectionHelperV2(
       peripheral: peripheralMock,
       cars: [],
       authenticatorType: CarAuthenticatorFake.self
     )
 
-    XCTAssertEqual(helper.securityVersion, .v2)
+    let config = UUIDConfig(plistLoader: PListLoaderFake())
+    XCTAssertEqual(helper.discoveryUUID(from: config), config.reconnectionUUID(for: .v2))
   }
 
   func testAdMatch_Instantiated() {
@@ -220,5 +221,59 @@ class ReconnectionHelperV2Test: XCTestCase {
       try reconnectionHelper.handleMessage(
         messageStream: messageStreamMock, message: Data("test".utf8))
     )
+  }
+
+  func testDoesNotRequestSecuredChannelConfiguration_v2() throws {
+    let connectionHandler = ConnectionHandleFake()
+    let channel = SecuredCarChannelMock(id: "test", name: "test")
+
+    var completionCalled = false
+    var configurationSuccess = false
+
+    try reconnectionHelper.onResolvedSecurityVersion(.v2)
+    reconnectionHelper.configureSecureChannel(channel, using: connectionHandler) { success in
+      completionCalled = true
+      configurationSuccess = success
+    }
+
+    XCTAssertTrue(completionCalled)
+    XCTAssertTrue(configurationSuccess)
+    XCTAssertFalse(connectionHandler.requestConfigurationCalled)
+  }
+
+  func testDoesNotRequestSecuredChannelConfiguration_v3() throws {
+    let connectionHandler = ConnectionHandleFake()
+    let channel = SecuredCarChannelMock(id: "test", name: "test")
+
+    var completionCalled = false
+    var configurationSuccess = false
+
+    try reconnectionHelper.onResolvedSecurityVersion(.v3)
+    reconnectionHelper.configureSecureChannel(channel, using: connectionHandler) { success in
+      completionCalled = true
+      configurationSuccess = success
+    }
+
+    XCTAssertTrue(completionCalled)
+    XCTAssertTrue(configurationSuccess)
+    XCTAssertFalse(connectionHandler.requestConfigurationCalled)
+  }
+
+  func testRequestsSecuredChannelConfiguration_v4() throws {
+    let connectionHandler = ConnectionHandleFake()
+    let channel = SecuredCarChannelMock(id: "test", name: "test")
+
+    var completionCalled = false
+    var configurationSuccess = false
+
+    try reconnectionHelper.onResolvedSecurityVersion(.v4)
+    reconnectionHelper.configureSecureChannel(channel, using: connectionHandler) { success in
+      completionCalled = true
+      configurationSuccess = success
+    }
+
+    XCTAssertTrue(completionCalled)
+    XCTAssertTrue(configurationSuccess)
+    XCTAssertTrue(connectionHandler.requestConfigurationCalled)
   }
 }

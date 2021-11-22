@@ -40,7 +40,7 @@ protocol ReconnectionHandlerDelegate: AnyObject {
   ///   - securedCarChannel: The established secure channel for sending and receiving messages.
   func reconnectionHandler(
     _ reconnectionHandler: ReconnectionHandler,
-    didEstablishSecureChannel securedCarChannel: SecuredCarChannel
+    didEstablishSecureChannel securedCarChannel: SecuredConnectedDeviceChannel
   )
 
   /// Called when there was an error during a secure channel establishment.

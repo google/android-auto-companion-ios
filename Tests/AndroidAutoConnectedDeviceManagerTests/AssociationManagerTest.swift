@@ -463,12 +463,10 @@ class AssociationManagerTest: XCTestCase {
     XCTAssertEqual(delegate.error, .timedOut)
   }
 
-  /// Test whether the helper is wired up correctly.
-  func testMessageHelperCalls() {
-    messageHelperFactoryProxy.shouldUseRealFactory = false
+  // MARK: - Message helper calls.
 
-    let delegate = AssociationDelegateMock()
-    associationManager.delegate = delegate
+  func testMessageHelperCalls_startCalled() {
+    messageHelperFactoryProxy.shouldUseRealFactory = false
 
     let peripheralMock = PeripheralMock(name: "mock", services: [validService])
     notifyValidCharacteristicsDiscovered(for: peripheralMock)
@@ -478,6 +476,13 @@ class AssociationManagerTest: XCTestCase {
       as! AssociationMessageHelperMock
 
     XCTAssertTrue(messageHelperMock.startCalled)
+  }
+
+  func testMessageHelperCalls_handleMessageCalled() {
+    messageHelperFactoryProxy.shouldUseRealFactory = false
+
+    let peripheralMock = PeripheralMock(name: "mock", services: [validService])
+    notifyValidCharacteristicsDiscovered(for: peripheralMock)
 
     // Next, send any message
     let data = Data("Test".utf8)
@@ -490,7 +495,24 @@ class AssociationManagerTest: XCTestCase {
       )
     )
 
+    let messageHelperMock =
+      messageHelperFactoryProxy.latestMessageHelper
+      as! AssociationMessageHelperMock
     XCTAssertTrue(messageHelperMock.handleMessageCalled)
+  }
+
+  func testMessageHelperCalls_encryptionAndPairingFlow() {
+    messageHelperFactoryProxy.shouldUseRealFactory = false
+
+    let delegate = AssociationDelegateMock()
+    associationManager.delegate = delegate
+
+    let peripheralMock = PeripheralMock(name: "mock", services: [validService])
+    notifyValidCharacteristicsDiscovered(for: peripheralMock)
+
+    let messageHelperMock =
+      messageHelperFactoryProxy.latestMessageHelper
+      as! AssociationMessageHelperMock
 
     messageHelperMock.performEncryptionAndPairingFlow()
 
@@ -498,6 +520,20 @@ class AssociationManagerTest: XCTestCase {
     XCTAssertTrue(messageHelperMock.onEncryptionEstablishedCalled)
     XCTAssertTrue(delegate.receivedCarIdCalled)
     XCTAssertTrue(delegate.requiresDisplayOfPairingCodeCalled)
+  }
+
+  func testMessageHelperCalls_messageDidSendSuccessfullyCalled() {
+    messageHelperFactoryProxy.shouldUseRealFactory = false
+
+    let peripheralMock = PeripheralMock(name: "mock", services: [validService])
+    notifyValidCharacteristicsDiscovered(for: peripheralMock)
+
+    notifyMessageSentSuccessfully(to: UUID())
+
+    let messageHelperMock =
+      messageHelperFactoryProxy.latestMessageHelper
+      as! AssociationMessageHelperMock
+    XCTAssertTrue(messageHelperMock.messageDidSendSuccessfullyCalled)
   }
 
   // MARK: - Pairing code tests.
@@ -514,6 +550,8 @@ class AssociationManagerTest: XCTestCase {
     notifyValidCharacteristicsDiscovered(for: peripheralMock)
 
     XCTAssert(peripheralMock.characteristicToNotifyFor === serverWriteCharacteristicMock)
+
+    notifyMessageSentSuccessfully(to: UUID())
 
     let identifier = makeRandomUUID()
     sendCarId(identifier, to: associationManager)
@@ -613,6 +651,9 @@ class AssociationManagerTest: XCTestCase {
 
     notifyValidCharacteristicsDiscovered(for: peripheralMock)
 
+    // The phone sends it device id first, so acknowledge that it was successful.
+    notifyMessageSentSuccessfully(to: UUID())
+
     let identifier = makeRandomUUID()
     sendCarId(identifier, to: associationManager)
     sendPairingCodeConfirmation(to: associationManager)
@@ -638,6 +679,10 @@ class AssociationManagerTest: XCTestCase {
     let identifier = makeRandomUUID()
     sendCarId(identifier, to: associationManager)
 
+    // The save happens after we confirm that the phone responds with device id + authentication
+    // key.
+    notifyMessageSentSuccessfully(to: UUID())
+
     XCTAssertTrue(delegate.didEncounterErrorCalled)
     XCTAssertEqual(delegate.error, .cannotStoreAssociation)
   }
@@ -652,6 +697,9 @@ class AssociationManagerTest: XCTestCase {
     let peripheralMock = PeripheralMock(name: "mock", services: [validService])
 
     notifyValidCharacteristicsDiscovered(for: peripheralMock)
+
+    // The phone responds with its device id, so acknowledge that the send was successful.
+    notifyMessageSentSuccessfully(to: UUID())
 
     let identifier = makeRandomUUID()
     sendCarId(identifier, to: associationManager)
@@ -677,6 +725,10 @@ class AssociationManagerTest: XCTestCase {
 
     let identifier = makeRandomUUID()
     sendCarId(identifier, to: associationManager)
+
+    // The save happens after we confirm that the phone responds with device id + authentication
+    // key.
+    notifyMessageSentSuccessfully(to: UUID())
 
     // Verify that a secure session has been saved.
     XCTAssertEqual(
@@ -777,6 +829,9 @@ class AssociationManagerTest: XCTestCase {
 
     XCTAssert(peripheralMock.characteristicToNotifyFor === serverWriteCharacteristicMock)
 
+    // The phone sends its device id first, so acknowledge that it is successful.
+    notifyMessageSentSuccessfully(to: UUID())
+
     sendCarId(identifier, to: associationManager)
 
     // The association manager should be storing the id that it received.
@@ -807,6 +862,10 @@ class AssociationManagerTest: XCTestCase {
     XCTAssertNotNil(associationManager.messageStream)
 
     sendCarId(identifier, to: associationManager)
+
+    // The phone responds with its device id + authentication key, so acknowledge that the message
+    // send was successful.
+    notifyMessageSentSuccessfully(to: UUID())
 
     // The association manager should be storing the id that it received, but in version 2 sending
     // the id completes the association and thus resets the association manager.
@@ -874,6 +933,12 @@ class AssociationManagerTest: XCTestCase {
     associatedCarsManagerMock.addAssociatedCar(identifier: car.id, name: car.name)
     let _ = secureSessionManagerMock.storeSecureSession(Data(), for: car.id)
   }
+
+  /// Invokes a callback on the `associationManager` acknowledging that a message was just
+  /// successfully sent to the recipient with the given `UUID`.
+  private func notifyMessageSentSuccessfully(to recipient: UUID) {
+    associationManager.messageStreamDidWriteMessage(associationManager.messageStream!, to: recipient)
+  }
 }
 
 // MARK: - Mocks
@@ -897,7 +962,7 @@ class AssociationDelegateMock: AssociationManagerDelegate {
   func associationManager(
     _ associationManager: AssociationManager,
     didCompleteAssociationWithCar car: Car,
-    securedCarChannel: SecuredCarChannel,
+    securedCarChannel: SecuredConnectedDeviceChannel,
     peripheral: BLEPeripheral
   ) {
     didCompleteAssociationCalled = true

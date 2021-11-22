@@ -12,17 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoMessageStream
+import XCTest
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable import AndroidAutoConnectedDeviceTransport
 
-/// A fake `ConnectionHandle` that will keep of if its methods have been called.
-class ConnectionHandleFake: ConnectionHandle {
-  var disconnectCalled = false
-  var disconnectedStream: MessageStream?
+/// Fake peripheral for testing generic transport.
+@available(iOS 12.0, *)
+public final class FakePeripheral: TransportPeripheral {
+  public typealias DiscoveryContext = Any
 
-  func disconnect(_ messageStream: MessageStream) {
-    disconnectCalled = true
-    disconnectedStream = messageStream
+  public let id = UUID()
+  public var onStatusChange: ((PeripheralStatus) -> Void)? = nil
+  public var displayName = "abc"
+  public var isConnected = false
+
+  public var status = PeripheralStatus.discovered {
+    didSet {
+      onStatusChange?(status)
+    }
   }
+
+  public init() {}
 }

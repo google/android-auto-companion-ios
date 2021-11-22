@@ -30,10 +30,7 @@ protocol PListLoader {
 /// constructor and load the values from it.
 @available(iOS 10.0, watchOS 6.0, *)
 struct PListLoaderImpl: PListLoader {
-  private static let logger = Logger(
-    subsystem: "com.google.ios.aae.trustagentclient",
-    category: "PListLoaderImpl"
-  )
+  private static let logger = Logger(for: PListLoaderImpl.self)
 
   private static let plistExtension = "plist"
 

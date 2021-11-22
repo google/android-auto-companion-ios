@@ -42,7 +42,7 @@ protocol CommunicationManagerDelegate: AnyObject {
   ///     communication.
   func communicationManager(
     _ communicationManager: CommunicationManager,
-    didEstablishSecureChannel securedCarChannel: SecuredCarChannel
+    didEstablishSecureChannel securedCarChannel: SecuredConnectedDeviceChannel
   )
 
   /// Invoked when an error has been encountered during the reconnection.
@@ -101,15 +101,21 @@ enum CommunicationManagerError: Error, Equatable {
 
   /// Failed to resolve the version.
   case versionResolutionFailed
+
+  /// The security version is unresolved.
+  case unresolvedSecurityVersion
+
+  /// The resolved security version doesn't match the helper's security version.
+  case mismatchedSecurityVersion
+
+  /// Attempt to configure a secure channel failed.
+  case configureSecureChannelFailed
 }
 
 /// A manager responsible for handling communication with associated devices.
 @available(iOS 10.0, *)
 class CommunicationManager: NSObject {
-  private static let logger = Logger(
-    subsystem: "com.google.ios.aae.trustagentclient",
-    category: "CommunicationManager"
-  )
+  private static let logger = Logger(for: CommunicationManager.self)
 
   /// The amount of time a reconnection attempt has before it has been deemed to have timed out.
   static let defaultReconnectionTimeoutDuration = DispatchTimeInterval.seconds(10)
@@ -230,7 +236,7 @@ class CommunicationManager: NSObject {
     } else {
       pendingCar = PendingCar(car: peripheral)
     }
-    serviceUUIDToDiscover = uuidConfig.reconnectionUUID(for: helper.securityVersion)
+    serviceUUIDToDiscover = helper.discoveryUUID(from: uuidConfig)
 
     pendingCars.append(pendingCar)
 
@@ -577,6 +583,7 @@ extension CommunicationManager: BLEVersionResolverDelegate {
     }
 
     do {
+      try helper.onResolvedSecurityVersion(securityVersion)
       try helper.startHandshake(messageStream: messageStream)
     } catch let error as CommunicationManagerError {
       notifyDelegateOfError(error, connecting: peripheral)
@@ -631,7 +638,6 @@ extension CommunicationManager: MessageStreamDelegate {
 
     // The handshake is complete for this peripheral, so we need to cleanup however we return.
     defer {
-      reconnectionHelpers[peripheral.identifier] = nil
       removePendingCars(with: peripheral)
     }
 
@@ -762,13 +768,40 @@ extension CommunicationManager: MessageStreamDelegate {
 @available(iOS 10.0, *)
 extension CommunicationManager: ReconnectionHandlerDelegate {
   func reconnectionHandler(
-    _ reconnectionHander: ReconnectionHandler,
-    didEstablishSecureChannel securedCarChannel: SecuredCarChannel
+    _ reconnectionHandler: ReconnectionHandler,
+    didEstablishSecureChannel securedCarChannel: SecuredConnectedDeviceChannel
   ) {
-    cleanTimeouts(for: reconnectionHander.peripheral)
+    guard let helper = try? reconnectionHelper(for: reconnectionHandler.peripheral) else {
+      Self.logger.error.log("Missing reconnection helper after establishing secure channel.")
+      delegate?.communicationManager(
+        self,
+        didEncounterError: .missingReconnectionHelper(reconnectionHandler.peripheral.identifier),
+        whenReconnecting: reconnectionHandler.peripheral
+      )
+      return
+    }
 
-    delegate?.communicationManager(self, didEstablishSecureChannel: securedCarChannel)
-    reconnectingHandlers.removeAll(where: { $0.car == securedCarChannel.car })
+    helper.configureSecureChannel(
+      securedCarChannel,
+      using: connectionHandle
+    ) { [weak self] success in
+      guard let self = self else { return }
+
+      guard success else {
+        self.delegate?.communicationManager(
+          self,
+          didEncounterError: .configureSecureChannelFailed,
+          whenReconnecting: reconnectionHandler.peripheral)
+        return
+      }
+
+      self.cleanTimeouts(for: reconnectionHandler.peripheral)
+
+      self.delegate?.communicationManager(self, didEstablishSecureChannel: securedCarChannel)
+      self.reconnectingHandlers.removeAll(where: { $0.car == securedCarChannel.car })
+
+      self.reconnectionHelpers[reconnectionHandler.peripheral.identifier] = nil
+    }
   }
 
   func reconnectionHandler(
@@ -781,6 +814,7 @@ extension CommunicationManager: ReconnectionHandlerDelegate {
       connecting: reconnectionHandler.peripheral
     )
     reconnectingHandlers.removeAll(where: { $0.car == reconnectionHandler.car })
+    reconnectionHelpers[reconnectionHandler.peripheral.identifier] = nil
   }
 }
 

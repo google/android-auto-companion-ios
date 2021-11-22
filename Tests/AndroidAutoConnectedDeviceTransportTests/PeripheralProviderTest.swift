@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import AndroidAutoConnectedDeviceTransportFakes
 import AndroidAutoLogger
 import XCTest
 
@@ -90,10 +91,7 @@ private class TrialPeripheralProvider {
 extension TrialPeripheralProvider: TransportPeripheralProvider {
   typealias Peripheral = FakePeripheral
 
-  static let logger = Logger(
-    subsystem: "com.google.ios.aae.transporttests",
-    category: "MockPeripheralProvider"
-  )
+  static let logger = Logger(for: TrialPeripheralProvider.self)
 
   /// Start scanning in the specified mode.
   func startPeripheralScan(mode: PeripheralScanMode) -> Bool {

@@ -18,6 +18,8 @@ import UIKit
 
 private typealias SystemQuery = Com_Google_Companionprotos_SystemQuery
 private typealias SystemQueryType = Com_Google_Companionprotos_SystemQueryType
+private typealias SystemUserRoleResponse = Com_Google_Companionprotos_SystemUserRoleResponse
+typealias SystemUserRole = Com_Google_Companionprotos_SystemUserRole
 
 /// Provides the containing application name.
 protocol AppNameProvider {
@@ -27,10 +29,7 @@ protocol AppNameProvider {
 
 /// A feature manager that is responsible to responding to device level queries.
 class SystemFeatureManager: FeatureManager {
-  private static let logger = Logger(
-    subsystem: "com.google.ios.aae.trustagentclient",
-    category: "SystemFeatureManager"
-  )
+  private static let logger = Logger(for: SystemFeatureManager.self)
 
   static let recipientUUID = UUID(uuidString: "892ac5d9-e9a5-48dc-874a-c01e3cb00d5d")!
 
@@ -115,6 +114,40 @@ class SystemFeatureManager: FeatureManager {
   }
 }
 
+// MARK: - User Role
+extension SystemFeatureManager: ChannelFeatureProvider {
+  /// Request the user role (driver/passenger) for the specified channel.
+  func requestUserRole(
+    with channel: SecuredCarChannel,
+    completion: @escaping (UserRole?) -> Void
+  ) {
+    do {
+      var systemQuery = SystemQuery()
+      systemQuery.type = .userRole
+      let systemQueryData = try systemQuery.serializedData()
+      let query = Query(request: systemQueryData, parameters: nil)
+      Self.logger.log("Sending system query for user role.")
+      try channel.sendQuery(query, to: Self.recipientUUID) { queryResponse in
+        guard queryResponse.isSuccessful else {
+          Self.logger.error.log("Query response for user role failed.")
+          completion(nil)
+          return
+        }
+        guard
+          let response = try? SystemUserRoleResponse(serializedData: queryResponse.response)
+        else {
+          completion(nil)
+          return
+        }
+        completion(UserRole(response.role))
+      }
+    } catch {
+      Self.logger.error.log("Error sending user role query: \(error.localizedDescription)")
+      completion(nil)
+    }
+  }
+}
+
 extension Bundle: AppNameProvider {
   /// Returns the localized name of the current application if it exists.
   var appName: String? {
@@ -125,5 +158,20 @@ extension Bundle: AppNameProvider {
     // when one is available.
     return object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? object(
       forInfoDictionaryKey: "CFBundleName") as? String
+  }
+}
+
+// MARK: - SystemUserRole Conversion
+
+extension UserRole {
+  init?(_ systemUserRole: SystemUserRole) {
+    switch systemUserRole {
+    case .driver:
+      self = .driver
+    case .passenger:
+      self = .passenger
+    case .unknown, .UNRECOGNIZED(_):
+      return nil
+    }
   }
 }

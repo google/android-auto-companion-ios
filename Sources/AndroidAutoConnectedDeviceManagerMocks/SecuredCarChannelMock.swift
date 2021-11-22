@@ -33,8 +33,10 @@ public class SecuredCarChannelMock: SecuredCarChannelPeripheral {
   public var writtenQueries: [Query] = []
   public var writtenQueryResponses: [QueryResponse] = []
   public var writtenMessages: [Data] = []
+  public var configureUsingFeatureProviderCalled = false
 
   public var car: Car
+  public var userRole: UserRole?
   public var isValid = true
   public var blePeripheral: BLEPeripheral
 
@@ -57,6 +59,7 @@ public class SecuredCarChannelMock: SecuredCarChannelPeripheral {
   public init(car: Car) {
     self.car = car
     blePeripheral = PeripheralMock(name: car.name)
+    userRole = nil
   }
 
   public func reset() {
@@ -89,7 +92,7 @@ public class SecuredCarChannelMock: SecuredCarChannelPeripheral {
   }
 }
 
-extension SecuredCarChannelMock: SecuredCarChannel {
+extension SecuredCarChannelMock: SecuredConnectedDeviceChannel {
   public func writeEncryptedMessage(
     _ message: Data,
     to recipient: UUID,
@@ -102,6 +105,15 @@ extension SecuredCarChannelMock: SecuredCarChannel {
 
     writtenMessages.append(message)
     completion?(true)
+  }
+
+  /// Complete configuration of the channel with the specified feature provider.
+  public func configure(
+    using provider: ChannelFeatureProvider,
+    completion: @escaping (SecuredConnectedDeviceChannel) -> Void
+  ) {
+    completion(self)
+    configureUsingFeatureProviderCalled = true
   }
 
   public func sendQuery(

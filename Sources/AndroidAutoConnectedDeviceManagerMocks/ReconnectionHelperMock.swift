@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import AndroidAutoMessageStream
-import Foundation
+import CoreBluetooth
 
 @testable import AndroidAutoConnectedDeviceManager
 
@@ -26,12 +26,14 @@ final public class ReconnectionHelperMock {
   public var securityVersion: MessageSecurityVersion = .v2
   public var isReadyForHandshake = true
   public var prepareForHandshakeShouldSucceed = true
+  public var configureSecureChannelShouldSucceed = true
 
   /// The Car ID to use once the handshake is complete.
   private var pendingCarId: String
 
   // MARK: - Method call checks
   public var startHandshakeCalled = false
+  public var onResolvedSecurityVersionCalled = false
   public var handleMessageCalled = false
   public var prepareForHandshakeCalled = false
 
@@ -50,6 +52,10 @@ final public class ReconnectionHelperMock {
 // MARK: - ReconnectionHelper
 @available(iOS 10.0, *)
 extension ReconnectionHelperMock: ReconnectionHelper {
+  public func discoveryUUID(from config: UUIDConfig) -> CBUUID {
+    config.reconnectionUUID(for: securityVersion)
+  }
+
   public func prepareForHandshake(withAdvertisementData data: Data) throws {
     prepareForHandshakeCalled = true
 
@@ -59,6 +65,10 @@ extension ReconnectionHelperMock: ReconnectionHelper {
       isReadyForHandshake = false
       throw CommunicationManagerError.unassociatedCar
     }
+  }
+
+  public func onResolvedSecurityVersion(_ version: MessageSecurityVersion) throws {
+    onResolvedSecurityVersionCalled = true
   }
 
   public func startHandshake(messageStream: MessageStream) {
@@ -77,5 +87,13 @@ extension ReconnectionHelperMock: ReconnectionHelper {
     }
 
     return shouldCompleteHandshake
+  }
+
+  public func configureSecureChannel(
+    _: SecuredConnectedDeviceChannel,
+    using connectionHandle: ConnectionHandle,
+    completion: (Bool) -> Void
+  ) {
+    completion(configureSecureChannelShouldSucceed)
   }
 }

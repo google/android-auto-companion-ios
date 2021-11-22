@@ -55,10 +55,7 @@ private protocol MessageExchangeDelegate: AnyObject {
 /// Resolver of the messaging protocol to use.
 @available(iOS 10.0, *)
 public class BLEVersionResolverImpl: NSObject, BLEVersionResolver {
-  private static let logger = Logger(
-    subsystem: "com.google.ios.aae.trustagentclient",
-    category: "BLEVersionResolverImpl"
-  )
+  private static let logger = Logger(for: BLEVersionResolverImpl.self)
 
   private var peripheral: BLEPeripheral?
   private var readCharacteristic: BLECharacteristic?
@@ -201,10 +198,7 @@ extension BLEVersionResolverImpl: BLEPeripheralDelegate {
 }
 
 private struct VersionExchangeHandler: ResolutionExchangeHandler {
-  private static let logger = Logger(
-    subsystem: "com.google.ios.aae.trustagentclient",
-    category: "VersionExchangeHandler"
-  )
+  private static let logger = Logger(for: VersionExchangeHandler.self)
 
   // The supported versions for the communication and security protocol.
   //
@@ -401,10 +395,7 @@ private struct VersionExchangeHandler: ResolutionExchangeHandler {
 /// Sends empty capabilities to satisify V3 security requirements. Since V4 deprecates capabilities
 /// exchange, we don't need to build it out any further.
 private struct EmptyCapabilitiesExchangeHandler: ResolutionExchangeHandler {
-  private static let logger = Logger(
-    subsystem: "com.google.ios.aae.trustagentclient",
-    category: "CapabilitiesExchangeHandler"
-  )
+  private static let logger = Logger(for: EmptyCapabilitiesExchangeHandler.self)
 
   private let resolution: ExchangeResolution
   private let peripheral: BLEPeripheral

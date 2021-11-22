@@ -102,15 +102,17 @@ protocol SomeConnectionManager {
 protocol ConnectionHandle {
   /// Disconnects the specified `MessageStream` from its remote car.
   func disconnect(_ messageStream: MessageStream)
+
+  /// Request the user role (driver/passenger) for the specified channel.
+  func requestConfiguration(
+    for channel: SecuredConnectedDeviceChannel,
+    completion: @escaping () -> Void
+  )
 }
 
 /// Log used internally by `ConnectionManager` since Generics can't have static
 /// stored properties.
 @available(iOS 10.0, *)
-private let connectionManagerLogger = Logger(
-  subsystem: "com.google.ios.aae.trustagentclient",
-  category: "ConnectionManager"
-)
 
 private let plistFileName = "connected_device_manager"
 
@@ -196,7 +198,6 @@ public class CoreBluetoothConnectionManager: ConnectionManager<CBCentralManager>
   private var connectionRetryStates: [UUID: ConnectionRetryState] = [:]
 
   private let centralManagerWrapper: CoreBluetoothCentralManagerWrapper
-  private var systemFeatureManager: SystemFeatureManager!
 
   public override init() {
     centralManagerWrapper = CoreBluetoothCentralManagerWrapper()
@@ -206,7 +207,6 @@ public class CoreBluetoothConnectionManager: ConnectionManager<CBCentralManager>
       reconnectionHelperFactory: ReconnectionHelperFactoryImpl.self
     )
     centralManagerWrapper.connectionManager = self
-    systemFeatureManager = SystemFeatureManager(connectedCarManager: self)
   }
 
   /// Connects to the given `peripheral` and schedules retry events if necessary.
@@ -234,7 +234,7 @@ public class CoreBluetoothConnectionManager: ConnectionManager<CBCentralManager>
   /// after a certain amount of time has passed.
   private func handleConnectionRetry(with peripheral: Peripheral) {
     guard var retryState = connectionRetryStates[peripheral.identifier] else {
-      Self.logger.log(
+      logger.log(
         """
         Attempt to handle connection retry for car (\(peripheral.logName)), \
         but no retry state exists. Disconnecting.
@@ -245,7 +245,7 @@ public class CoreBluetoothConnectionManager: ConnectionManager<CBCentralManager>
     }
 
     guard retryState.retryCount < Self.maxConnectionRetryCount else {
-      Self.logger.log(
+      logger.log(
         """
         Attempted to retry connection with car (\(peripheral.logName)), \
         but max retry limit reached. Disconnecting
@@ -257,7 +257,7 @@ public class CoreBluetoothConnectionManager: ConnectionManager<CBCentralManager>
     }
 
     guard peripheral.state != .connected else {
-      Self.logger.log(
+      logger.log(
         """
         Car (\(peripheral.logName)) connected (\(peripheral.state.rawValue)). \
         No need to schedule a connection retry
@@ -268,7 +268,7 @@ public class CoreBluetoothConnectionManager: ConnectionManager<CBCentralManager>
       return
     }
 
-    Self.logger.log(
+    logger.log(
       "Retrying connection with car (\(peripheral.logName)). Attempt \(retryState.retryCount + 1)")
 
     centralManager.connect(peripheral, options: nil)
@@ -283,7 +283,7 @@ public class CoreBluetoothConnectionManager: ConnectionManager<CBCentralManager>
   }
 
   override func onPeripheralConnected(_ peripheral: Peripheral) {
-    Self.logger.log(
+    logger.log(
       "Connected car (\(peripheral.logName))",
       metadata: ["car": peripheral.logName, "connected": true]
     )
@@ -291,7 +291,7 @@ public class CoreBluetoothConnectionManager: ConnectionManager<CBCentralManager>
   }
 
   override func onPeripheralDisconnected(_ peripheral: Peripheral) {
-    Self.logger.log(
+    logger.log(
       "Disconnected car (\(peripheral.logName))",
       metadata: ["car": peripheral.logName, "connected": false]
     )
@@ -343,17 +343,17 @@ public class CoreBluetoothConnectionManager: ConnectionManager<CBCentralManager>
         id: peripheralDeviceIds[peripheral.identifier]
       )
     } catch CommunicationManagerError.notAssociated {
-      Self.logger.error.log(
+      logger.error.log(
         """
         Unexpected. Attempted to establish a secure channel with an \
         unassociated device: \(peripheral.logName)
         """
       )
     } catch CommunicationManagerError.noSavedEncryption {
-      Self.logger.error.log(
+      logger.error.log(
         "No saved encryption session information for device: \(peripheral.logName).")
     } catch {
-      Self.logger.error.log("Unknown error during establishment of secure channel.")
+      logger.error.log("Unknown error during establishment of secure channel.")
     }
   }
 }
@@ -367,7 +367,7 @@ public class ConnectionManager<CentralManager>:
 where CentralManager: SomeCentralManager {
   public typealias Peripheral = CentralManager.Peripheral
 
-  fileprivate static var logger: Logger { connectionManagerLogger }
+  fileprivate lazy var logger = Logger(for: type(of: self))
 
   fileprivate var centralManager: CentralManager
 
@@ -427,6 +427,8 @@ where CentralManager: SomeCentralManager {
   public fileprivate(set) var securedChannels: [SecuredCarChannel] = []
   let secureSessionManager: SecureSessionManager = KeychainSecureSessionManager()
 
+  fileprivate var systemFeatureManager: SystemFeatureManager!
+
   /// Returns `true` if the current device has been associated with a car.
   public var isAssociated: Bool {
     return associationManager.isAssociated
@@ -467,6 +469,7 @@ where CentralManager: SomeCentralManager {
 
     let connectionHandleProxy = ConnectionHandleProxy(connectionManager: self)
     let overlay = plistLoader.loadOverlayValues()
+    systemFeatureManager = SystemFeatureManager(connectedCarManager: self)
 
     associationManager = AssociationManager(
       overlay: overlay,
@@ -541,7 +544,7 @@ where CentralManager: SomeCentralManager {
     discoveredPeripherals = []
 
     guard centralManager.state.isPoweredOn else {
-      Self.logger.error.log(
+      logger.error.log(
         """
         Request to scan for cars to associate, but Bluetooth is not on. \
         State: \(centralManager.state.rawValue).
@@ -551,7 +554,7 @@ where CentralManager: SomeCentralManager {
     }
 
     let associationUUID = associationConfig.associationUUID
-    Self.logger.log("Starting scan for cars to associate with UUID \(associationUUID)")
+    logger.log("Starting scan for cars to associate with UUID \(associationUUID)")
 
     centralManager.scanForPeripherals(
       withServices: [associationUUID],
@@ -573,13 +576,13 @@ where CentralManager: SomeCentralManager {
 
     // No need to scan if there are no cars that are associated.
     if associationManager.cars.isEmpty {
-      Self.logger.debug.log(
+      logger.debug.log(
         "Request to connect to associated cars, but none associated. Will not scan.")
       return
     }
 
     guard centralManager.state == .poweredOn else {
-      Self.logger.error.log(
+      logger.error.log(
         """
         Request to scan for associated cars, but bt is not on. \
         State: \(centralManager.state.rawValue).
@@ -588,7 +591,7 @@ where CentralManager: SomeCentralManager {
       return
     }
 
-    Self.logger.log("Starting scan for associated cars.")
+    logger.log("Starting scan for associated cars.")
 
     // If this scan completes, then any associated cars are automatically connected to.
     centralManager.scanForPeripherals(
@@ -622,7 +625,7 @@ where CentralManager: SomeCentralManager {
       throw StartAssociationError.stateNotReady
     }
 
-    Self.logger.log("Attempting to connect to (\(car.logName)) for association")
+    logger.log("Attempting to connect to (\(car.logName)) for association")
 
     isAssociating = true
 
@@ -664,7 +667,7 @@ where CentralManager: SomeCentralManager {
   ///
   /// - Parameter car: The car to be removed.
   public func clearAssociation(for car: Car) {
-    Self.logger.log("Clearing association for car id = \(car.id)")
+    logger.log("Clearing association for car id = \(car.id)")
 
     disconnect(car)
 
@@ -697,12 +700,12 @@ where CentralManager: SomeCentralManager {
   /// If it does, then this manager will disconnect from the given `Car` as messages are no longer
   /// able to be sent and received.
   fileprivate func inspectServices(_ invalidatedServices: [BLEService], on car: Car) {
-    Self.logger.debug.log(
+    logger.debug.log(
       "Received notification that car (\(car.logName)) has modified its services")
 
     // If the services this manager cares about is now invalidated, then disconnect.
     if invalidatedServices.contains(where: { $0.uuid == associationConfig.associationUUID }) {
-      Self.logger.log(
+      logger.log(
         """
         Required service \(associationConfig.associationUUID) invalidated for car \
         (\(car.logName)). Disconnecting if currently connected.
@@ -732,7 +735,7 @@ where CentralManager: SomeCentralManager {
 
   /// Disconnect the given peripheral if it is currently connected or connecting.
   func disconnect(_ peripheral: Peripheral) {
-    Self.logger.log("Request to disconnect peripheral: \(peripheral.logName)")
+    logger.log("Request to disconnect peripheral: \(peripheral.logName)")
 
     // If the peripheral is already disconnected, then calling `cancelPeripheralConnection` will
     // result in nothing happening. So, if this manager believes the device is connected, then
@@ -740,7 +743,7 @@ where CentralManager: SomeCentralManager {
     if peripheral.state == .disconnected,
       discoveredPeripherals.contains(where: { $0 == peripheral })
     {
-      Self.logger.log(
+      logger.log(
         """
         Peripheral (\(peripheral.logName)) already in disconnected \
         state (\(peripheral.state.rawValue)). Manually handling disconnecting.
@@ -755,7 +758,7 @@ where CentralManager: SomeCentralManager {
   }
 
   private func disconnectAllPeripherals() {
-    Self.logger.log(
+    logger.log(
       "Request to disconnect all peripherals. Peripheral count: \(discoveredPeripherals.count)")
 
     discoveredPeripherals.forEach { disconnect($0) }
@@ -803,6 +806,19 @@ where CentralManager: SomeCentralManager {
   func peripheral(from blePeripheral: BLEPeripheral) -> Peripheral? {
     return nil
   }
+
+  /// Request the user role (driver/passenger) for the specified channel.
+  func requestConfiguration(
+    for channel: SecuredConnectedDeviceChannel,
+    completion: @escaping () -> Void
+  ) {
+    logger.log("Requesting configuration of channel: \(channel)")
+    channel.configure(using: systemFeatureManager) { [weak self] channel in
+      defer { completion() }
+      guard let self = self else { return }
+      self.logger.log("Secure channel configuration complete.")
+    }
+  }
 }
 
 // MARK: - ConnectionHandleProxy
@@ -819,6 +835,13 @@ private struct ConnectionHandleProxy<T: SomeCentralManager>: ConnectionHandle {
 
   func disconnect(_ messageStream: MessageStream) {
     connectionManager.disconnect(messageStream)
+  }
+
+  func requestConfiguration(
+    for channel: SecuredConnectedDeviceChannel,
+    completion: @escaping () -> Void
+  ) {
+    connectionManager.requestConfiguration(for: channel, completion: completion)
   }
 }
 
@@ -919,12 +942,12 @@ extension ConnectionManager: CommunicationManagerDelegate {
 
   func communicationManager(
     _ communicationManager: CommunicationManager,
-    didEstablishSecureChannel securedCarChannel: SecuredCarChannel
+    didEstablishSecureChannel securedCarChannel: SecuredConnectedDeviceChannel
   ) {
-    securedChannels.append(securedCarChannel)
-    registerServiceObserver(on: securedCarChannel)
+    self.securedChannels.append(securedCarChannel)
+    self.registerServiceObserver(on: securedCarChannel)
 
-    observations.securedChannel.values.forEach { observation in
+    self.observations.securedChannel.values.forEach { observation in
       observation(self, securedCarChannel)
     }
   }
@@ -936,11 +959,11 @@ extension ConnectionManager: CommunicationManagerDelegate {
   ) {
     signpostMetrics.postIfAvailable(ConnectionManagerSignposts.reconnectionFailure)
     signpostMetrics.postIfAvailable(ConnectionManagerSignposts.reconnectionDuration.end)
-    Self.logger.error.log(
+    logger.error.log(
       "Encountered error during reconnection. Disconnecting peripheral: \(peripheral.logName).")
 
     guard let somePeripheral = self.peripheral(from: peripheral) else {
-      Self.logger.error.log(
+      logger.error.log(
         "Peripheral could not be mapped to a peripheral type this connection manager knows.")
       return
     }
@@ -959,25 +982,26 @@ extension ConnectionManager: AssociationManagerDelegate {
   func associationManager(
     _ associationManager: AssociationManager,
     didCompleteAssociationWithCar car: Car,
-    securedCarChannel: SecuredCarChannel,
+    securedCarChannel: SecuredConnectedDeviceChannel,
     peripheral: BLEPeripheral
   ) {
     signpostMetrics.postIfAvailable(ConnectionManagerSignposts.associationDuration.end)
     signpostMetrics.postIfAvailable(ConnectionManagerSignposts.associationCompletion)
 
-    securedChannels.append(securedCarChannel)
-    registerServiceObserver(on: securedCarChannel)
+    self.securedChannels.append(securedCarChannel)
+    self.registerServiceObserver(on: securedCarChannel)
 
-    associationDelegate?.connectionManager(self, didCompleteAssociationWithCar: car)
+    self.associationDelegate?.connectionManager(
+      self, didCompleteAssociationWithCar: car)
 
     // Ensure that the list of peripherals to device ids is up to date.
-    peripheralDeviceIds[peripheral.identifier] = car.id
+    self.peripheralDeviceIds[peripheral.identifier] = car.id
 
-    observations.securedChannel.values.forEach { observation in
+    self.observations.securedChannel.values.forEach { observation in
       observation(self, securedCarChannel)
     }
 
-    connectToAssociatedCars()
+    self.connectToAssociatedCars()
   }
 
   func associationManager(
@@ -1001,7 +1025,7 @@ extension ConnectionManager: AssociationManagerDelegate {
   ) {
     // A car can only be associated once with the companion app.
     if let existingCar = associatedCars.first(where: { $0.id == carId }) {
-      Self.logger.error.log(
+      logger.error.log(
         "Found existing association for car id while completing association.",
         redacting: "id: \(carId)"
       )
@@ -1039,14 +1063,14 @@ extension ConnectionManager: CentralManagerDelegate {
   public func centralManagerDidUpdateState(_ central: CentralManager) {
     state = central.state
 
-    Self.logger.log(
+    logger.log(
       "CoreBluetooth state changed.",
       metadata: ["bluetooth.state": central.state.rawValue]
     )
 
     switch central.state {
     case .poweredOff:
-      Self.logger.log(
+      logger.log(
         "CoreBluetooth BLE hardware is powered off",
         metadata: ["bluetooth.power": false]
       )
@@ -1059,7 +1083,7 @@ extension ConnectionManager: CentralManagerDelegate {
         handleDisconnection(of: peripheral, error: nil)
       }
     case .poweredOn:
-      Self.logger.log(
+      logger.log(
         "CoreBluetooth BLE hardware is powered on and ready",
         metadata: ["bluetooth.power": true]
       )
@@ -1071,15 +1095,15 @@ extension ConnectionManager: CentralManagerDelegate {
         connectToAssociatedCars()
       }
     case .resetting:
-      Self.logger.log("CoreBluetooth BLE hardware is resetting")
+      logger.log("CoreBluetooth BLE hardware is resetting")
     case .unauthorized:
-      Self.logger.log("CoreBluetooth BLE state is unauthorized")
+      logger.log("CoreBluetooth BLE state is unauthorized")
     case .unknown:
-      Self.logger.log("CoreBluetooth BLE state is unknown")
+      logger.log("CoreBluetooth BLE state is unknown")
     case .unsupported:
-      Self.logger.log("CoreBluetooth BLE hardware is unsupported")
+      logger.log("CoreBluetooth BLE hardware is unsupported")
     default:
-      Self.logger.error.log("CoreBluetooth BLE unknown state: \(central.state.rawValue)")
+      logger.error.log("CoreBluetooth BLE unknown state: \(central.state.rawValue)")
     }
 
     observations.state.values.forEach { observation in
@@ -1097,18 +1121,18 @@ extension ConnectionManager: CentralManagerDelegate {
     }
 
     guard central.state == .poweredOn else {
-      Self.logger.log("Restored central manager, but not powered on.")
+      logger.log("Restored central manager, but not powered on.")
       return
     }
 
     guard let services = dict[CBCentralManagerRestoredStateScanServicesKey] as? [CBUUID],
       !services.isEmpty
     else {
-      Self.logger.log("No services for restored central manager to resume scanning.")
+      logger.log("No services for restored central manager to resume scanning.")
       return
     }
 
-    Self.logger.log(
+    logger.log(
       """
       Central Manager restored. Resuming scan for services: \
       [\(services.map { $0.uuidString }.joined(separator: ","))]
@@ -1134,7 +1158,7 @@ extension ConnectionManager: CentralManagerDelegate {
     // calls to this `didDiscover` callback. Thus, ignore any callbacks in which we cannot resolve
     // the name.
     if isAssociating, advertisedName == nil {
-      Self.logger.log(
+      logger.log(
         """
         Discovered device (\(peripheral.logName): \(peripheral.identifier.uuidString)). \
         With no advertised name during association. Ignoring. State: \(peripheral.state.rawValue).
@@ -1143,7 +1167,7 @@ extension ConnectionManager: CentralManagerDelegate {
       return
     }
 
-    Self.logger.log(
+    logger.log(
       """
       Discovered device (\(peripheral.logName): \(peripheral.identifier.uuidString)). \
       Advertised name: <\(advertisedName ?? "no name")>.) State: \(peripheral.state.rawValue).
@@ -1163,7 +1187,7 @@ extension ConnectionManager: CentralManagerDelegate {
     }
 
     guard associationManager.isAssociated else {
-      Self.logger.log("Discovered car during reconnection phase, but no cars associated. Ignoring.")
+      logger.log("Discovered car during reconnection phase, but no cars associated. Ignoring.")
       return
     }
 
@@ -1179,7 +1203,7 @@ extension ConnectionManager: CentralManagerDelegate {
       let dataContents = advertisementData[CBAdvertisementDataServiceDataKey] as? NSDictionary,
       let rawData = dataContents[uuidConfig.associationDataUUID] as? Data
     else {
-      Self.logger.debug.log("Retrieving default advertised name from advertisement data.")
+      logger.debug.log("Retrieving default advertised name from advertisement data.")
 
       // iOS will cache the name of the discovered peripheral if it is paired via Bluetooth. This
       // means `peripheral.name` might not be up to date. As a result, manually read the advertised
@@ -1188,11 +1212,11 @@ extension ConnectionManager: CentralManagerDelegate {
     }
 
     if rawData.count == advertisementLengthForUTF8Conversion {
-      Self.logger.debug.log("Retrieving advertised name with association UUID using UTF-8.")
+      logger.debug.log("Retrieving advertised name with association UUID using UTF-8.")
       return String(decoding: rawData, as: UTF8.self)
     }
 
-    Self.logger.debug.log(
+    logger.debug.log(
       "Advertisement data of length \(rawData.count). Converting to hex value and adding prefix.")
     return associationNamePrefix + rawData.hex
   }
@@ -1207,7 +1231,7 @@ extension ConnectionManager: CentralManagerDelegate {
     }
 
     if peripheral.state == .disconnected {
-      Self.logger.log(
+      logger.log(
         "Device already discovered before, but disconnected. Proceeding with connection.")
 
       return true
@@ -1219,7 +1243,7 @@ extension ConnectionManager: CentralManagerDelegate {
       if let connectedPeripheral = self.peripheral(from: channel),
         peripheral.identifier == connectedPeripheral.identifier
       {
-        Self.logger.log(
+        logger.log(
           """
           Duplicate peripheral discovered that has secure session. Disconnecting. \
           Peripheral state: \(peripheral.state.rawValue)
@@ -1232,7 +1256,7 @@ extension ConnectionManager: CentralManagerDelegate {
       }
     }
 
-    Self.logger.log(
+    logger.log(
       """
       Duplicate peripheral discovered without secure channel. Proceeding with connection. \
       Peripheral state: \(peripheral.state.rawValue).
@@ -1262,15 +1286,15 @@ extension ConnectionManager: CentralManagerDelegate {
 
       communicationManager.addReconnectionHelper(reconnectionHelper)
 
-      Self.logger.log("Attempting to connect to device (\(peripheral.logName))")
+      logger.log("Attempting to connect to device (\(peripheral.logName))")
 
       connect(with: peripheral)
       return
     } catch CommunicationManagerError.notAssociated {
-      Self.logger.error.log(
+      logger.error.log(
         "No associated car found corresponding to device (\(peripheral.logName))")
     } catch {
-      Self.logger.error.log(
+      logger.error.log(
         """
         Error: <\(error.localizedDescription)> encountered making reconnection helper \
         for device (\(peripheral.logName))
@@ -1293,7 +1317,7 @@ extension ConnectionManager: CentralManagerDelegate {
     // If not associated, notify the delegate. Otherwise, this manager will handle the connection
     // flow, so no need to notify.
     if isAssociating {
-      Self.logger.log(
+      logger.log(
         """
         Car (\(peripheral.logName)) connected. \
         Proceeding with association flow and notifying delegate.
@@ -1305,7 +1329,7 @@ extension ConnectionManager: CentralManagerDelegate {
       return
     }
 
-    Self.logger.log(
+    logger.log(
       """
       Car (name: \(peripheral.logName)) connected. \
       Attempting to establish secure communication with car.
@@ -1346,7 +1370,7 @@ extension ConnectionManager: CentralManagerDelegate {
     }
 
     guard let id = peripheralDeviceIds.removeValue(forKey: peripheral.identifier) else {
-      Self.logger.info.log(
+      logger.info.log(
         "Device disconnected, but no device id, meaning device ids have not been exchanged yet.")
       return
     }
@@ -1357,11 +1381,11 @@ extension ConnectionManager: CentralManagerDelegate {
 
     // Only notify observers if the device is associated.
     guard associatedCarsManager.identifiers.contains(id) else {
-      Self.logger.info.log("Disconnected from un-associated car (id: \(id)).")
+      logger.info.log("Disconnected from un-associated car (id: \(id)).")
       return
     }
 
-    Self.logger.info.log("Disconnected from associated car (id: \(id)). Notifying observers.")
+    logger.info.log("Disconnected from associated car (id: \(id)). Notifying observers.")
 
     observations.disconnected.values.forEach { observation in
       observation(self, Car(id: id, name: peripheral.name))
@@ -1390,10 +1414,7 @@ extension ConnectionManager: CentralManagerDelegate {
 /// by a generic equivalent. Namely we need this to handle `CBCentralManagerDelegate`.
 @available(iOS 10.0, *)
 private class CoreBluetoothCentralManagerWrapper: NSObject {
-  private static let logger = Logger(
-    subsystem: "com.google.ios.aae.trustagentclient",
-    category: "CoreBluetoothConnectionManagerProvider"
-  )
+  private static let logger = Logger(for: CoreBluetoothCentralManagerWrapper.self)
 
   /// The key that is passed to the central manager to enable state restoration.
   private static var centralManagerRestoreKey =
