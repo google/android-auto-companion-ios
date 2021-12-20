@@ -298,7 +298,9 @@ extension EstablishedCarChannel: MessageStreamDelegate {
 
     // This should not happen because a handler is always stored for every write.
     guard !writeCompletionHandlers.isEmpty else {
-      Self.logger.error.log(
+      assertionFailure("No completion handler to call after a message write failure.")
+
+      Self.logger.fault.log(
         "Unexpected. No completion handler able to call after a message write failure.")
       return
     }
@@ -394,6 +396,8 @@ extension EstablishedCarChannel: MessageStreamDelegate {
   ) {
     // This should not happen because a handler is always stored for every write.
     guard !writeCompletionHandlers.isEmpty else {
+      assertionFailure("No completion handler to call after a successful message write.")
+
       Self.logger.fault.log(
         "Unexpected. No completion handler able to call after a successful message write.")
       return

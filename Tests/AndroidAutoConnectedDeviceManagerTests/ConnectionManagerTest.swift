@@ -195,7 +195,76 @@ class ConnectionManagerTest: XCTestCase {
     connectionManager.centralManagerDidUpdateState(centralManagerMock)
     XCTAssertTrue(connectionManager.state.isUnknown)
   }
-  let peripheralMock = PeripheralMock(name: "Test")
+
+  func testRequestRadioStateActionPended_PoweredOn() {
+    centralManagerMock.state = .unknown
+    connectionManager.centralManagerDidUpdateState(centralManagerMock)
+
+    var actionPerformed = false
+    var state: RadioState = CBManagerState.unknown
+    connectionManager.requestRadioStateAction {
+      state = $0
+      actionPerformed = true
+    }
+
+    XCTAssertFalse(actionPerformed)
+
+    centralManagerMock.state = .poweredOn
+    connectionManager.centralManagerDidUpdateState(centralManagerMock)
+
+    XCTAssertTrue(actionPerformed)
+    XCTAssertTrue(state.isPoweredOn)
+  }
+
+  func testRequestRadioStateActionPended_PoweredOff() {
+    centralManagerMock.state = .unknown
+    connectionManager.centralManagerDidUpdateState(centralManagerMock)
+
+    var actionPerformed = false
+    var state: RadioState = CBManagerState.unknown
+    connectionManager.requestRadioStateAction {
+      state = $0
+      actionPerformed = true
+    }
+
+    XCTAssertFalse(actionPerformed)
+
+    centralManagerMock.state = .poweredOff
+    connectionManager.centralManagerDidUpdateState(centralManagerMock)
+
+    XCTAssertTrue(actionPerformed)
+    XCTAssertTrue(state.isPoweredOff)
+  }
+
+  func testRequestRadioStateActionImmediate_PoweredOn() {
+    centralManagerMock.state = .poweredOn
+    connectionManager.centralManagerDidUpdateState(centralManagerMock)
+
+    var actionPerformed = false
+    var state: RadioState = CBManagerState.unknown
+    connectionManager.requestRadioStateAction {
+      state = $0
+      actionPerformed = true
+    }
+
+    XCTAssertTrue(actionPerformed)
+    XCTAssertTrue(state.isPoweredOn)
+  }
+
+  func testRequestRadioStateActionImmediate_PoweredOff() {
+    centralManagerMock.state = .poweredOff
+    connectionManager.centralManagerDidUpdateState(centralManagerMock)
+
+    var actionPerformed = false
+    var state: RadioState = CBManagerState.unknown
+    connectionManager.requestRadioStateAction {
+      state = $0
+      actionPerformed = true
+    }
+
+    XCTAssertTrue(actionPerformed)
+    XCTAssertTrue(state.isPoweredOff)
+  }
 
   func testCentralManagerPoweredOnAndWillRestoreState_ScansForPeripherals() {
     centralManagerMock.state = .poweredOn
@@ -321,6 +390,7 @@ class ConnectionManagerTest: XCTestCase {
 
     /// The hex name just needs to be a length that is not 8 bytes.
     let hexName = "2AF8"
+    let hexNameData = Data(hex: hexName)!
 
     connectionManager.scanForCarsToAssociate(namePrefix: namePrefix)
 
@@ -328,7 +398,7 @@ class ConnectionManagerTest: XCTestCase {
 
     let advertisementData: [String: Any] = [
       CBAdvertisementDataLocalNameKey: advertisedName,
-      CBAdvertisementDataServiceDataKey: [uuidConfig.associationDataUUID: hexName.hex],
+      CBAdvertisementDataServiceDataKey: [uuidConfig.associationDataUUID: hexNameData],
     ]
 
     connectionManager.centralManager(
@@ -738,34 +808,5 @@ class ConnectionManagerTest: XCTestCase {
 extension ConnectionManagerTest: SecureBLEChannelFactory {
   func makeChannel() -> SecureBLEChannel {
     return SecureBLEChannelMock()
-  }
-}
-
-extension String {
-  /// Interprets this string as a hexadecimal string and converts to a resulting `Data` object.
-  ///
-  /// Invalid strings will result in an empty `Data` object.
-  fileprivate var hex: Data {
-    // Each two characters in the hex string form one byte. So the resulting data will be half the
-    // size of the string.
-    let resultingLength = count / 2
-
-    var data = Data(capacity: resultingLength)
-    var currentIndex = startIndex
-
-    for _ in 0..<resultingLength {
-      // Process two characters at a time.
-      let nextIndex = index(currentIndex, offsetBy: 2)
-      let bytes = self[currentIndex..<nextIndex]
-
-      guard let hexValue = UInt8(bytes, radix: 16) else {
-        return Data()
-      }
-
-      data.append(contentsOf: [hexValue])
-      currentIndex = nextIndex
-    }
-
-    return data
   }
 }

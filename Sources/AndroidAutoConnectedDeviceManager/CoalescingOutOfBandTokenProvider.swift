@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import AndroidAutoLogger
 import Foundation
 
 /// Coalesces multiple out of band token providers into a single provider.
@@ -19,6 +20,8 @@ import Foundation
 /// Forwards token events from its providers to its token handler and maintains the most recently
 /// posted token.
 class CoalescingOutOfBandTokenProvider {
+  private static let logger = Logger(for: CoalescingOutOfBandTokenProvider.self)
+
   /// The child providers.
   private var providers: [OutOfBandTokenProvider]
 
@@ -34,6 +37,13 @@ class CoalescingOutOfBandTokenProvider {
   /// - Parameter providers: The child providers to which to forward requests.
   convenience init(_ providers: OutOfBandTokenProvider...) {
     self.init(providers)
+  }
+
+  /// Register the specified provider as a source.
+  ///
+  /// - Parameter provider: The provider to register as a source.
+  func register(_ provider: OutOfBandTokenProvider) {
+    self.providers.append(provider)
   }
 }
 

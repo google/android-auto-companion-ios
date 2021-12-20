@@ -266,6 +266,7 @@ class AssociationManager: NSObject {
   /// attempts.
   func clearAllAssociations() {
     resetInternalState()
+    outOfBandTokenProvider.reset()
     associatedCarsManager.identifiers.forEach {
       secureSessionManager.clearSecureSession(for: $0)
       try? CarAuthenticatorImpl.removeKey(forIdentifier: $0)
@@ -277,6 +278,7 @@ class AssociationManager: NSObject {
   ///
   /// - Parameter car: The car to be removed.
   func clearAssociation(for car: Car) {
+    outOfBandTokenProvider.reset()
     secureSessionManager.clearSecureSession(for: car.id)
     associatedCarsManager.clearIdentifier(car.id)
     try? CarAuthenticatorImpl.removeKey(forIdentifier: car.id)
@@ -295,6 +297,7 @@ class AssociationManager: NSObject {
   /// Clear internal state for current association.
   func clearCurrentAssociation() {
     resetInternalState()
+    outOfBandTokenProvider.reset()
   }
 
   /// Reset to the default state before a device is to be associated.
@@ -309,8 +312,6 @@ class AssociationManager: NSObject {
     carToAssociate = nil
     carId = nil
     messageHelper = nil
-
-    outOfBandTokenProvider.reset()
   }
 
   /// Checks if the given peripheral has an association characteristic for registering an escrow
@@ -389,6 +390,7 @@ class AssociationManager: NSObject {
     messageStream: BLEMessageStream
   ) {
     resetInternalState()
+    outOfBandTokenProvider.reset()
     delegate?.associationManager(
       self,
       didCompleteAssociationWithCar: channel.car,

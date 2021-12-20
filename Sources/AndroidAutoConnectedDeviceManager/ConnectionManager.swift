@@ -398,6 +398,18 @@ where CentralManager: SomeCentralManager {
   /// The current configuration for an association scan.
   fileprivate var associationConfig: AssociationConfig
 
+  /// Restricting filter applied to the advertised name for considering a discovered peripheral for
+  /// association.
+  ///
+  /// This filter is intended for internal use.
+  ///
+  /// If this filter is `nil` then every discovered car will be considered a valid candidate
+  /// regardless of its advertised name.
+  ///
+  /// This closure takes the discovered car's advertised name as the parameter and should return
+  /// `true` to accept the car and `false` to ignore the car.
+  fileprivate var associationAdvertisedNameFilter: ((String?) -> Bool)? = nil
+
   /// The possible events within the connection manager that can be observed.
   ///
   /// Each observable event is a mapping of a unique id to a closure function that is executed when
@@ -410,6 +422,9 @@ where CentralManager: SomeCentralManager {
     dissociation: [UUID: (ConnectedCarManager, Car) -> Void]()
   )
 
+  /// Actions to perform sequentially once the power state has been determined.
+  private var pendingPowerStateActions: [(RadioState) -> Void] = []
+
   /// Maps `Peripheral`s by their identifier to its associated device ID.
   ///
   /// The device ID is different than the `identifier` in the `Peripheral`. During association and
@@ -419,10 +434,16 @@ where CentralManager: SomeCentralManager {
   /// advertisement data of the peripheral or sent after connection.
   fileprivate var peripheralDeviceIds: [UUID: String] = [:]
 
+  /// Central out of band association token provider which wraps others.
+  private let centralOutOfBandAssociationTokenProvider = CoalescingOutOfBandTokenProvider()
+
+  /// Out of band association token provider which is externally populated.
+  private let externalAssociationTokenProvider = PassiveOutOfBandTokenProvider()
+
   public weak var associationDelegate: ConnectionManagerAssociationDelegate?
 
   /// The current state of bluetooth.
-  public var state: RadioState = CBManagerState.poweredOff
+  public var state: RadioState = CBManagerState.unknown
 
   public fileprivate(set) var securedChannels: [SecuredCarChannel] = []
   let secureSessionManager: SecureSessionManager = KeychainSecureSessionManager()
@@ -464,6 +485,8 @@ where CentralManager: SomeCentralManager {
     defaultAssociationConfig = AssociationConfig(associationUUID: uuidConfig.associationUUID)
     associationConfig = defaultAssociationConfig
 
+    centralOutOfBandAssociationTokenProvider.register(externalAssociationTokenProvider)
+
     // Calling `super` here so that subsequent code can use `self`.
     super.init()
 
@@ -479,7 +502,7 @@ where CentralManager: SomeCentralManager {
       secureSessionManager: secureSessionManager,
       secureBLEChannel: secureBLEChannelFactory.makeChannel(),
       bleVersionResolver: bleVersionResolver,
-      outOfBandTokenProvider: CoalescingOutOfBandTokenProvider()
+      outOfBandTokenProvider: centralOutOfBandAssociationTokenProvider
     )
 
     communicationManager = CommunicationManager(
@@ -525,9 +548,20 @@ where CentralManager: SomeCentralManager {
   /// entry with a key of `AssociationServiceUUID`. The value of this key should be a 16-byte
   /// UUID of the form `00000000-0000-0000-0000-000000000000`.
   ///
-  /// - Parameter namePrefix: A value that may be prefixed to the name of cars that are discovered.
+  /// Typically, call this method with a readyState of zero when you know the device is in a ready
+  /// state (e.g. bluetooth power is on). If this is being called from an app launch, the device may
+  /// not yet be ready, so you can request association to begin within the specified timeout once
+  /// the device is ready. By calling this method before the device is ready, the connection manager
+  /// is configured for association which allows the UI to query the configuration (e.g. that an out
+  /// of band token is being used for association at launch).
+  ///
+  /// - Parameters:
+  ///   - namePrefix: A value that may be prefixed to the name of cars that are discovered.
+  ///   - outOfBandSource: Source of out of band data.
+  ///   - configurator: Closure allowing for custom configuration of association parameters.
   public func scanForCarsToAssociate(
     namePrefix: String = "",
+    outOfBandSource: OutOfBandAssociationDataSource? = nil,
     configurator: ((inout AssociationConfig) -> Void)? = nil
   ) {
     associationNamePrefix = namePrefix
@@ -535,6 +569,17 @@ where CentralManager: SomeCentralManager {
     // Prefill out the configuration object for callers to modify.
     associationConfig = defaultAssociationConfig
     configurator?(&associationConfig)
+
+    if let outOfBandSource = outOfBandSource {
+      externalAssociationTokenProvider.postToken(outOfBandSource.token)
+      associationAdvertisedNameFilter = {
+        guard let advertisedName = $0 else { return false }
+        return advertisedName.compare(
+          outOfBandSource.deviceID.hex, options: .caseInsensitive) == .orderedSame
+      }
+    } else {
+      associationAdvertisedNameFilter = nil
+    }
 
     // A scan for peripherals will override any previous scans. Thus, as soon as we start scanning
     // for cars to associate, it is considered in the association flow.
@@ -544,6 +589,8 @@ where CentralManager: SomeCentralManager {
     discoveredPeripherals = []
 
     guard centralManager.state.isPoweredOn else {
+      isAssociating = false
+      externalAssociationTokenProvider.reset()
       logger.error.log(
         """
         Request to scan for cars to associate, but Bluetooth is not on. \
@@ -560,6 +607,34 @@ where CentralManager: SomeCentralManager {
       withServices: [associationUUID],
       options: nil
     )
+  }
+
+  /// Schedules the requested action to be performed when the radio state becomes known.
+  ///
+  /// On startup, the radio power state is unknown, and there is a race between requests that
+  /// depend on the known radio power state and the power state being determined. This method
+  /// performs the requested action when the power state becomes known. If the power state is
+  /// already known at the time of the call, the requested action is performed immediately.
+  ///
+  /// The action is passed the power state (e.g. powered on, off).
+  ///
+  /// - Parameter action: Action to perform when the power state becomes known.
+  public func requestRadioStateAction(_ action: @escaping (RadioState) -> Void) {
+    if state.isUnknown {
+      logger.log("Power state is unknown, pending requested action.")
+      pendingPowerStateActions.append(action)
+    } else {
+      action(state)
+    }
+  }
+
+  /// Determine whether this connection manager has an out of band association token.
+  ///
+  /// - Parameter completion: The handler to call when the request has been processed.
+  public func hasOutOfBandAssociationToken(completion: @escaping (Bool) -> Void) {
+    centralOutOfBandAssociationTokenProvider.requestToken { token in
+      completion(token != nil)
+    }
   }
 
   /// Attempts to connect to any cars that are already associated.
@@ -1109,6 +1184,15 @@ extension ConnectionManager: CentralManagerDelegate {
     observations.state.values.forEach { observation in
       observation(self, state)
     }
+
+    if !state.isUnknown {
+      // Perform any pending actions awaiting the state update.
+      let actions = pendingPowerStateActions
+      pendingPowerStateActions = []
+      for action in actions {
+        action(state)
+      }
+    }
   }
 
   public func centralManager(_ central: CentralManager, willRestoreState dict: [String: Any]) {
@@ -1179,6 +1263,11 @@ extension ConnectionManager: CentralManagerDelegate {
     // Nothing else to do if associating. Association relies on the user to explicitly call
     // associate(_:) for a connection.
     if isAssociating {
+      guard associationAdvertisedNameFilter?(advertisedName) ?? true else {
+        logger.log("Discovered car but rejected for association by filter. Ignoring.")
+        return
+      }
+
       discoveredPeripherals.insert(peripheral)
 
       associationDelegate?.connectionManager(
@@ -1569,13 +1658,6 @@ public protocol CentralManagerDelegate {
     didDisconnectPeripheral peripheral: CentralManager.Peripheral,
     error: Error?
   )
-}
-
-extension Data {
-  /// Returns a hexadecimal representation of this `Data` object's contents.
-  fileprivate var hex: String {
-    return map { String(format: "%02X", $0) }.joined()
-  }
 }
 
 /// Provide `RadioState` conformance.

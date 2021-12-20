@@ -35,8 +35,6 @@ class CoalescingOutOfBandTokenProviderTest: XCTestCase {
   }
 
   func testNoChildProviders_BailsImmediately() {
-    testTokenProvider = CoalescingOutOfBandTokenProvider()
-
     var tokenCounter = 0
     var token: OutOfBandToken? = nil
     testTokenProvider.requestToken {
@@ -45,6 +43,50 @@ class CoalescingOutOfBandTokenProviderTest: XCTestCase {
     }
 
     XCTAssertNil(token)
+    XCTAssertEqual(tokenCounter, 1)
+  }
+
+  func testRegistersProvider() {
+    let child = FakeOutOfBandTokenProvider()
+    testTokenProvider.register(child)
+
+    var tokenCounter = 0
+    var token: OutOfBandToken? = nil
+    testTokenProvider.requestToken {
+      token = $0
+      tokenCounter += 1
+    }
+
+    child.postToken(FakeOutOfBandToken())
+
+    XCTAssertNotNil(token)
+    XCTAssertEqual(tokenCounter, 1)
+  }
+
+  /// Only providers registered before a request should service the request for predictable behavior
+  /// (i.e. the completion handler should be called exactly once per request).
+  func testIgnoresProviderRegisteredAfterRequest() {
+    let child1 = FakeOutOfBandTokenProvider()
+    testTokenProvider.register(child1)
+
+    var tokenCounter = 0
+    var token: OutOfBandToken? = nil
+    testTokenProvider.requestToken {
+      token = $0
+      tokenCounter += 1
+    }
+
+    // Child 2 was registered after the request, so the request should ignore it.
+    let child2 = FakeOutOfBandTokenProvider()
+    testTokenProvider.register(child2)
+    child2.postToken(FakeOutOfBandToken())
+
+    XCTAssertNil(token)
+    XCTAssertEqual(tokenCounter, 0)
+
+    // Child 1 was registered before the request, so it fulfills the request.
+    child1.postToken(FakeOutOfBandToken())
+    XCTAssertNotNil(token)
     XCTAssertEqual(tokenCounter, 1)
   }
 

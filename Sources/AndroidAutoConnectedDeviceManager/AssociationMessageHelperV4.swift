@@ -152,15 +152,18 @@ extension AssociationMessageHelperV4: AssociationMessageHelper {
   }
 
   func onRequiresPairingVerification(_ verificationToken: SecurityVerificationToken) {
+    Self.logger.log("Helper requesting out of band token.")
     associator.requestOutOfBandToken { [weak self] outOfBandToken in
       guard let self = self else { return }
       do {
         var code = VerificationCode()
         if let outOfBandToken = outOfBandToken {
+          Self.logger.log("Out of band verification token will be used.")
           code.state = .oobVerification
           code.payload = try outOfBandToken.encrypt(verificationToken.data)
           self.phase = .outOfBandConfirmation(verificationToken, outOfBandToken)
         } else {
+          Self.logger.log("No out of band verification token. Will perform visual verification.")
           code.state = .visualVerification
           self.phase = .visualConfirmation
           self.associator.displayPairingCode(verificationToken.pairingCode)
