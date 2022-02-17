@@ -32,7 +32,7 @@ protocol Associator {
   /// Request an out of band token.
   func requestOutOfBandToken(completion: @escaping (OutOfBandToken?) -> Void)
 
-  /// Attempt to configure a secure channel using the specified messsage stream.
+  /// Attempt to configure a secure channel using the specified message stream.
   func establishEncryption(using messageStream: MessageStream)
 
   /// Saves the secure session and establishes a secured car channel.
@@ -236,6 +236,7 @@ class AssociationManager: NSObject {
   ///   - config: A configuration object for modifying the current scan.
   func associate(_ peripheral: BLEPeripheral, config: AssociationConfig) {
     resetInternalState()
+    outOfBandTokenProvider.prepareForRequests()
 
     associationUUID = config.associationUUID
 
@@ -390,7 +391,7 @@ class AssociationManager: NSObject {
     messageStream: BLEMessageStream
   ) {
     resetInternalState()
-    outOfBandTokenProvider.reset()
+    outOfBandTokenProvider.closeForRequests()
     delegate?.associationManager(
       self,
       didCompleteAssociationWithCar: channel.car,
@@ -418,6 +419,7 @@ class AssociationManager: NSObject {
   /// - Parameter error: The error to send to the delegate.
   private func notifyDelegateOfError(_ error: AssociationError) {
     associationTimeout?.cancel()
+    outOfBandTokenProvider.closeForRequests()
     delegate?.associationManager(self, didEncounterError: error)
   }
 }

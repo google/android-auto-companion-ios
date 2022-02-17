@@ -85,7 +85,7 @@ class UserDefaultsAssociatedCarsManager: NSObject, AssociatedCarsManager {
     )
   }
 
-  /// Renames an associated car in persisted storage.
+  /// Renames an associated car in persistent storage.
   ///
   /// - Parameters:
   ///   - identifier: The ID of the car to rename.

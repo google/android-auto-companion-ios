@@ -48,7 +48,7 @@ extension ReconnectionHelperV1: ReconnectionHelper {
     config.reconnectionUUID(for: .v1)
   }
 
-  /// Prepare for the handshake with the advertisment data to configure the helper as needed.
+  /// Prepare for the handshake with the advertisement data to configure the helper as needed.
   ///
   /// For V1, this is a NO-OP because it's ready for the handshake upon completing initialization.
   ///

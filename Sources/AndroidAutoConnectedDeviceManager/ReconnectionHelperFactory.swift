@@ -22,7 +22,7 @@ protocol ReconnectionHelperFactory {
   ///
   /// - Parameters:
   ///   - peripheral: The peripheral for which the reconnection is being attempted.
-  ///   - advertismentData: The advertisement data associated with the peripheral discovery.
+  ///   - advertisementData: The advertisement data associated with the peripheral discovery.
   ///   - associatedCars: The cars among which we should test for a match against the advertisement.
   ///   - uuidConfig: A configuration for common UUIDs.
   ///   - authenticator: Authenticator to use.
@@ -44,7 +44,7 @@ struct ReconnectionHelperFactoryImpl: ReconnectionHelperFactory {
   ///
   /// - Parameters:
   ///   - peripheral: The peripheral for which the reconnection is being attempted.
-  ///   - advertismentData: The advertisement data associated with the peripheral discovery.
+  ///   - advertisementData: The advertisement data associated with the peripheral discovery.
   ///   - associatedCars: The cars among which we should test for a match against the advertisement.
   ///   - uuidConfig: A configuration for common UUIDs.
   ///   - authenticator: Authenticator to use.

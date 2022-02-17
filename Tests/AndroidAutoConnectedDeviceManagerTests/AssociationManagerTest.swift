@@ -66,7 +66,7 @@ class AssociationManagerTest: XCTestCase {
       characteristics: [clientWriteCharacteristicMock, serverWriteCharacteristicMock]
     )
 
-    // Default state is ensure that a secure channel is always set up.
+    // Default state is to ensure that a secure channel is always set up.
     secureBLEChannelMock.establishShouldInstantlyNotify = true
 
     connectionHandle = ConnectionHandleFake()
@@ -818,7 +818,7 @@ class AssociationManagerTest: XCTestCase {
   }
 
   /// Associates a peripheral with the provided `identifier` and tests that association was
-  /// successful. Follows the sercurity version 1 flow.
+  /// successful. Follows the security version 1 flow.
   private func associatePeripheral_securityV1(withIdentifier identifier: CBUUID) {
     let delegate = AssociationDelegateMock()
     associationManager.delegate = delegate

@@ -22,11 +22,11 @@ import Foundation
 /// A delegate to be notified of the current state of secure communication establishment.
 @available(iOS 10.0, *)
 protocol CommunicationManagerDelegate: AnyObject {
-  /// Invoked when the process of encryption set up has begun.
+  /// Invoked when the process of encryption setup has begun.
   ///
   /// - Parameters:
   ///   - communicationManager: The manager handling secure channel establishment.
-  ///   - car: The car for which the encryption set up is in progress.
+  ///   - car: The car for which the encryption setup is in progress.
   ///   - peripheral: The backing peripheral for the car.
   func communicationManager(
     _ communicationManager: CommunicationManager,
@@ -58,7 +58,7 @@ protocol CommunicationManagerDelegate: AnyObject {
   )
 }
 
-/// Possible errors that can result during a secure channel set up.
+/// Possible errors that can result during a secure channel setup.
 enum CommunicationManagerError: Error, Equatable {
   /// An unknown error occurred and connection could not be established.
   case unknown
@@ -90,7 +90,7 @@ enum CommunicationManagerError: Error, Equatable {
   /// reconnection cannot occur.
   case invalidMessage
 
-  /// The required advertisment data is missing.
+  /// The required advertisement data is missing.
   case missingAdvertisementData
 
   /// The required reconnection helper is missing for the specified peripheral `id`.
@@ -158,7 +158,7 @@ class CommunicationManager: NSObject {
   /// The cars waiting for a secure channel to be set up.
   var pendingCars: [PendingCar] = []
 
-  /// Handlers that are currently in the middle of encryption set up.
+  /// Handlers that are currently in the middle of encryption setup.
   var reconnectingHandlers: [ReconnectionHandler] = []
 
   /// `ReconnectionHelper` keyed by peripheral id.

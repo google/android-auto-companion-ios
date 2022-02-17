@@ -42,13 +42,15 @@ class DataExtensionsTest: XCTestCase {
     XCTAssertNotNil(Data(hex: "1A2B3C4D"))
   }
 
+  // The hex representation should always be two digits per byte.
   func testRecoverHexStringFromData() {
-    XCTAssertEqual(Data(hex: "0")!.hex, "0")
-    XCTAssertEqual(Data(hex: "1")!.hex, "1")
+    XCTAssertEqual(Data(hex: "0")!.hex, "00")
+    XCTAssertEqual(Data(hex: "1")!.hex, "01")
     XCTAssertEqual(Data(hex: "A1")!.hex, "A1")
-    XCTAssertEqual(Data(hex: "A1B")!.hex, "A1B")
+    XCTAssertEqual(Data(hex: "A1B")!.hex, "0A1B")
+    XCTAssertEqual(Data(hex: "A100")!.hex, "A100")
     XCTAssertEqual(Data(hex: "A1B2")!.hex, "A1B2")
-    XCTAssertEqual(Data(hex: "A1B2C")!.hex, "A1B2C")
+    XCTAssertEqual(Data(hex: "A1B2C")!.hex, "0A1B2C")
     XCTAssertEqual(Data(hex: "A1B2C3")!.hex, "A1B2C3")
   }
 }

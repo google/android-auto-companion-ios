@@ -99,8 +99,8 @@ extension TransportPeripheralProvider {
   /// Begin scanning based on the last specified discovery monitor.
   ///
   /// Checks whether there is an active discovery monitor and the provider is ready. If these
-  /// conditions are satisified, the scan will start. This can be used to automatically begin
-  /// scans when the provider becomes ready.
+  /// conditions are satisfied, the scan will start. This can be used to automatically begin scans
+  /// when the provider becomes ready.
   public func startScanIfNeeded() {
     guard isReady, let monitor = discoveryMonitor else { return }
 
@@ -130,10 +130,10 @@ public protocol SomePeripheralDiscoveryMonitor: PeripheralActivityMonitor {
 
 /// Mode (i.e. association or reconnection) for which to scan peripherals.
 public enum PeripheralScanMode: Equatable {
-  /// Scanning for unassociated peripehrals to associate.
+  /// Scanning for unassociated peripherals to associate.
   case association
 
-  /// Scanning for associated peripehrals to reconnect.
+  /// Scanning for associated peripherals to reconnect.
   case reconnection
 
   /// Convenience for determining if for association.

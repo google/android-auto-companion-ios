@@ -325,7 +325,7 @@ class TrustAgentManagerTest: XCTestCase {
     let channel = SecuredCarChannelMock(car: testCar1)
     trustAgentManager.delegate = delegate
 
-    // Simulate the set up of a secure channel, which should trigger the unlock flow.
+    // Simulate the setup of a secure channel, which should trigger the unlock flow.
     connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
 
     // Now trigger a message from the car with the request to enroll.

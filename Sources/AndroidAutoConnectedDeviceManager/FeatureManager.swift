@@ -247,8 +247,9 @@ open class FeatureManager {
     queryReceivedHandles[channel.car.id]?.cancel()
 
     do {
-      let handle = try channel.observeQueryReceived(from: featureID) { [weak self] queryID, query in
-        self?.handleQuery(query, queryID: queryID, from: channel.car)
+      let handle = try channel.observeQueryReceived(from: featureID) {
+        [weak self] queryID, sender, query in
+        self?.handleQuery(query, queryID: queryID, sender: sender, car: channel.car)
       }
 
       queryReceivedHandles[channel.car.id] = handle
@@ -266,24 +267,27 @@ open class FeatureManager {
     }
   }
 
-  private func handleQuery(_ query: Query, queryID: Int32, from car: Car) {
+  private func handleQuery(_ query: Query, queryID: Int32, sender: UUID, car: Car) {
     // Construct a handle to abstract away the query ID from features. This closure will ensure
     // the right ID is passed to each response.
     let responseHandle = QueryResponseHandle { [weak self] response, isSuccessful in
       try self?.sendQueryResponse(
         QueryResponse(id: queryID, isSuccessful: isSuccessful, response: response),
-        to: car
+        to: car,
+        sender: sender
       )
     }
     onQueryReceived(query, from: car, responseHandle: responseHandle)
   }
 
-  private func sendQueryResponse(_ queryResponse: QueryResponse, to car: Car) throws {
+  private func sendQueryResponse(
+    _ queryResponse: QueryResponse, to car: Car, sender: UUID
+  ) throws {
     guard let channel = connectedCarManager.securedChannel(for: car) else {
       throw FeatureManagerError.noSecureChannel
     }
 
-    try channel.sendQueryResponse(queryResponse, to: featureID)
+    try channel.sendQueryResponse(queryResponse, to: sender)
   }
 
   private func clearMessageHandles(for car: Car) {

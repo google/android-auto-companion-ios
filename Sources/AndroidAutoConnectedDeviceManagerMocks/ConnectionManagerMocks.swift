@@ -21,7 +21,7 @@ import XCTest
 
 // extend PeripheralMock to conform to SomePeripheral
 extension PeripheralMock: SomePeripheral {
-  // Empty: already satifies the requirements
+  // Empty: already satisfies the requirements
 }
 
 /// A mock central manager for testing ConnectionManager independent of CoreBluetooth.

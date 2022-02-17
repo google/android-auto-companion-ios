@@ -63,7 +63,7 @@ class ReconnectionHelperV2 {
 
   private var phase: Phase
 
-  /// Constructs a helper with the associated cars pending the advertisment that will be used for
+  /// Constructs a helper with the associated cars pending the advertisement that will be used for
   /// matching in a later phase.
   ///
   /// This constructor should only be used when the advertisement data is not known up front. This
@@ -77,7 +77,7 @@ class ReconnectionHelperV2 {
   ///   - peripheral: The peripheral for which the reconnection is being attempted.
   ///   - cars: The cars among which we should test for a match against the advertisement.
   ///   - authenticatorType: Authenticator to use.
-  /// - Returns: `nil` if none of the cars are successfully matched against the advertisment.
+  /// - Returns: `nil` if none of the cars are successfully matched against the advertisement.
   init(
     peripheral: AnyPeripheral,
     cars: Set<Car>,
@@ -100,10 +100,10 @@ class ReconnectionHelperV2 {
   ///
   /// - Parameters:
   ///   - peripheral: The peripheral for which the reconnection is being attempted.
-  ///   - advertismentData: The advertisement data associated with the peripheral discovery.
+  ///   - advertisementData: The advertisement data associated with the peripheral discovery.
   ///   - cars: The cars among which we should test for a match against the advertisement.
   ///   - authenticatorType: Authenticator to use.
-  /// - Returns: `nil` if none of the cars are successfully matched against the advertisment.
+  /// - Returns: `nil` if none of the cars are successfully matched against the advertisement.
   init?(
     peripheral: AnyPeripheral,
     advertisementData: Data,
@@ -133,7 +133,7 @@ extension ReconnectionHelperV2: ReconnectionHelper {
     config.reconnectionUUID(for: .v2)
   }
 
-  /// Prepare for the handshake with the advertisment data to configure the helper as needed.
+  /// Prepare for the handshake with the advertisement data to configure the helper as needed.
   ///
   /// V2 uses the advertisement to match the associated car.
   ///
@@ -142,7 +142,7 @@ extension ReconnectionHelperV2: ReconnectionHelper {
   func prepareForHandshake(withAdvertisementData data: Data) throws {
     guard case let .unresolved(cars) = phase else { return }
 
-    // Find an associated car which can authenticate the advertisment data. The match returned
+    // Find an associated car which can authenticate the advertisement data. The match returned
     // contains the matching car and the full HMAC that we computed.
     guard
       let match = authenticatorType.first(among: cars, matchingData: data as Data)
@@ -222,7 +222,7 @@ extension ReconnectionHelperV2: ReconnectionHelper {
   /// Handle the message handshake response.
   ///
   /// Extract the HMAC from the message and compare it with the HMAC computed for the salt
-  /// challege we sent in the previous handshake message. If they match then the car has been
+  /// challenge we sent in the previous handshake message. If they match then the car has been
   /// authenticated successfully and we are done. If not, we throw an error.
   ///
   /// - Parameters:

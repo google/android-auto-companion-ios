@@ -38,7 +38,7 @@ protocol AssociationMessageHelper {
   /// Invoked when a message that is requested to have been sent has succeeded.
   func messageDidSendSuccessfully()
 
-  /// The encryption handshake requires verification using either the full verfication data to be
+  /// The encryption handshake requires verification using either the full verification data to be
   /// verified through a separate out of band channel or the visual pairing code.
   ///
   /// - Parameter verificationToken: Token with data to verify.

@@ -19,35 +19,56 @@ import Foundation
 ///
 /// Forwards token events from its providers to its token handler and maintains the most recently
 /// posted token.
-class CoalescingOutOfBandTokenProvider {
-  private static let logger = Logger(for: CoalescingOutOfBandTokenProvider.self)
+@available(iOS 10.0, watchOS 6.0, *)
+struct CoalescingOutOfBandTokenProvider<Provider: OutOfBandTokenProvider> {
+  private static var logger: Logger { Logger(for: CoalescingOutOfBandTokenProvider<Provider>.self) }
 
   /// The child providers.
-  private var providers: [OutOfBandTokenProvider]
+  private(set) var providers: [Provider]
 
   /// Initializes this provider with child providers.
   ///
   /// - Parameter providers: The child providers to which to forward requests.
-  init(_ providers: [OutOfBandTokenProvider]) {
+  init(_ providers: [Provider]) {
     self.providers = providers
   }
 
   /// Initializes this provider with child providers.
   ///
   /// - Parameter providers: The child providers to which to forward requests.
-  convenience init(_ providers: OutOfBandTokenProvider...) {
+  init(_ providers: Provider...) {
     self.init(providers)
+  }
+
+  init(configure: (inout CoalescingOutOfBandTokenProvider) -> Void) {
+    self.init([])
+    configure(&self)
   }
 
   /// Register the specified provider as a source.
   ///
   /// - Parameter provider: The provider to register as a source.
-  func register(_ provider: OutOfBandTokenProvider) {
+  mutating func register(_ provider: Provider) {
     self.providers.append(provider)
   }
 }
 
+@available(iOS 10.0, watchOS 6.0, *)
 extension CoalescingOutOfBandTokenProvider: OutOfBandTokenProvider {
+  /// Prepare the registered providers for token requests.
+  func prepareForRequests() {
+    for provider in providers {
+      provider.prepareForRequests()
+    }
+  }
+
+  /// Close the registered providers for token requests.
+  func closeForRequests() {
+    for provider in providers {
+      provider.closeForRequests()
+    }
+  }
+
   /// Request a token and call the completion handler when it's been resolved.
   ///
   /// The request is tied to the current child providers at the time the request was made since each

@@ -18,7 +18,14 @@ import Foundation
 extension Data {
   /// Returns a hexadecimal representation of the `Data` contents.
   var hex: String {
-    self.map { String($0, radix: 16, uppercase: true) }.joined()
+    self.map {
+      // Each byte is represented by two hex digits.
+      var digitPair = String($0, radix: 16, uppercase: true)
+      if digitPair.count == 1 {
+        digitPair = "0" + digitPair
+      }
+      return digitPair
+    }.joined()
   }
 
   /// Initializes from a hexadecimal string.

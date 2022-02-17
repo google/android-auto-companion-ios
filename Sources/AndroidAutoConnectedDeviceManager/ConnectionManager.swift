@@ -181,8 +181,8 @@ public class CoreBluetoothConnectionManager: ConnectionManager<CBCentralManager>
   /// The maximum amount of times a call to `connect` will be retried.
   ///
   /// When a phone and car are paired via Bluetooth, a call to connect the two via BLE
-  /// will often times not result in a `didConnect` call. However, if we retry after a certain
-  /// amount of time, then this connection can succeed.
+  /// will oftentimes not result in a `didConnect` call. However, if we retry after a certain amount
+  /// of time, then this connection can succeed.
   ///
   /// There is no method to obtain if the car is currently paired via Bluetooth, so need to opt
   /// for retrying.
@@ -435,7 +435,9 @@ where CentralManager: SomeCentralManager {
   fileprivate var peripheralDeviceIds: [UUID: String] = [:]
 
   /// Central out of band association token provider which wraps others.
-  private let centralOutOfBandAssociationTokenProvider = CoalescingOutOfBandTokenProvider()
+  private lazy var centralOutOfBandAssociationTokenProvider:
+    CoalescingOutOfBandTokenProvider<AnyOutOfBandTokenProvider> =
+      makeCentralOutOfBandTokenProvider()
 
   /// Out of band association token provider which is externally populated.
   private let externalAssociationTokenProvider = PassiveOutOfBandTokenProvider()
@@ -484,8 +486,6 @@ where CentralManager: SomeCentralManager {
     uuidConfig = UUIDConfig(plistLoader: plistLoader)
     defaultAssociationConfig = AssociationConfig(associationUUID: uuidConfig.associationUUID)
     associationConfig = defaultAssociationConfig
-
-    centralOutOfBandAssociationTokenProvider.register(externalAssociationTokenProvider)
 
     // Calling `super` here so that subsequent code can use `self`.
     super.init()
@@ -628,13 +628,18 @@ where CentralManager: SomeCentralManager {
     }
   }
 
-  /// Determine whether this connection manager has an out of band association token.
+  /// Determines whether an `outOfBandSource` matches the ongoing association scan data.
   ///
-  /// - Parameter completion: The handler to call when the request has been processed.
-  public func hasOutOfBandAssociationToken(completion: @escaping (Bool) -> Void) {
-    centralOutOfBandAssociationTokenProvider.requestToken { token in
-      completion(token != nil)
-    }
+  /// This method will help determine if the given out of band data is the same as an ongoing scan.
+  /// The return value will change after
+  /// `scanForCarsToAssociate(namePreix:outOfBandSource:configurator:)` is called.
+  ///
+  /// - Parameter outOfBandSource: The data which will be compared with ongoing scan data.
+  /// - Returns: `true` if the `outOfBandSource` matches the data of an ongoing scan.
+  public func matchesOngoingScanDataSource(outOfBandSource: OutOfBandAssociationDataSource)
+    -> Bool
+  {
+    return associationAdvertisedNameFilter?(outOfBandSource.deviceID.hex) ?? false
   }
 
   /// Attempts to connect to any cars that are already associated.
@@ -767,6 +772,32 @@ where CentralManager: SomeCentralManager {
       return false
     }
     return associationManager.renameCar(withId: carId, to: name)
+  }
+
+  /// Make the central out of band token provider which coalesces registed token providers.
+  ///
+  /// The central token provider can register any out of band token provider. It is initialized
+  /// with the external token provider and if supported will also register the accessory oob token
+  /// provider.
+  ///
+  /// - Returns: The new out of band token provider.
+  private func makeCentralOutOfBandTokenProvider()
+    -> CoalescingOutOfBandTokenProvider<AnyOutOfBandTokenProvider>
+  {
+    CoalescingOutOfBandTokenProvider {
+      $0.register(wrapping: externalAssociationTokenProvider)
+      #if OOB_SPP
+        logger.log("Experimental Out of Band + SPP is enabled.")
+        let accessoryOutOfBandTokenProviderFactory = AccessoryOutOfBandTokenProviderFactory()
+        if let accessoryOutOfBandTokenProvider =
+          accessoryOutOfBandTokenProviderFactory.makeProvider()
+        {
+          $0.register(wrapping: accessoryOutOfBandTokenProvider)
+        }
+      #else
+        logger.log("Experimental Out of Band + SPP is NOT enabled. Use the OOB_SPP flag to enable.")
+      #endif
+    }
   }
 
   /// Verifies that the list of now invalidated services does not include the services that this
@@ -1236,42 +1267,19 @@ extension ConnectionManager: CentralManagerDelegate {
     advertisementData: [String: Any],
     rssi RSSI: NSNumber
   ) {
+    guard shouldConnect(to: peripheral) else { return }
+
     let advertisedName = resolveName(from: advertisementData)
-
-    // The name during association can come from the scan response, which iOS interprets as two
-    // calls to this `didDiscover` callback. Thus, ignore any callbacks in which we cannot resolve
-    // the name.
-    if isAssociating, advertisedName == nil {
-      logger.log(
-        """
-        Discovered device (\(peripheral.logName): \(peripheral.identifier.uuidString)). \
-        With no advertised name during association. Ignoring. State: \(peripheral.state.rawValue).
-        """
-      )
-      return
-    }
-
     logger.log(
       """
       Discovered device (\(peripheral.logName): \(peripheral.identifier.uuidString)). \
       Advertised name: <\(advertisedName ?? "no name")>.) State: \(peripheral.state.rawValue).
       """
     )
-
-    guard shouldConnect(to: peripheral) else { return }
-
     // Nothing else to do if associating. Association relies on the user to explicitly call
     // associate(_:) for a connection.
     if isAssociating {
-      guard associationAdvertisedNameFilter?(advertisedName) ?? true else {
-        logger.log("Discovered car but rejected for association by filter. Ignoring.")
-        return
-      }
-
-      discoveredPeripherals.insert(peripheral)
-
-      associationDelegate?.connectionManager(
-        self, didDiscover: peripheral, advertisedName: advertisedName)
+      handleDiscoveryForAssociation(of: peripheral, advertisedName: advertisedName)
       return
     }
 
@@ -1282,6 +1290,30 @@ extension ConnectionManager: CentralManagerDelegate {
 
     discoveredPeripherals.insert(peripheral)
     attemptReconnection(with: peripheral, advertisementData: advertisementData)
+  }
+
+  private func handleDiscoveryForAssociation(of peripheral: Peripheral, advertisedName: String?) {
+    // The name during association can come from the scan response, which iOS interprets as two
+    // calls to this `didDiscover` callback. Thus, ignore any callbacks in which we cannot resolve
+    // the name.
+    guard let advertisedName = advertisedName else {
+      logger.log(
+        """
+        Discovered device (\(peripheral.logName): \(peripheral.identifier.uuidString)). \
+        With no advertised name during association. Ignoring. State: \(peripheral.state.rawValue).
+        """
+      )
+      return
+    }
+    guard associationAdvertisedNameFilter?(advertisedName) ?? true else {
+      logger.log("Discovered car but rejected for association by filter. Ignoring.")
+      return
+    }
+    discoveredPeripherals.insert(peripheral)
+    let fullName =
+      requiresNamePrefix(advertisedName) ? associationNamePrefix + advertisedName : advertisedName
+
+    associationDelegate?.connectionManager(self, didDiscover: peripheral, advertisedName: fullName)
   }
 
   private func resolveName(from advertisementData: [String: Any]) -> String? {
@@ -1306,8 +1338,14 @@ extension ConnectionManager: CentralManagerDelegate {
     }
 
     logger.debug.log(
-      "Advertisement data of length \(rawData.count). Converting to hex value and adding prefix.")
-    return associationNamePrefix + rawData.hex
+      "Advertisement data of length \(rawData.count). Converting to hex value.")
+    return rawData.hex
+  }
+
+  /// Returns `true` if the `advertisedName` is a new version name and a prefix needs to be
+  /// prepended.
+  private func requiresNamePrefix(_ advertisedName: String) -> Bool {
+    return advertisedName.count != advertisementLengthForUTF8Conversion
   }
 
   /// Returns `true` if a connection should be attempted with the given `peripheral`.

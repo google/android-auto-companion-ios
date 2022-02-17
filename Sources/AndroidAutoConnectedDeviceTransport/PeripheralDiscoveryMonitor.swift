@@ -48,7 +48,7 @@ public class PeripheralDiscoveryMonitor<Peripheral: TransportPeripheral>:
   ///
   /// - Parameters:
   ///   - peripheral: The discovered peripheral.
-  ///   - conetxt: Context if any associated with the peripheral discovery.
+  ///   - context: Context if any associated with the peripheral discovery.
   public func onPeripheralDiscovered(_ peripheral: Peripheral, context: DiscoveryContext? = nil) {
     discoveryHandler(peripheral, context)
   }

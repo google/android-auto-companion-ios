@@ -18,14 +18,14 @@ import Foundation
 
 /// A creator of `ReconnectionHandler`.
 protocol ReconnectionHandlerFactory {
-  /// Creates a handler that can be used set up secure communication with the given car.
+  /// Creates a handler that can be used to set up secure communication with the given car.
   ///
   /// - Parameters:
   ///   - car: The car to communicate securely with.
   ///   - connectionHandle: A handle for managing connections to remote cars.
   ///   - secureSession: The data that represents a previous secure session with the car.
   ///   - messageStream: The stream that handles message sending.
-  ///   - secureBLEChannel: The underlying stream that handles set up of secure communication.
+  ///   - secureBLEChannel: The underlying stream that handles setup of secure communication.
   ///   - secureSessionManager: Manager for retrieving and storing secure sessions.
   func makeHandler(
     car: Car,

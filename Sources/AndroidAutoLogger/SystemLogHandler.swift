@@ -46,7 +46,7 @@ public class SystemLogHandler: LoggerDelegate {
 /// System log extensions for Logger.Level.
 @available(iOS 10.0, macOS 10.15, *)
 extension Logger.Level {
-  /// Get the corresonding `OSLogType`.
+  /// Get the corresponding `OSLogType`.
   var osLogType: OSLogType {
     switch self {
     case .debug: return .debug

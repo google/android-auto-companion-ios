@@ -99,7 +99,7 @@ public enum DecimalFormat {
       return formatter.string(from: value as NSNumber) ?? "<unknown>"
     case .pattern(let pattern):
       let formatter = NumberFormatter()
-      // An optional semincolon splits subpatterns for separate positive and negative patterns.
+      // An optional semicolon splits subpatterns for separate positive and negative patterns.
       let subpatterns = pattern.split(separator: ";", maxSplits: 1)
       switch subpatterns.count {  // We should only ever get one or two subpatterns.
       case 1:

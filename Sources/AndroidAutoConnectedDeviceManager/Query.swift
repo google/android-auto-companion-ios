@@ -26,11 +26,11 @@ public struct Query: Equatable {
 
 extension Query {
   /// Converts this `Query` to its proto representation in `Data` form.
-  func toProtoData(queryID: Int32, recipient: UUID) throws -> Data {
+  func toProtoData(queryID: Int32, sender: UUID) throws -> Data {
     var queryProto = Com_Google_Companionprotos_Query()
 
     queryProto.id = queryID
-    queryProto.sender = recipient.toData()
+    queryProto.sender = sender.toData()
     queryProto.request = self.request
 
     if let parameters = self.parameters {

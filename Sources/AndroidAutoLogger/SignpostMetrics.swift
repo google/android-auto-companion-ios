@@ -102,7 +102,7 @@ public struct SignpostMetrics {
     handler.post(marker, dso: dso)
   }
 
-  /// Post the signpost metric if the system supports it, othewise it's a no-op.
+  /// Post the signpost metric if the system supports it, otherwise it's a no-op.
   ///
   /// See https://developer.apple.com/documentation/metrickit/3214364-mxsignpost
   /// - Parameters:

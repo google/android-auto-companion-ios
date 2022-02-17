@@ -150,7 +150,7 @@ class TrustAgentConfigUserDefaults: TrustAgentConfig {
     guard let savedConfig = storage.data(forKey: trustedDeviceConfigurationKey(forCarId: car.id))
     else {
       Self.logger.debug.log(
-        "No individual car configuration found for car id. Empty config will be retured.",
+        "No individual car configuration found for car id. Empty config will be returned.",
         redacting: "car id: \(car.id)"
       )
       return IndividualCarConfig()
@@ -158,7 +158,7 @@ class TrustAgentConfigUserDefaults: TrustAgentConfig {
     guard let loadedConfig = try? JSONDecoder().decode(IndividualCarConfig.self, from: savedConfig)
     else {
       Self.logger.error.log(
-        "Cannot decode individual car configuration for car id. Empty config will be retured.",
+        "Cannot decode individual car configuration for car id. Empty config will be returned.",
         redacting: "car id: \(car.id)"
       )
       return IndividualCarConfig()

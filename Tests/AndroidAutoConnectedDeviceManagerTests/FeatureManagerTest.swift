@@ -23,6 +23,7 @@ private enum Constants {
   // The values of these UUIDs are arbitrary; they just need to be different.
   static let featureID = UUID(uuidString: "8ed7346c-0a15-414f-af26-2964f7b17570")!
   static let differentID = UUID(uuidString: "7e796761-2422-4552-bb0d-97bb3fc1bcfa")!
+  static let senderId = UUID(uuidString: "0497aec5-cd44-4f31-ae92-5d3356159aea")!
 }
 
 /// Unit tests for `FeatureManager`.
@@ -302,7 +303,8 @@ class FeatureManagerTest: XCTestCase {
     connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
 
     let query = Query(request: Data("request".utf8), parameters: Data())
-    channel.triggerQuery(query, queryID: 5, from: Constants.featureID)
+    channel.triggerQuery(
+      query, queryID: 5, sender: Constants.senderId, recipient: Constants.featureID)
 
     XCTAssertEqual(featureManager.receivedQueries.count, 1)
     XCTAssertEqual(featureManager.receivedQueries[0], query)
@@ -319,7 +321,8 @@ class FeatureManagerTest: XCTestCase {
 
     let queryID: Int32 = 5
     let query = Query(request: Data("request".utf8), parameters: Data())
-    channel.triggerQuery(query, queryID: queryID, from: Constants.featureID)
+    channel.triggerQuery(
+      query, queryID: queryID, sender: Constants.senderId, recipient: Constants.featureID)
 
     XCTAssertEqual(featureManager.queryResponseHandlers.count, 1)
     let responseHandle = featureManager.queryResponseHandlers[0]
@@ -331,7 +334,8 @@ class FeatureManagerTest: XCTestCase {
       QueryResponse(id: queryID, isSuccessful: true, response: response)
 
     XCTAssertEqual(channel.writtenQueryResponses.count, 1)
-    XCTAssertEqual(channel.writtenQueryResponses[0], expectedQueryResponse)
+    XCTAssertEqual(channel.writtenQueryResponses[0].queryResponse, expectedQueryResponse)
+    XCTAssertEqual(channel.writtenQueryResponses[0].recipient, Constants.senderId)
   }
 }
 

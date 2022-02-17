@@ -16,9 +16,13 @@ import AndroidAutoCoreBluetoothProtocolsMocks
 import AndroidAutoSecureChannel
 import CoreBluetooth
 import XCTest
+@_implementationOnly import AndroidAutoCompanionProtos
 
 @testable import AndroidAutoConnectedDeviceManager
 @testable import AndroidAutoConnectedDeviceManagerMocks
+
+private typealias OutOfBandAssociationData = Com_Google_Companionprotos_OutOfBandAssociationData
+private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBandAssociationToken
 
 /// Unit tests for `CommunicationManager`. Specifically testing the version 2 flow.
 @available(iOS 10.0, *)
@@ -412,6 +416,90 @@ class ConnectionManagerTest: XCTestCase {
 
     let expectedName = "\(namePrefix)\(hexName)"
     XCTAssertEqual(associationDelegateMock.advertisedName, expectedName)
+  }
+
+  func testCentralManagerDidDiscoverPeripheralWithNameFilter_notifiesWithHexNameAndNamePrefix()
+    throws
+  {
+    let peripheralMock = PeripheralMock(name: "Test")
+    let advertisedName = "advertisedName"
+    let namePrefix = "namePrefix "
+
+    /// The hex name just needs to be a length that is not 8 bytes.
+    let hexName = "2AF8"
+    let hexNameData = Data(hex: hexName)!
+
+    // Construct out of band data source.
+    var outOfBandData = OutOfBandAssociationData()
+    outOfBandData.token = OutOfBandAssociationToken()
+    outOfBandData.deviceIdentifier = Data(hex: hexName)!
+    let querySafeBase64 = try outOfBandData.serializedData().base64EncodedString()
+      .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+      .replacingOccurrences(of: "/", with: "_")
+      .replacingOccurrences(of: "+", with: "-")
+    let url = URL(string: "http://companion/associate?oobData=\(querySafeBase64)")
+    let dataSource = try OutOfBandAssociationDataSource(url!)
+
+    connectionManager.scanForCarsToAssociate(namePrefix: namePrefix, outOfBandSource: dataSource)
+    XCTAssertNoThrow(try connectionManager.associate(peripheralMock))
+
+    let advertisementData: [String: Any] = [
+      CBAdvertisementDataLocalNameKey: advertisedName,
+      CBAdvertisementDataServiceDataKey: [uuidConfig.associationDataUUID: hexNameData],
+    ]
+    connectionManager.centralManager(
+      centralManagerMock,
+      didDiscover: peripheralMock,
+      advertisementData: advertisementData,
+      rssi: 1.0)
+
+    XCTAssertTrue(connectionManager.discoveredPeripherals.contains(peripheralMock))
+    XCTAssertTrue(associationDelegateMock.discoveredCars.contains(peripheralMock))
+
+    let expectedName = "\(namePrefix)\(hexName)"
+    XCTAssertEqual(associationDelegateMock.advertisedName, expectedName)
+  }
+
+  func testCentralManagerDidDiscoverPeripheralWithNameFilter_doNotNotifyDelegateWithUTF8Name()
+    throws
+  {
+    let peripheralMock = PeripheralMock(name: "Test")
+    let advertisedName = "advertisedName"
+
+    /// UTF-8 encoding requires the name be 8 bytes long
+    let utf8Name = "12345678"
+    let namePrefix = "namePrefix "
+
+    /// The hex name just needs to be a length that is not 8 bytes.
+    let hexName = "2AF8"
+    let hexNameData = Data(hex: hexName)!
+
+    // Create QR code out of band data source.
+    var outOfBandData = OutOfBandAssociationData()
+    outOfBandData.token = OutOfBandAssociationToken()
+    outOfBandData.deviceIdentifier = hexNameData
+    let querySafeBase64 = try outOfBandData.serializedData().base64EncodedString()
+      .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+      .replacingOccurrences(of: "/", with: "_")
+      .replacingOccurrences(of: "+", with: "-")
+    let url = URL(string: "http://companion/associate?oobData=\(querySafeBase64)")
+    let dataSource = try OutOfBandAssociationDataSource(url!)
+
+    connectionManager.scanForCarsToAssociate(namePrefix: namePrefix, outOfBandSource: dataSource)
+    XCTAssertNoThrow(try connectionManager.associate(peripheralMock))
+
+    let advertisementData: [String: Any] = [
+      CBAdvertisementDataLocalNameKey: advertisedName,
+      CBAdvertisementDataServiceDataKey: [uuidConfig.associationDataUUID: Data(utf8Name.utf8)],
+    ]
+
+    connectionManager.centralManager(
+      centralManagerMock,
+      didDiscover: peripheralMock,
+      advertisementData: advertisementData,
+      rssi: 1.0)
+
+    XCTAssertFalse(associationDelegateMock.discoveredCars.contains(peripheralMock))
   }
 
   // MARK: - Disconnection tests.

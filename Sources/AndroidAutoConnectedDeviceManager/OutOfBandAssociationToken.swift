@@ -41,7 +41,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
 
   /// OutOfBandToken Conformance.
   extension OutOfBandAssociationToken: OutOfBandToken {
-    /// Size of the authentication tag appended to the end of the encyrypted data.
+    /// Size of the authentication tag appended to the end of the encrypted data.
     private static let tagSize = 16
 
     func encrypt(_ message: Data) throws -> Data {

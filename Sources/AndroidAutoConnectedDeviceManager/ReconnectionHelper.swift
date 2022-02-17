@@ -35,7 +35,7 @@ protocol ReconnectionHelper: AnyObject {
   /// Get the appropriate discovery uuid from the config.
   func discoveryUUID(from config: UUIDConfig) -> CBUUID
 
-  /// Prepare for the handshake with the advertisment data to configure the helper as needed.
+  /// Prepare for the handshake with the advertisement data to configure the helper as needed.
   ///
   /// - Parameter data: The advertisement data.
   /// - Throws: An error if the helper cannot be configured.

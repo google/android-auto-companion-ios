@@ -78,7 +78,7 @@ static string CPPStringFromData(const NSData *data) {
 // MARK: - Properties.
 
 - (AAEState)handshakeState {
-  // If the handshake has bee null-ed out, that means the handshake was completed. So return
+  // If the handshake has been null-ed out, that means the handshake was completed. So return
   // the state indicating as such.
   if (!_handshake) {
     return AAEStateAlreadyUsed;

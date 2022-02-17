@@ -47,13 +47,13 @@ class EstablishedCarChannel: NSObject, SecuredCarChannelPeripheral {
 
   /// A mapping of feature IDs to closures that should be notified when a query is received for that
   /// feature.
-  private var receivedQueryObservations: [UUID: (Int32, Query) -> Void] = [:]
+  private var receivedQueryObservations: [UUID: (Int32, UUID, Query) -> Void] = [:]
 
   /// Queries that were received, but had no registered observation for them.
   ///
   /// These queries are saved until an observer is registered, after which the queries are sent to
   /// that observation in the order they are received.
-  private var missedQueriesForRecipients: [UUID: [(Int32, Query)]] = [:]
+  private var missedQueriesForRecipients: [UUID: [(Int32, UUID, Query)]] = [:]
 
   /// Keep track of unique recipient UUIDs being observed to an identifier for observations
   /// that should be invoked when a query is received.
@@ -141,7 +141,7 @@ extension EstablishedCarChannel: SecuredCarChannel {
 
   func observeQueryReceived(
     from recipient: UUID,
-    using observation: @escaping ((Int32, Query) -> Void)
+    using observation: @escaping ((Int32, UUID, Query) -> Void)
   ) throws -> ObservationHandle {
     guard queryRecipientToObservations[recipient] == nil else {
       throw SecuredCarChannelError.observerAlreadyRegistered
@@ -155,8 +155,8 @@ extension EstablishedCarChannel: SecuredCarChannel {
     // have to worry about race conditions between registering and receiving queries.
     defer {
       if let missedQueries = missedQueriesForRecipients[recipient] {
-        for (id, query) in missedQueries {
-          observation(id, query)
+        for (id, sender, query) in missedQueries {
+          observation(id, sender, query)
         }
         missedQueriesForRecipients[recipient] = nil
       }
@@ -206,7 +206,7 @@ extension EstablishedCarChannel: SecuredCarChannel {
     let queryID = nextQueryID()
     do {
       try messageStream.writeEncryptedMessage(
-        try query.toProtoData(queryID: queryID, recipient: recipient),
+        try query.toProtoData(queryID: queryID, sender: recipient),
         params: MessageStreamParams(recipient: recipient, operationType: .query)
       )
 
@@ -376,7 +376,7 @@ extension EstablishedCarChannel: MessageStreamDelegate {
     if let observationID = queryRecipientToObservations[recipient] {
       // Unlikely for this unwrap to fail since the observation ID is created at the time of
       // registration.
-      receivedQueryObservations[observationID]?(query.id, query.toQuery())
+      receivedQueryObservations[observationID]?(query.id, query.senderUUID, query.toQuery())
       return
     }
 
@@ -387,7 +387,7 @@ extension EstablishedCarChannel: MessageStreamDelegate {
       missedQueriesForRecipients[recipient] = []
     }
 
-    missedQueriesForRecipients[recipient]?.append((query.id, query.toQuery()))
+    missedQueriesForRecipients[recipient]?.append((query.id, query.senderUUID, query.toQuery()))
   }
 
   public func messageStreamDidWriteMessage(
@@ -421,6 +421,12 @@ extension QueryProto {
   fileprivate func toQuery() -> Query {
     return Query(request: self.request, parameters: self.parameters)
   }
+
+  /// A `UUID` representation of the `sender` field.
+  fileprivate var senderUUID: UUID {
+    NSUUID(uuidBytes: [UInt8](self.sender)) as UUID
+  }
+
 }
 
 extension QueryResponseProto {

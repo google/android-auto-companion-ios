@@ -392,7 +392,7 @@ private struct VersionExchangeHandler: ResolutionExchangeHandler {
 
 /// Handles capabilities exchange.
 ///
-/// Sends empty capabilities to satisify V3 security requirements. Since V4 deprecates capabilities
+/// Sends empty capabilities to satisfy V3 security requirements. Since V4 deprecates capabilities
 /// exchange, we don't need to build it out any further.
 private struct EmptyCapabilitiesExchangeHandler: ResolutionExchangeHandler {
   private static let logger = Logger(for: EmptyCapabilitiesExchangeHandler.self)
@@ -414,7 +414,7 @@ private struct EmptyCapabilitiesExchangeHandler: ResolutionExchangeHandler {
   func sendCapabilities() {
     guard let delegate = self.delegate else { return }
 
-    // Sends empty capabilties to meet the minimal requirements for the exchange.
+    // Sends empty capabilities to meet the minimal requirements for the exchange.
     guard let serializedProto = try? CapabilitiesExchange().serializedData() else {
       // This shouldn't fail because nothing dynamic is going into the proto.
       Self.logger.error.log("Could not serialize capabilities exchange proto")

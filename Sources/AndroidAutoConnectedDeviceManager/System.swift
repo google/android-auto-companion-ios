@@ -33,7 +33,7 @@ private protocol SomeSystem {
   /// Determine whether the current device is unlocked.
   static var isCurrentDeviceUnlocked: Bool { get }
 
-  /// Indicates whether this device can somehow be authenticated (e.g. passcode, bioemetrics, etc.).
+  /// Indicates whether this device can somehow be authenticated (e.g. passcode, biometrics, etc.).
   static var canAuthenticateDevice: Bool { get }
 }
 
@@ -54,7 +54,7 @@ private protocol SomeSystem {
     /// Determine whether the current device is unlocked.
     static var isCurrentDeviceUnlocked: Bool { UIApplication.shared.isProtectedDataAvailable }
 
-    /// Indicates whether this device can somehow be authenticated (e.g. passcode or bioemetrics).
+    /// Indicates whether this device can somehow be authenticated (e.g. passcode or biometrics).
     static var canAuthenticateDevice: Bool {
       LAContext().canEvaluatePolicy(.deviceOwnerAuthentication, error: nil)
     }
@@ -78,7 +78,7 @@ private protocol SomeSystem {
     /// The watch must be unlocked to run this app, so the value must always be `true`.
     static var isCurrentDeviceUnlocked: Bool { true }
 
-    /// Indicates whether this device can somehow be authenticated (e.g. passcode or bioemetrics).
+    /// Indicates whether this device can somehow be authenticated (e.g. passcode or biometrics).
     ///
     /// WatchOS currently has no API for device level authentication.
     static var canAuthenticateDevice: Bool { false }

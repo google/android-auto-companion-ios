@@ -291,7 +291,7 @@ class EstablishedCarChannelTest: XCTestCase {
 
     XCTAssertEqual(messageStream.writtenEncryptedMessages.count, 1)
 
-    let expectedMessage = try! query.toProtoData(queryID: queryID, recipient: recipient)
+    let expectedMessage = try! query.toProtoData(queryID: queryID, sender: recipient)
     let expectedParams = MessageStreamParams(recipient: recipient, operationType: .query)
 
     XCTAssertEqual(messageStream.writtenEncryptedMessages[0].message, expectedMessage)
@@ -391,10 +391,11 @@ class EstablishedCarChannelTest: XCTestCase {
   func testQueryObservation_throwsErrorIfMultipleObserversRegistered() {
     let recipient = UUID()
 
-    XCTAssertNoThrow(try channel.observeQueryReceived(from: recipient) { _, _ in })
+    XCTAssertNoThrow(try channel.observeQueryReceived(from: recipient) { _, _, _ in })
 
     // Second call to register on same recipient should throw error.
-    XCTAssertThrowsError(try channel.observeQueryReceived(from: recipient) { _, _ in }) { error in
+    XCTAssertThrowsError(try channel.observeQueryReceived(from: recipient) { _, _, _ in }) {
+      error in
       XCTAssertEqual(error as! SecuredCarChannelError, .observerAlreadyRegistered)
     }
   }
@@ -405,24 +406,26 @@ class EstablishedCarChannelTest: XCTestCase {
     observerNotCalled.isInverted = true
 
     let recipient = UUID(uuidString: "28092c2c-3b28-4aa6-ad0f-99d2e8c72468")!
+    let expectedSender = UUID(uuidString: "dd17ffb7-496f-4e5d-83be-b39048d46a26")!
     let otherRecipient = UUID(uuidString: "9205bf88-bcf0-4faa-8c67-c3f5a740ff30")!
 
     let expectedQueryID: Int32 = 5
     let expectedQuery = Query(request: Data("request".utf8), parameters: Data())
 
     XCTAssertNoThrow(
-      try channel.observeQueryReceived(from: recipient) { queryID, query in
+      try channel.observeQueryReceived(from: recipient) { queryID, sender, query in
         XCTAssertEqual(queryID, expectedQueryID)
+        XCTAssertEqual(sender, expectedSender)
         XCTAssertEqual(query, expectedQuery)
         observerCalled.fulfill()
       })
 
     XCTAssertNoThrow(
-      try channel.observeQueryReceived(from: otherRecipient) { _, _ in
+      try channel.observeQueryReceived(from: otherRecipient) { _, _, _ in
         observerNotCalled.fulfill()
       })
 
-    let queryData = try! expectedQuery.toProtoData(queryID: expectedQueryID, recipient: recipient)
+    let queryData = try! expectedQuery.toProtoData(queryID: expectedQueryID, sender: expectedSender)
     messageStream.triggerMessageReceived(
       queryData,
       params: MessageStreamParams(recipient: recipient, operationType: .query)
@@ -442,13 +445,14 @@ class EstablishedCarChannelTest: XCTestCase {
     observerNotCalled.isInverted = true
 
     let recipient = UUID(uuidString: "28092c2c-3b28-4aa6-ad0f-99d2e8c72468")!
+    let expectedSender = UUID(uuidString: "dd17ffb7-496f-4e5d-83be-b39048d46a26")!
     let otherRecipient = UUID(uuidString: "9205bf88-bcf0-4faa-8c67-c3f5a740ff30")!
 
     let expectedQueryID: Int32 = 5
     let expectedQuery = Query(request: Data("request".utf8), parameters: Data())
 
     // Send the message before registration of observers.
-    let queryData = try! expectedQuery.toProtoData(queryID: expectedQueryID, recipient: recipient)
+    let queryData = try! expectedQuery.toProtoData(queryID: expectedQueryID, sender: expectedSender)
     messageStream.triggerMessageReceived(
       queryData,
       params: MessageStreamParams(recipient: recipient, operationType: .query)
@@ -456,14 +460,15 @@ class EstablishedCarChannelTest: XCTestCase {
 
     // Now, register the observers.
     XCTAssertNoThrow(
-      try channel.observeQueryReceived(from: recipient) { queryID, query in
+      try channel.observeQueryReceived(from: recipient) { queryID, sender, query in
         XCTAssertEqual(queryID, expectedQueryID)
+        XCTAssertEqual(sender, expectedSender)
         XCTAssertEqual(query, expectedQuery)
         observerCalled.fulfill()
       })
 
     XCTAssertNoThrow(
-      try channel.observeQueryReceived(from: otherRecipient) { _, _ in
+      try channel.observeQueryReceived(from: otherRecipient) { _, _, _ in
         observerNotCalled.fulfill()
       })
 
@@ -480,22 +485,23 @@ class EstablishedCarChannelTest: XCTestCase {
     observerNotCalled.isInverted = true
 
     let recipient = UUID(uuidString: "28092c2c-3b28-4aa6-ad0f-99d2e8c72468")!
+    let sender = UUID(uuidString: "dd17ffb7-496f-4e5d-83be-b39048d46a26")!
 
     let queryID: Int32 = 5
     let query = Query(request: Data("request".utf8), parameters: Data())
 
     // Send the message before registration of observers.
-    let queryData = try! query.toProtoData(queryID: queryID, recipient: recipient)
+    let queryData = try! query.toProtoData(queryID: queryID, sender: sender)
     messageStream.triggerMessageReceived(
       queryData,
       params: MessageStreamParams(recipient: recipient, operationType: .query)
     )
 
-    let handle = try! channel.observeQueryReceived(from: recipient) { _, _ in }
+    let handle = try! channel.observeQueryReceived(from: recipient) { _, _, _ in }
     handle.cancel()
 
     // This second register should not trigger any missed queries.
-    let _ = try! channel.observeQueryReceived(from: recipient) { _, _ in
+    let _ = try! channel.observeQueryReceived(from: recipient) { _, _, _ in
       observerNotCalled.fulfill()
     }
 
@@ -513,24 +519,26 @@ class EstablishedCarChannelTest: XCTestCase {
     observerNotCalled.isInverted = true
 
     let recipient = UUID(uuidString: "28092c2c-3b28-4aa6-ad0f-99d2e8c72468")!
+    let expectedSender = UUID(uuidString: "dd17ffb7-496f-4e5d-83be-b39048d46a26")!
     let otherRecipient = UUID(uuidString: "9205bf88-bcf0-4faa-8c67-c3f5a740ff30")!
 
     let expectedQueryID: Int32 = 5
     let expectedQuery = Query(request: Data("request".utf8), parameters: Data())
 
     XCTAssertNoThrow(
-      try channel.observeQueryReceived(from: recipient) { queryID, query in
+      try channel.observeQueryReceived(from: recipient) { queryID, sender, query in
         XCTAssertEqual(queryID, expectedQueryID)
+        XCTAssertEqual(sender, expectedSender)
         XCTAssertEqual(query, expectedQuery)
         observerCalled.fulfill()
       })
 
-    let observationToCancel = try! channel.observeQueryReceived(from: otherRecipient) { _, _ in
+    let observationToCancel = try! channel.observeQueryReceived(from: otherRecipient) { _, _, _ in
       observerNotCalled.fulfill()
     }
     observationToCancel.cancel()
 
-    let queryData = try! expectedQuery.toProtoData(queryID: expectedQueryID, recipient: recipient)
+    let queryData = try! expectedQuery.toProtoData(queryID: expectedQueryID, sender: expectedSender)
     messageStream.triggerMessageReceived(
       queryData,
       params: MessageStreamParams(recipient: recipient, operationType: .query)

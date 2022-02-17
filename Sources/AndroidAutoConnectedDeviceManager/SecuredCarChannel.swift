@@ -17,7 +17,7 @@
 @_implementationOnly import AndroidAutoSecureChannel
 import Foundation
 
-/// The possible errors that can result from sending an ecnrypted message to a car.
+/// The possible errors that can result from sending an encrypted message to a car.
 enum SecuredCarChannelError: Error {
   /// There was an error encrypting the message to send to the car.
   case cannotEncryptMessage
@@ -65,7 +65,8 @@ public protocol SecuredCarChannel: AnyObject {
 
   /// Observe when a query has been received from the given recipient.
   ///
-  /// The closure passed to this method is passed a unique identifier and the details of the query.
+  /// The closure passed to this method is passed a unique identifier, the UUID of the sender and
+  /// the details of the query. The sender UUID should be the UUID that a response is directed to.
   /// The unique identifier must be passed as part of `sendQueryResponse(_:)`. Any queries that
   /// arrived before the registration of this observer will be delivered immediately following this
   /// call.
@@ -81,7 +82,7 @@ public protocol SecuredCarChannel: AnyObject {
   /// - Throws: An error if an observer has already been registered for the given `recipient`.
   func observeQueryReceived(
     from recipient: UUID,
-    using observation: @escaping ((Int32, Query) -> Void)
+    using observation: @escaping ((Int32, UUID, Query) -> Void)
   ) throws -> ObservationHandle
 
   /// Writes an encrypted message to the recipient on the car associated with this class.

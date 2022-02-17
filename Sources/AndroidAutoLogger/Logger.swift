@@ -40,7 +40,7 @@ public struct Logger {
   /// Category for tagging a log entry (e.g. "YourSmartMonitor", "YourGreatController").
   public let category: String?
 
-  /// Logging level indicating the signficance of the log.
+  /// Logging level indicating the significance of the log.
   public private(set) var level: Level = .standard
 
   /// Indicates whether logs are printed to standard output in addition to the archive.
@@ -68,7 +68,7 @@ public struct Logger {
   /// Initializer for a logger with both a subsystem and a category.
   ///
   /// - Parameters:
-  ///   - subsystem: Subystem to be written to the log record.
+  ///   - subsystem: Subsystem to be written to the log record.
   ///   - category: Category to be written to the log record.
   ///   - prints: `true` (defaults to `false`) to print to standard output besides archiving.
   public init(subsystem: String, category: String, prints: Bool = false) {
@@ -320,14 +320,14 @@ extension Logger {
     // Check whether the fully qualified category is prefixed by the subsystem. If not, just take
     // the category to be the fully qualified category.
     let typeName = String(reflecting: type)
-    let subystemPrefix = subsystem + "."
+    let subsystemPrefix = subsystem + "."
 
-    guard typeName.hasPrefix(subystemPrefix), typeName.endIndex != subystemPrefix.endIndex else {
+    guard typeName.hasPrefix(subsystemPrefix), typeName.endIndex != subsystemPrefix.endIndex else {
       // This would happen if the logger is instantiated outside of the type's module.
       self.category = String(describing: type)
       return
     }
-    let baseTypeName = String(typeName.suffix(from: subystemPrefix.endIndex))
+    let baseTypeName = String(typeName.suffix(from: subsystemPrefix.endIndex))
 
     // Handle mangled type names which have a prefix in parentheses followed by a period.
     guard let lastParenIndex = baseTypeName.lastIndex(of: ")") else {

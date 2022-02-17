@@ -32,7 +32,7 @@ class ReconnectionHandlerImpl: NSObject, ReconnectionHandler {
 
   /// Possible unlock states.
   enum State {
-    /// A set up of a secure channel has not been requested.
+    /// A setup of a secure channel has not been requested.
     case none
 
     /// New keys for encryption are being derived.
@@ -86,7 +86,7 @@ class ReconnectionHandlerImpl: NSObject, ReconnectionHandler {
   }
 
   func establishEncryption() throws {
-    Self.logger.log("Starting set up of secure channel with car (id: \(car.id)).")
+    Self.logger.log("Starting setup of secure channel with car (id: \(car.id)).")
 
     state = .keyExchangeInProgress
 

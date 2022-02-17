@@ -65,7 +65,7 @@ class SystemFeatureManagerTest: XCTestCase {
       response: Data(deviceName.utf8)
     )
     XCTAssertEqual(channel.writtenQueryResponses.count, 1)
-    XCTAssertEqual(channel.writtenQueryResponses[0], expectedQueryResponse)
+    XCTAssertEqual(channel.writtenQueryResponses[0].queryResponse, expectedQueryResponse)
   }
 
   // MARK: - App name tests
@@ -84,7 +84,7 @@ class SystemFeatureManagerTest: XCTestCase {
       response: Data(appName.utf8)
     )
     XCTAssertEqual(channel.writtenQueryResponses.count, 1)
-    XCTAssertEqual(channel.writtenQueryResponses[0], expectedQueryResponse)
+    XCTAssertEqual(channel.writtenQueryResponses[0].queryResponse, expectedQueryResponse)
   }
 
   func testOnAppNameRetrievalFaiL_sendsUnsuccessfulQueryResponse() {
@@ -106,7 +106,7 @@ class SystemFeatureManagerTest: XCTestCase {
       response: Data()
     )
     XCTAssertEqual(channel.writtenQueryResponses.count, 1)
-    XCTAssertEqual(channel.writtenQueryResponses[0], expectedQueryResponse)
+    XCTAssertEqual(channel.writtenQueryResponses[0].queryResponse, expectedQueryResponse)
   }
 
   func testBundleExtension_looksUpAppName() {
@@ -212,7 +212,7 @@ class SystemFeatureManagerTest: XCTestCase {
       response: Data()
     )
     XCTAssertEqual(channel.writtenQueryResponses.count, 1)
-    XCTAssertEqual(channel.writtenQueryResponses[0], expectedQueryResponse)
+    XCTAssertEqual(channel.writtenQueryResponses[0].queryResponse, expectedQueryResponse)
   }
 
   func testInvalidQueryProto_doesNotSendQueryResponse() {
@@ -229,7 +229,7 @@ class SystemFeatureManagerTest: XCTestCase {
   func testOnMessageReceived_doesNotSendQueryResponse() {
     connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
 
-    channel.triggerMessageReceived(Data("message".utf8), from: SystemFeatureManager.recipientUUID)
+    channel.triggerMessageReceived(Data("message".utf8),from: SystemFeatureManager.recipientUUID)
 
     XCTAssertTrue(channel.writtenQueryResponses.isEmpty)
     XCTAssertTrue(channel.writtenMessages.isEmpty)

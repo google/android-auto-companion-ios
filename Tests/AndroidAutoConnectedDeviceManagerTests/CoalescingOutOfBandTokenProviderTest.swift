@@ -20,7 +20,7 @@ import XCTest
 @available(iOS 10.0, watchOS 6.0, *)
 class CoalescingOutOfBandTokenProviderTest: XCTestCase {
   // The token provider to test.
-  private var testTokenProvider: CoalescingOutOfBandTokenProvider!
+  private var testTokenProvider: CoalescingOutOfBandTokenProvider<MockOutOfBandTokenProvider>!
 
   override func setUp() {
     super.setUp()
@@ -47,7 +47,7 @@ class CoalescingOutOfBandTokenProviderTest: XCTestCase {
   }
 
   func testRegistersProvider() {
-    let child = FakeOutOfBandTokenProvider()
+    let child = MockOutOfBandTokenProvider()
     testTokenProvider.register(child)
 
     var tokenCounter = 0
@@ -63,10 +63,43 @@ class CoalescingOutOfBandTokenProviderTest: XCTestCase {
     XCTAssertEqual(tokenCounter, 1)
   }
 
+  func testCallsPrepareForRequestOnProviders() {
+    let child1 = MockOutOfBandTokenProvider()
+    let child2 = MockOutOfBandTokenProvider()
+    testTokenProvider = CoalescingOutOfBandTokenProvider(child1, child2)
+
+    testTokenProvider.prepareForRequests()
+
+    XCTAssertTrue(child1.prepareForRequestsCalled)
+    XCTAssertTrue(child2.prepareForRequestsCalled)
+  }
+
+  func testCallsCloseForRequestOnProviders() {
+    let child1 = MockOutOfBandTokenProvider()
+    let child2 = MockOutOfBandTokenProvider()
+    testTokenProvider = CoalescingOutOfBandTokenProvider(child1, child2)
+
+    testTokenProvider.closeForRequests()
+
+    XCTAssertTrue(child1.closeForRequestsCalled)
+    XCTAssertTrue(child2.closeForRequestsCalled)
+  }
+
+  func testCallsResetOnProviders() {
+    let child1 = MockOutOfBandTokenProvider()
+    let child2 = MockOutOfBandTokenProvider()
+    testTokenProvider = CoalescingOutOfBandTokenProvider(child1, child2)
+
+    testTokenProvider.reset()
+
+    XCTAssertTrue(child1.resetCalled)
+    XCTAssertTrue(child2.resetCalled)
+  }
+
   /// Only providers registered before a request should service the request for predictable behavior
   /// (i.e. the completion handler should be called exactly once per request).
   func testIgnoresProviderRegisteredAfterRequest() {
-    let child1 = FakeOutOfBandTokenProvider()
+    let child1 = MockOutOfBandTokenProvider()
     testTokenProvider.register(child1)
 
     var tokenCounter = 0
@@ -77,7 +110,7 @@ class CoalescingOutOfBandTokenProviderTest: XCTestCase {
     }
 
     // Child 2 was registered after the request, so the request should ignore it.
-    let child2 = FakeOutOfBandTokenProvider()
+    let child2 = MockOutOfBandTokenProvider()
     testTokenProvider.register(child2)
     child2.postToken(FakeOutOfBandToken())
 
@@ -91,7 +124,7 @@ class CoalescingOutOfBandTokenProviderTest: XCTestCase {
   }
 
   func testForwardsChildTokenPosted() {
-    let child = FakeOutOfBandTokenProvider()
+    let child = MockOutOfBandTokenProvider()
     testTokenProvider = CoalescingOutOfBandTokenProvider(child)
 
     var tokenCounter = 0
@@ -110,9 +143,9 @@ class CoalescingOutOfBandTokenProviderTest: XCTestCase {
   }
 
   func testForwardsFirstNonNilChildTokenPosted() {
-    let child1 = FakeOutOfBandTokenProvider()
-    let child2 = FakeOutOfBandTokenProvider()
-    let child3 = FakeOutOfBandTokenProvider()
+    let child1 = MockOutOfBandTokenProvider()
+    let child2 = MockOutOfBandTokenProvider()
+    let child3 = MockOutOfBandTokenProvider()
     testTokenProvider = CoalescingOutOfBandTokenProvider(child1, child2, child3)
 
     var tokenCounter = 0
@@ -133,9 +166,9 @@ class CoalescingOutOfBandTokenProviderTest: XCTestCase {
   }
 
   func testCallsCompletionOnlyOnce() {
-    let child1 = FakeOutOfBandTokenProvider()
-    let child2 = FakeOutOfBandTokenProvider()
-    let child3 = FakeOutOfBandTokenProvider()
+    let child1 = MockOutOfBandTokenProvider()
+    let child2 = MockOutOfBandTokenProvider()
+    let child3 = MockOutOfBandTokenProvider()
     testTokenProvider = CoalescingOutOfBandTokenProvider(child1, child2, child3)
 
     var tokenCounter = 0
@@ -156,9 +189,9 @@ class CoalescingOutOfBandTokenProviderTest: XCTestCase {
   }
 
   func testCallsCompletionIfNoTokensDiscovered() {
-    let child1 = FakeOutOfBandTokenProvider()
-    let child2 = FakeOutOfBandTokenProvider()
-    let child3 = FakeOutOfBandTokenProvider()
+    let child1 = MockOutOfBandTokenProvider()
+    let child2 = MockOutOfBandTokenProvider()
+    let child3 = MockOutOfBandTokenProvider()
     testTokenProvider = CoalescingOutOfBandTokenProvider(child1, child2, child3)
 
     var tokenCounter = 0
@@ -179,9 +212,9 @@ class CoalescingOutOfBandTokenProviderTest: XCTestCase {
   }
 
   func testCallsCompletionOnReset() {
-    let child1 = FakeOutOfBandTokenProvider()
-    let child2 = FakeOutOfBandTokenProvider()
-    let child3 = FakeOutOfBandTokenProvider()
+    let child1 = MockOutOfBandTokenProvider()
+    let child2 = MockOutOfBandTokenProvider()
+    let child3 = MockOutOfBandTokenProvider()
     testTokenProvider = CoalescingOutOfBandTokenProvider(child1, child2, child3)
 
     var tokenCounter = 0
@@ -211,4 +244,46 @@ private struct FakeOutOfBandToken: OutOfBandToken {
   func decrypt(_ message: Data) throws -> Data {
     Data(message.reversed())
   }
+}
+
+/// Mock Out-Of-Band Token Provider.
+@available(iOS 10.0, watchOS 6.0, *)
+class MockOutOfBandTokenProvider: OutOfBandTokenProvider {
+  private var completion: ((OutOfBandToken?) -> Void)?
+  private var token: OutOfBandToken? = nil
+
+  var prepareForRequestsCalled = false
+  var closeForRequestsCalled = false
+  var resetCalled = false
+
+  func prepareForRequests() {
+    prepareForRequestsCalled = true
+  }
+
+  func closeForRequests() {
+    closeForRequestsCalled = true
+  }
+
+  func requestToken(completion: @escaping (OutOfBandToken?) -> Void) {
+    if let token = token {
+      completion(token)
+    } else {
+      self.completion = completion
+    }
+  }
+
+  func reset() {
+    resetCalled = true
+    token = nil
+    completion?(nil)
+    completion = nil
+  }
+
+  func postToken(_ token: OutOfBandToken?) {
+    self.token = token
+    completion?(token)
+    completion = nil
+  }
+
+  init() {}
 }

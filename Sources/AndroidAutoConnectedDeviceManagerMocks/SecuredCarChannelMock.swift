@@ -25,13 +25,13 @@ public class SecuredCarChannelMock: SecuredCarChannelPeripheral {
   private var messageRecipientToObservations: [UUID: UUID] = [:]
 
   public var queryID: Int32 = 0
-  private var receivedQueryObservations: [UUID: (Int32, Query) -> Void] = [:]
+  private var receivedQueryObservations: [UUID: (Int32, UUID, Query) -> Void] = [:]
   private var queryRecipientToObservations: [UUID: UUID] = [:]
 
   private var queryResponseHandlers: [Int32: ((QueryResponse) -> Void)] = [:]
 
   public var writtenQueries: [Query] = []
-  public var writtenQueryResponses: [QueryResponse] = []
+  public var writtenQueryResponses: [(queryResponse: QueryResponse, recipient: UUID)] = []
   public var writtenMessages: [Data] = []
   public var configureUsingFeatureProviderCalled = false
 
@@ -75,9 +75,15 @@ public class SecuredCarChannelMock: SecuredCarChannelPeripheral {
     }
   }
 
+  /// Simulates a query from the given `recipient`. The `sender` for the query will match the
+  /// recipient when this method is invoked.
   public func triggerQuery(_ query: Query, queryID: Int32, from recipient: UUID) {
+    triggerQuery(query, queryID: queryID, sender: recipient, recipient: recipient)
+  }
+
+  public func triggerQuery(_ query: Query, queryID: Int32, sender: UUID, recipient: UUID) {
     if let id = queryRecipientToObservations[recipient] {
-      receivedQueryObservations[id]?(queryID, query)
+      receivedQueryObservations[id]?(queryID, sender, query)
     }
   }
 
@@ -136,7 +142,7 @@ extension SecuredCarChannelMock: SecuredConnectedDeviceChannel {
       throw makeMockError()
     }
 
-    writtenQueryResponses.append(queryResponse)
+    writtenQueryResponses.append((queryResponse, recipient))
   }
 
   public func observeMessageReceived(
@@ -157,7 +163,7 @@ extension SecuredCarChannelMock: SecuredConnectedDeviceChannel {
 
   public func observeQueryReceived(
     from recipient: UUID,
-    using observation: @escaping ((Int32, Query) -> Void)
+    using observation: @escaping ((Int32, UUID, Query) -> Void)
   ) throws -> ObservationHandle {
     let id = UUID()
     receivedQueryObservations[id] = observation

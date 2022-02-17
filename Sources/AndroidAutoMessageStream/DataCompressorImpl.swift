@@ -39,7 +39,7 @@ struct DataCompressorImpl: DataCompressor {
 
   /// Initialize with the specified algorithm.
   ///
-  /// - Parameter algorithm: Compression algorith to use.
+  /// - Parameter algorithm: Compression algorithm to use.
   /// - Parameter annotator: Optional annotator for annotating the raw compressed data.
   private init(algorithm: compression_algorithm, annotator: DataAnnotator?) {
     self.algorithm = algorithm
@@ -180,7 +180,7 @@ extension DataCompressorImpl {
     /// The checksum is composed of two sums. The first sum is of all the bytes modulo 65521. The
     /// second sum is the sum of the partial first sums modulo 65521.
     private func appendChecksum(to compressed: inout Data, input: Data) {
-      // Do the sums using 32 bits to avoid overlow.
+      // Do the sums using 32 bits to avoid overflow.
       var sumA: UInt32 = 1
       var sumB: UInt32 = 0
 
