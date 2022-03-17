@@ -15,6 +15,7 @@
 import AndroidAutoCoreBluetoothProtocolsMocks
 import AndroidAutoSecureChannel
 import CoreBluetooth
+import Foundation
 import XCTest
 @_implementationOnly import AndroidAutoCompanionProtos
 
@@ -102,6 +103,35 @@ class ConnectionManagerTest: XCTestCase {
       error: makeMockError())
 
     XCTAssertTrue(centralManagerMock.cancelPeripheralConnectionCalled)
+  }
+
+  func testCentralManager_callsOnPeripheralConnectionFailed_whenConnectionFails() {
+    let peripheralMock = PeripheralMock(name: "Test")
+    let mockError = makeMockError() as NSError
+
+    connectionManager.centralManager(
+      centralManagerMock,
+      didFailToConnect: peripheralMock,
+      error: mockError)
+
+    XCTAssertTrue(connectionManager.onPeripheralConnectionFailedCalled)
+    XCTAssertEqual(connectionManager.failedConnectionPeripheral, peripheralMock)
+    XCTAssertEqual(connectionManager.failedConnectionError, mockError)
+  }
+
+  func testCentralManager_peripheralConnectionFailsOnAssociation_notifiesDelegate() {
+    let peripheralMock = PeripheralMock(name: "Test")
+    let mockError = makeMockError() as NSError
+
+    XCTAssertNoThrow(try connectionManager.associate(peripheralMock))
+
+    connectionManager.centralManager(
+      centralManagerMock,
+      didFailToConnect: peripheralMock,
+      error: mockError)
+
+    XCTAssertTrue(associationDelegateMock.didEncounterErrorCalled)
+    XCTAssertEqual(associationDelegateMock.encounteredError as? AssociationError, .unknown)
   }
 
   func testCentralManager_peripheralDisconnectsOnAssociation_notifiesDelegate() {

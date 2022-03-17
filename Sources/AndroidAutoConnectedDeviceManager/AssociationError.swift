@@ -57,4 +57,14 @@ public enum AssociationError: Error {
 
   /// Received a carId that doesn't conform to the required form.
   case malformedCarId
+
+  /// The remote peer removed the pairing information causing connection failure.
+  ///
+  /// When the peripheral removes the classic bluetooth pairing with this phone, but the user has
+  /// not removed the pairing on the phone, subsequent BLE connection attempts fail. The user must
+  /// manually remove the bluetooth pairing with the peripheral via Settings -> Bluetooth and
+  /// choosing to forget the peripheral.
+  ///
+  /// See: https://developer.apple.com/forums/thread/4732
+  case peerRemovedPairingInfo
 }

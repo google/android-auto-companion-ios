@@ -18,6 +18,7 @@ import AndroidAutoLogger
 @_implementationOnly import AndroidAutoMessageStream
 @_implementationOnly import AndroidAutoSecureChannel
 import CoreBluetooth
+import Foundation
 
 /// Delegate that will be notified of the status of association.
 @available(iOS 10.0, *)
@@ -282,11 +283,28 @@ public class CoreBluetoothConnectionManager: ConnectionManager<CBCentralManager>
     connectionRetryStates[peripheral.identifier] = retryState
   }
 
+  override fileprivate func resolveError(_ error: NSError) -> Error {
+    guard #available(iOS 13.4, watchOS 6.4, *) else { return error }
+    guard isAssociating else { return error }
+
+    switch error.code {
+    case CBError.peerRemovedPairingInformation.rawValue where error.domain == CBErrorDomain:
+      return AssociationError.peerRemovedPairingInfo
+    default:
+      return super.resolveError(error)
+    }
+  }
+
   override func onPeripheralConnected(_ peripheral: Peripheral) {
     logger.log(
       "Connected car (\(peripheral.logName))",
       metadata: ["car": peripheral.logName, "connected": true]
     )
+    resetConnectionRetryState(for: peripheral)
+  }
+
+  override func onPeripheralConnectionFailed(_ peripheral: Peripheral, error: NSError) {
+    logger.error.log("Connection to: \(peripheral.logName) failed due to error: \(error)")
     resetConnectionRetryState(for: peripheral)
   }
 
@@ -870,6 +888,10 @@ where CentralManager: SomeCentralManager {
     discoveredPeripherals.forEach { disconnect($0) }
   }
 
+  fileprivate func resolveError(_ error: NSError) -> Error {
+    return isAssociating ? AssociationError.unknown : error
+  }
+
   // MARK: - ConnectionManager methods to be overridden
 
   // TODO(b/152079838): Extend testability to other classes to make override unnecessary in the
@@ -881,6 +903,10 @@ where CentralManager: SomeCentralManager {
   /// Subclasses should override this method to perform any clean up tasks needed when the
   /// given `peripheral` has connected.
   func onPeripheralConnected(_ peripheral: Peripheral) {}
+
+  /// Subclasses should override this method to perform any clean up tasks needed when the
+  /// given `peripheral` connection has failed.
+  func onPeripheralConnectionFailed(_ peripheral: Peripheral, error: NSError) {}
 
   /// Subclasses should override this method to perform any clean up tasks needed when the
   /// given `peripheral` has disconnected.
@@ -1476,6 +1502,26 @@ extension ConnectionManager: CentralManagerDelegate {
     handleDisconnection(of: peripheral, error: error)
   }
 
+  public func centralManager(
+    _ central: CentralManager,
+    didFailToConnect peripheral: CentralManager.Peripheral,
+    error: Error?
+  ) {
+    handleConnectionFailure(of: peripheral, error: error)
+  }
+
+  fileprivate func handleConnectionFailure(of peripheral: Peripheral, error: Error?) {
+    let error = error as NSError? ?? NSError(domain: "ConnectionManagerError", code: 1)
+
+    let resolvedError = resolveError(error)
+    onPeripheralConnectionFailed(peripheral, error: error)
+    if isAssociating {
+      associationDelegate?.connectionManager(self, didEncounterError: resolvedError)
+      isAssociating = false
+      clearCurrentAssociation()
+    }
+  }
+
   fileprivate func handleDisconnection(of peripheral: Peripheral, error: Error?) {
     // Usually this method is called by a system event, but it might also be triggered manually by
     // this class. Ensure that it is really disconnected.
@@ -1609,6 +1655,12 @@ extension CoreBluetoothCentralManagerWrapper: CBCentralManagerDelegate {
   ) {
     connectionManager?.centralManager(central, didDisconnectPeripheral: peripheral, error: error)
   }
+
+  public func centralManager(
+    _ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?
+  ) {
+    connectionManager?.centralManager(central, didFailToConnect: peripheral, error: error)
+  }
 }
 
 // MARK: - Peripheral and Central Manager Protocols
@@ -1694,6 +1746,12 @@ public protocol CentralManagerDelegate {
   func centralManager(
     _ central: CentralManager,
     didDisconnectPeripheral peripheral: CentralManager.Peripheral,
+    error: Error?
+  )
+
+  func centralManager(
+    _ central: CentralManager,
+    didFailToConnect: CentralManager.Peripheral,
     error: Error?
   )
 }

@@ -82,6 +82,10 @@ public class ConnectionManagerObservable: ConnectionManager<CentralManagerMock> 
   public var onPeripheralDisconnectedCalled = false
   public var disconnectedPeripheral: Peripheral?
 
+  public var onPeripheralConnectionFailedCalled = false
+  public var failedConnectionPeripheral: Peripheral?
+  public var failedConnectionError: NSError?
+
   public var registerServiceObserverCalled = false
   public var observedChannel: SecuredCarChannel?
 
@@ -101,6 +105,12 @@ public class ConnectionManagerObservable: ConnectionManager<CentralManagerMock> 
   public override func onPeripheralDisconnected(_ peripheral: Peripheral) {
     onPeripheralDisconnectedCalled = true
     disconnectedPeripheral = peripheral
+  }
+
+  public override func onPeripheralConnectionFailed(_ peripheral: Peripheral, error: NSError) {
+    onPeripheralConnectionFailedCalled = true
+    failedConnectionPeripheral = peripheral
+    failedConnectionError = error
   }
 
   public override func registerServiceObserver(on channel: SecuredCarChannel) {
