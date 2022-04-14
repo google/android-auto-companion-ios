@@ -91,7 +91,7 @@
     struct AccessoryProtocol {
       private static let logger = Logger(for: AccessoryProtocol.self)
       private static let accessoryProtocolsKey = "UISupportedExternalAccessoryProtocols"
-      private static let protocolSuffix = "oob-association"
+      private static let protocolSuffix = ".oob-association"
 
       /// Protocol string for out of band association.
       let identifier: String
@@ -101,8 +101,22 @@
       /// Searches the app's main bundle for registered external accessory protocols with a suffix
       /// matching `oob-association`. The first such protocol string found will be used.
       init?() {
+        guard let info = Bundle.main.infoDictionary else {
+          Self.logger.error("The Info dictionary is missing.")
+          return nil
+        }
+        self.init(info: info)
+      }
+
+      /// Initialize with the registered accessory protocol string if any, otherwise return `nil`.
+      ///
+      /// Searches the info dictionary for registered external accessory protocols with a suffix
+      /// matching `oob-association`. The first such protocol string found will be used.
+      ///
+      /// - Parameter info: A dictionary containing supported external accessory protocols.
+      init?(info: [String: Any]) {
         guard
-          let accessoryProtocols = Bundle.main.infoDictionary?[Self.accessoryProtocolsKey]
+          let accessoryProtocols = info[Self.accessoryProtocolsKey]
             as? [String]
         else {
           Self.logger.error("The Info dictionary does not define External Accessory protocols.")

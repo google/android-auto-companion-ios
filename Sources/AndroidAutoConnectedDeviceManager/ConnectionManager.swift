@@ -804,17 +804,16 @@ where CentralManager: SomeCentralManager {
   {
     CoalescingOutOfBandTokenProvider {
       $0.register(wrapping: externalAssociationTokenProvider)
-      #if OOB_SPP
-        logger.log("Experimental Out of Band + SPP is enabled.")
-        let accessoryOutOfBandTokenProviderFactory = AccessoryOutOfBandTokenProviderFactory()
-        if let accessoryOutOfBandTokenProvider =
+      let accessoryOutOfBandTokenProviderFactory = AccessoryOutOfBandTokenProviderFactory()
+      guard
+        let accessoryOutOfBandTokenProvider =
           accessoryOutOfBandTokenProviderFactory.makeProvider()
-        {
-          $0.register(wrapping: accessoryOutOfBandTokenProvider)
-        }
-      #else
-        logger.log("Experimental Out of Band + SPP is NOT enabled. Use the OOB_SPP flag to enable.")
-      #endif
+      else {
+        logger.log("SPP Out of Band token provider is unavailable.")
+        return
+      }
+      logger.log("Registered SPP Out of Band token provider.")
+      $0.register(wrapping: accessoryOutOfBandTokenProvider)
     }
   }
 
