@@ -136,6 +136,12 @@ private enum ConnectionManagerSignposts {
   static let reconnectionFailure = SignpostMarker("Reconnection Failure")
 }
 
+@available(iOS 10.0, *)
+extension BuildNumber {
+  /// The version of this SDK.
+  fileprivate static let sdkVersion = BuildNumber(major: 1, minor: 3, patch: 0)
+}
+
 /// Holds all the necessary information to try a reconnection for a `Peripheral`.
 private struct ConnectionRetryState {
   /// The block of code that will attempt a connection retry.
@@ -507,6 +513,8 @@ where CentralManager: SomeCentralManager {
 
     // Calling `super` here so that subsequent code can use `self`.
     super.init()
+
+    logger.log("SDK Version: \(BuildNumber.sdkVersion)")
 
     let connectionHandleProxy = ConnectionHandleProxy(connectionManager: self)
     let overlay = plistLoader.loadOverlayValues()

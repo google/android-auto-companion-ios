@@ -16,7 +16,6 @@
 
 import PackageDescription
 
-// Version 1.2.0
 let package = Package(
   name: "AndroidAutoCompanion",
   platforms: [
