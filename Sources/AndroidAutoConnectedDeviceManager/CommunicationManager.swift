@@ -20,7 +20,6 @@ import CoreBluetooth
 import Foundation
 
 /// A delegate to be notified of the current state of secure communication establishment.
-@available(iOS 10.0, *)
 protocol CommunicationManagerDelegate: AnyObject {
   /// Invoked when the process of encryption setup has begun.
   ///
@@ -113,9 +112,8 @@ enum CommunicationManagerError: Error, Equatable {
 }
 
 /// A manager responsible for handling communication with associated devices.
-@available(iOS 10.0, *)
 class CommunicationManager: NSObject {
-  private static let logger = Logger(for: CommunicationManager.self)
+  private static let log = Logger(for: CommunicationManager.self)
 
   /// The amount of time a reconnection attempt has before it has been deemed to have timed out.
   static let defaultReconnectionTimeoutDuration = DispatchTimeInterval.seconds(10)
@@ -248,7 +246,7 @@ class CommunicationManager: NSObject {
 
   private func scheduleReconnectionTimeout(for peripheral: BLEPeripheral) {
     let notifyReconnectionError = DispatchWorkItem { [weak self] in
-      Self.logger.error.log(
+      Self.log.error(
         "Reconnection attempt timed out for car \(peripheral.logName). Notifying delegate.")
 
       self?.notifyDelegateOfError(.failedEncryptionEstablishment, connecting: peripheral)
@@ -266,7 +264,7 @@ class CommunicationManager: NSObject {
   private func fetchSecureSession(for car: BLEPeripheral, id: String) throws -> Data {
     // Check if the peripheral matches the identifier of a previous association.
     guard associatedCarsManager.identifiers.contains(id) else {
-      Self.logger.log(
+      Self.log(
         """
         Attempted to set up secure channel with unassociated device (\(id). Expected ids: \
         \(associatedCarsManager.identifiers)
@@ -276,7 +274,7 @@ class CommunicationManager: NSObject {
     }
 
     guard let secureSession = secureSessionManager.secureSession(for: id) else {
-      Self.logger.log("No secure session found for car (id: \(id), name: \(car.logName)")
+      Self.log("No secure session found for car (id: \(id), name: \(car.logName)")
       throw CommunicationManagerError.noSavedEncryption
     }
 
@@ -301,13 +299,13 @@ class CommunicationManager: NSObject {
       let (readCharacteristic, writeCharacteristic) =
         filter(characteristics, for: ioCharacteristicsUUIDs)
     else {
-      Self.logger.error.log("Missing characteristics for car \(peripheral.logName)")
+      Self.log.error("Missing characteristics for car \(peripheral.logName)")
       notifyDelegateOfError(.characteristicsNotFound, connecting: peripheral)
       return
     }
 
     guard let pendingCar = firstPendingCar(with: peripheral) else {
-      Self.logger.error.log("No pending car found for \(peripheral.logName)")
+      Self.log.error("No pending car found for \(peripheral.logName)")
       notifyDelegateOfError(.characteristicsNotFound, connecting: peripheral)
       return
     }
@@ -341,7 +339,7 @@ class CommunicationManager: NSObject {
         $0.uuid == ioCharacteristicsUUIDs.readUUID
       })
     else {
-      Self.logger.error.log("Cannot find read characteristic.")
+      Self.log.error("Cannot find read characteristic.")
       return nil
     }
 
@@ -350,7 +348,7 @@ class CommunicationManager: NSObject {
         $0.uuid == ioCharacteristicsUUIDs.writeUUID
       })
     else {
-      Self.logger.error.log("Cannot find write characteristic.")
+      Self.log.error("Cannot find write characteristic.")
       return nil
     }
 
@@ -386,11 +384,10 @@ class CommunicationManager: NSObject {
 
 // MARK: - BLEPeripheralDelegate
 
-@available(iOS 10.0, *)
 extension CommunicationManager: BLEPeripheralDelegate {
   func peripheral(_ peripheral: BLEPeripheral, didDiscoverServices error: Error?) {
     guard error == nil else {
-      Self.logger.error.log(
+      Self.log.error(
         "Error discovering services for car (\(peripheral.logName)): \(error!.localizedDescription)"
       )
       notifyDelegateOfError(.serviceNotFound, connecting: peripheral)
@@ -398,17 +395,17 @@ extension CommunicationManager: BLEPeripheralDelegate {
     }
 
     guard let services = peripheral.services, services.count > 0 else {
-      Self.logger.error.log("No services in car \(peripheral.logName)")
+      Self.log.error("No services in car \(peripheral.logName)")
       notifyDelegateOfError(.serviceNotFound, connecting: peripheral)
       return
     }
 
-    Self.logger.debug.log("Discovered \(services.count) services for car \(peripheral.logName)")
+    Self.log("Discovered \(services.count) services for car \(peripheral.logName)")
 
     let supportedReconnectionUUIDs = uuidConfig.supportedReconnectionUUIDs
     guard let service = services.first(where: { supportedReconnectionUUIDs.contains($0.uuid) })
     else {
-      Self.logger.error.log(
+      Self.log.error(
         "No service found for \(peripheral.logName) that match supported service UUIDs.")
 
       notifyDelegateOfError(.serviceNotFound, connecting: peripheral)
@@ -445,7 +442,7 @@ extension CommunicationManager: BLEPeripheralDelegate {
         })
       else { throw CommunicationManagerError.missingAdvertisementData }
 
-      Self.logger.debug.log(
+      Self.log(
         """
         Found advertisement characteristic \(advertisementCharacteristic.uuid.uuidString) \
         on car (\(peripheral.logName)) for \
@@ -468,7 +465,7 @@ extension CommunicationManager: BLEPeripheralDelegate {
     error: Error?
   ) {
     guard error == nil else {
-      Self.logger.error.log(
+      Self.log.error(
         """
         Error discovering characteristics for car (\(peripheral.logName)): \
         \(error!.localizedDescription)
@@ -479,12 +476,12 @@ extension CommunicationManager: BLEPeripheralDelegate {
     }
 
     guard let characteristics = service.characteristics else {
-      Self.logger.error.log("No characteristics discovered for car \(peripheral.logName)")
+      Self.log.error("No characteristics discovered for car \(peripheral.logName)")
       notifyDelegateOfError(.characteristicsNotFound, connecting: peripheral)
       return
     }
 
-    Self.logger.debug.log(
+    Self.log(
       """
       Discovered \(characteristics.count) characteristics on car (\(peripheral.logName)) for \
       service \(service.uuid.uuidString)
@@ -501,7 +498,7 @@ extension CommunicationManager: BLEPeripheralDelegate {
     didUpdateValueFor characteristic: BLECharacteristic,
     error: Error?
   ) {
-    Self.logger.debug.log(
+    Self.log(
       """
       Received updated value for characteristic \(characteristic.uuid.uuidString) on car \
       (\(peripheral.logName))
@@ -515,7 +512,7 @@ extension CommunicationManager: BLEPeripheralDelegate {
       if helper.isReadyForHandshake { return }  // Nothing more to do.
 
       guard let advertisementData = characteristic.value else {
-        Self.logger.error.log(
+        Self.log.error(
           """
           The advertisement data for peripheral: (\(peripheral.logName)) was requested from \
           characteristic: \(characteristic.uuid.uuidString) but the updated value was nil.
@@ -537,7 +534,6 @@ extension CommunicationManager: BLEPeripheralDelegate {
 
 // MARK: - BLEVersionResolverDelegate
 
-@available(iOS 10.0, *)
 extension CommunicationManager: BLEVersionResolverDelegate {
   func bleVersionResolver(
     _ bleVersionResolver: BLEVersionResolver,
@@ -548,7 +544,7 @@ extension CommunicationManager: BLEVersionResolverDelegate {
     // This shouldn't happen because this case should have been vetted for when characteristics are
     // discovered.
     guard let pendingCar = firstPendingCar(with: peripheral) else {
-      Self.logger.error.log("No pending car for (\(peripheral.logName)) to send device id to.")
+      Self.log.error("No pending car for (\(peripheral.logName)) to send device id to.")
       notifyDelegateOfError(.unknown, connecting: peripheral)
       return
     }
@@ -558,7 +554,7 @@ extension CommunicationManager: BLEVersionResolverDelegate {
     guard let readCharacteristic = pendingCar.readCharacteristic,
       let writeCharacteristic = pendingCar.writeCharacteristic
     else {
-      Self.logger.error.log(
+      Self.log.error(
         "No read or write characteristic on peripheral (\(peripheral.logName)) to send device id."
       )
       notifyDelegateOfError(.unknown, connecting: peripheral)
@@ -608,7 +604,6 @@ extension CommunicationManager: BLEVersionResolverDelegate {
 
 // MARK: - MessageStreamDelegate
 
-@available(iOS 10.0, *)
 extension CommunicationManager: MessageStreamDelegate {
   func messageStream(
     _ messageStream: MessageStream,
@@ -653,7 +648,7 @@ extension CommunicationManager: MessageStreamDelegate {
 
     // Since the handshake is complete, we expect the helper to have a valid car id.
     guard let carId = helper.carId else {
-      Self.logger.error.log("Missing carId for peripheral (\(peripheral.logName))")
+      Self.log.error("Missing carId for peripheral (\(peripheral.logName))")
       notifyDelegateOfError(.invalidMessage, connecting: peripheral)
       return
     }
@@ -665,7 +660,7 @@ extension CommunicationManager: MessageStreamDelegate {
     } catch SecureBLEChannelError.invalidSavedSession {
       notifyDelegateOfError(.invalidSavedEncryption, connecting: peripheral)
     } catch {
-      Self.logger.error.log(
+      Self.log.error(
         """
         Error (\(error.localizedDescription)) establishing secure channel for peripheral
         (\(peripheral.logName))
@@ -715,7 +710,7 @@ extension CommunicationManager: MessageStreamDelegate {
     let peripheral = messageStream.peripheral
 
     guard let secureSession = secureSessionManager.secureSession(for: carId) else {
-      Self.logger.error.log(
+      Self.log.error(
         "No stored secure session with car \(peripheral.logName). Cannot establish encryption."
       )
       notifyDelegateOfError(.noSavedEncryption, connecting: peripheral)
@@ -743,7 +738,7 @@ extension CommunicationManager: MessageStreamDelegate {
       fatalError("messageStream: \(messageStream) must be a BLEMessageStream.")
     }
 
-    Self.logger.error.log(
+    Self.log.error(
       "Message error \(error.localizedDescription) with car \(messageStream.peripheral.logName)."
     )
 
@@ -752,9 +747,7 @@ extension CommunicationManager: MessageStreamDelegate {
   }
 
   func messageStreamEncounteredUnrecoverableError(_ messageStream: MessageStream) {
-    Self.logger.error.log(
-      "Underlying BLEMessageStream encountered unrecoverable error. Disconnecting."
-    )
+    Self.log.error("Underlying BLEMessageStream encountered unrecoverable error. Disconnecting.")
     connectionHandle.disconnect(messageStream)
   }
 
@@ -765,14 +758,13 @@ extension CommunicationManager: MessageStreamDelegate {
 
 // MARK: - ReconnectionHandlerDelegate
 
-@available(iOS 10.0, *)
 extension CommunicationManager: ReconnectionHandlerDelegate {
   func reconnectionHandler(
     _ reconnectionHandler: ReconnectionHandler,
     didEstablishSecureChannel securedCarChannel: SecuredConnectedDeviceChannel
   ) {
     guard let helper = try? reconnectionHelper(for: reconnectionHandler.peripheral) else {
-      Self.logger.error.log("Missing reconnection helper after establishing secure channel.")
+      Self.log.error("Missing reconnection helper after establishing secure channel.")
       delegate?.communicationManager(
         self,
         didEncounterError: .missingReconnectionHelper(reconnectionHandler.peripheral.identifier),
@@ -820,7 +812,6 @@ extension CommunicationManager: ReconnectionHandlerDelegate {
 
 // MARK: - Overlay Extensions
 
-@available(iOS 10.0, *)
 extension Overlay {
   /// Indicates whether message compression is allowed.
   var isMessageCompressionAllowed: Bool {

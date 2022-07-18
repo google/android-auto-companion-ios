@@ -23,7 +23,7 @@ import XCTest
 @testable import AndroidAutoConnectedDeviceManager
 
 /// Unit tests for `ReconnectionHandlerImpl`.
-@available(iOS 10.0, *)
+
 class ReconnectionHandlerImplTest: XCTestCase {
   private let carId = "carId"
   private let car = PeripheralMock(name: "carName")

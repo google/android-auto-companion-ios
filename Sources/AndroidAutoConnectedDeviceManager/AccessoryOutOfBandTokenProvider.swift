@@ -23,9 +23,8 @@
   private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBandAssociationToken
 
   /// Controller for external MFi accessory discovery and session establishment.
-  @available(iOS 13.0, *)
   final class AccessoryOutOfBandTokenProvider {
-    private static let logger = Logger(for: AccessoryOutOfBandTokenProvider.self)
+    private static let log = Logger(for: AccessoryOutOfBandTokenProvider.self)
 
     private let accessoryProtocol: AccessoryProtocol
 
@@ -33,7 +32,7 @@
 
     init?() {
       guard let accessoryProtocol = AccessoryProtocol() else {
-        Self.logger.error("No matching accessory protocol found for out of band association.")
+        Self.log.error("No matching accessory protocol found for out of band association.")
         return nil
       }
 
@@ -44,7 +43,6 @@
 
   // MARK: - OutOfBandTokenProvider Conformance
 
-  @available(iOS 13.0, *)
   extension AccessoryOutOfBandTokenProvider: OutOfBandTokenProvider {
     func prepareForRequests() {
       // Retain sessions for currently connected accessories.
@@ -65,7 +63,7 @@
       }.forEach {
         source.register($0)
       }
-      Self.logger(
+      Self.log(
         "Preparing accessory out of band token provider with \(source.providers.count) sessions.")
     }
 
@@ -85,11 +83,10 @@
 
   // MARK: - AccessoryProtocol
 
-  @available(iOS 13.0, *)
   extension AccessoryOutOfBandTokenProvider {
     /// Supported accessory protocol for Out of Band Association.
     struct AccessoryProtocol {
-      private static let logger = Logger(for: AccessoryProtocol.self)
+      private static let log = Logger(for: AccessoryProtocol.self)
       private static let accessoryProtocolsKey = "UISupportedExternalAccessoryProtocols"
       private static let protocolSuffix = ".oob-association"
 
@@ -102,7 +99,7 @@
       /// matching `oob-association`. The first such protocol string found will be used.
       init?() {
         guard let info = Bundle.main.infoDictionary else {
-          Self.logger.error("The Info dictionary is missing.")
+          Self.log.error("The Info dictionary is missing.")
           return nil
         }
         self.init(info: info)
@@ -119,18 +116,18 @@
           let accessoryProtocols = info[Self.accessoryProtocolsKey]
             as? [String]
         else {
-          Self.logger.error("The Info dictionary does not define External Accessory protocols.")
+          Self.log.error("The Info dictionary does not define External Accessory protocols.")
           return nil
         }
 
         guard
           let identifier = accessoryProtocols.first(where: { $0.hasSuffix(Self.protocolSuffix) })
         else {
-          Self.logger.error("No External Accessory protocol with suffix: \(Self.protocolSuffix)")
+          Self.log.error("No External Accessory protocol with suffix: \(Self.protocolSuffix)")
           return nil
         }
 
-        Self.logger.info("Found supported accessory protocol: \(identifier)")
+        Self.log.info("Found supported accessory protocol: \(identifier)")
         self.init(identifier)
       }
 

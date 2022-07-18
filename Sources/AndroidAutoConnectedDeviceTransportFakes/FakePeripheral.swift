@@ -17,7 +17,6 @@ import XCTest
 @testable import AndroidAutoConnectedDeviceTransport
 
 /// Fake peripheral for testing generic transport.
-@available(iOS 12.0, *)
 public final class FakePeripheral: TransportPeripheral {
   public typealias DiscoveryContext = Any
 

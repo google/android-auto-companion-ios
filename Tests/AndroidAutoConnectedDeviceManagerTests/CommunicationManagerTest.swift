@@ -24,7 +24,7 @@ import AndroidAutoTrustAgentProtos
 @testable import AndroidAutoConnectedDeviceManager
 
 /// Unit tests for `CommunicationManager`. Specifically testing the version 2 flow.
-@available(iOS 10.0, *)
+
 class CommunicationManagerTest: XCTestCase {
   private let associatedCarsManagerMock = AssociatedCarsManagerMock()
   private let secureSessionManagerMock = SecureSessionManagerMock()
@@ -1017,7 +1017,6 @@ class CommunicationManagerTest: XCTestCase {
 
 // MARK: - secureBLEChannelFactory
 
-@available(iOS 10.0, *)
 extension CommunicationManagerTest: SecureBLEChannelFactory {
   func makeChannel() -> SecureBLEChannel {
     return SecureBLEChannelMock()

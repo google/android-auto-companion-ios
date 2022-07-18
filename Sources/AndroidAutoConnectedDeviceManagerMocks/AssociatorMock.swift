@@ -20,7 +20,6 @@ import Foundation
 @testable import AndroidAutoConnectedDeviceManager
 
 /// Mock for the Associator so we can track calls from tests.
-@available(iOS 10.0, *)
 final public class AssociatorMock {
   // MARK: - Configuration
   public var shouldThrowWhenNotifyingPairingCodeAccepted = false
@@ -49,7 +48,6 @@ final public class AssociatorMock {
 }
 
 // MARK: - Associator
-@available(iOS 10.0, *)
 extension AssociatorMock: Associator {
   public func establishEncryption(using messageStream: MessageStream) {
     establishEncryptionCalled = true

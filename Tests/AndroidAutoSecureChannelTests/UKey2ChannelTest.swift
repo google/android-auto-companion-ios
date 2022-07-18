@@ -21,7 +21,6 @@ import XCTest
 @testable import AndroidAutoSecureChannel
 
 /// Unit tests for `UKey2Channel`.
-@available(iOS 10.0, *)
 class UKey2ChannelTest: XCTestCase {
   private static let recipientUUID = UUID(uuidString: "9f024256-06aa-423d-be60-93b086adce12")!
 

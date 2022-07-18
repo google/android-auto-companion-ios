@@ -19,7 +19,6 @@ import AndroidAutoSecureChannel
 @testable import AndroidAutoConnectedDeviceManager
 
 /// The fake factory for making message exchange helper mocks.
-@available(iOS 10.0, *)
 public struct AssociationMessageHelperFactoryFake: AssociationMessageHelperFactory {
   public init() {}
 
@@ -34,7 +33,6 @@ public struct AssociationMessageHelperFactoryFake: AssociationMessageHelperFacto
 }
 
 /// Proxy for a `AssociationMessageHelperFactory` so we can set the internal behavior.
-@available(iOS 10.0, *)
 public class AssociationMessageHelperFactoryProxy: AssociationMessageHelperFactory {
   public var shouldUseRealFactory = false
   public var latestMessageHelper: AssociationMessageHelper?

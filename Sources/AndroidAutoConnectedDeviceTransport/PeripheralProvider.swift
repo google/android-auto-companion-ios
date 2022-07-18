@@ -85,7 +85,7 @@ extension TransportPeripheralProvider {
     let success = startPeripheralScan(mode: mode)
 
     if !success {
-      Logger(for: type(of: self)).error.log(
+      Logger(for: type(of: self)).error(
         """
         Request to scan for cars to associate, but this peripheral provider is not ready. \
         Will begin scan when possible.

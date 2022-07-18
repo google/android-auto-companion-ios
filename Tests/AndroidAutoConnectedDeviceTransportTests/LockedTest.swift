@@ -17,7 +17,6 @@ import XCTest
 @testable import AndroidAutoConnectedDeviceTransport
 
 /// Unit tests for Locked.
-@available(iOS 12.0, *)
 class LockedTest: XCTestCase {
   @Locked private var lockedItem = 0
   private var lockMock = LockMock()
@@ -59,7 +58,6 @@ class LockedTest: XCTestCase {
 }
 
 /// Mock for a lock.
-@available(iOS 12.0, *)
 private class LockMock: NSLocking {
   var lockCalled = false
   var unlockCalled = false

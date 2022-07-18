@@ -22,7 +22,7 @@ private typealias OutOfBandAssociationData = Com_Google_Companionprotos_OutOfBan
 private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBandAssociationToken
 
 /// Unit tests for OutOfBandAssociationDataSource.
-@available(iOS 10.0, watchOS 6.0, *)
+@available(watchOS 6.0, *)
 class OutOfBandAssociationDataSourceTest: XCTestCase {
   func testURLMissingQueryThrows() {
     let url = URL(string: "http://companion/associate")

@@ -16,8 +16,8 @@ import Foundation
 import os.log
 
 /// Archive logs to persistent storage.
-@available(iOS 10.0, macOS 10.15, *)
-public class LogArchiver: LoggerDelegate {
+@available(macOS 10.15, *)
+public actor LogArchiver: LoggerDelegate {
   /// Log for reporting logging errors.
   static private let log = OSLog(
     subsystem: "com.google.ios.aae.trustagentclient",
@@ -30,40 +30,20 @@ public class LogArchiver: LoggerDelegate {
   /// Number of records to drop when clearing the backlog.
   static private let backlogDropCount = backlogLimit / 2
 
-  /// Delay (seconds) from when the write is dispatched and when it can begin executing.
+  /// Delay (nanoseconds) from when the write is dispatched and when it can begin executing.
   ///
   /// Allow enough time to write a batch of records together but not so much time that it would
   /// risk information loss.
-  static private let batchWriteDelay = DispatchTimeInterval.seconds(1)
+  static private let batchWriteDelayNanoseconds: UInt64 = 1_000_000_000
 
   /// Directory for the log files that are actively being written.
-  static public var logDirectory: String {
-    #if os(iOS) || os(watchOS)
-    return NSString.path(withComponents: [
-      NSHomeDirectory(), "Documents", "Logs",
-    ])
-    #elseif os(macOS)
-    return NSString.path(withComponents: [
-      NSHomeDirectory(), "Library", "Logs", ProcessInfo.processInfo.processName
-    ])
-    #else
-    #error("Unsupported OS for logDirectory.")
-    #endif
-  }
-
-  /// Factory for making the persistent store.
-  private let persistentStoreFactory: PersistentLogStoreFactory
-
-  /// Low priority queue on which the records are persisted.
-  private let queue = DispatchQueue(label: "LogArchiver", qos: .utility)
-
-  /// Lock which allows for safe access from multiple threads.
-  private var lock = os_unfair_lock()
+  static public var logDirectory: String { LogSerialWriter.logDirectory }
 
   /// Records to be persisted.
-  ///
-  /// Note that `lock` needs to be held for safe access to the records.
-  private var records_locked: [LogRecord] = []
+  private var records: [LogRecord] = []
+
+  /// Serially writes records to the persistent store.
+  private var serialWriter: LogSerialWriter
 
   /// Initialize with `FileLogStoreFactory` for persistence.
   convenience init() {
@@ -74,11 +54,11 @@ public class LogArchiver: LoggerDelegate {
   ///
   /// - Parameter persistentStoreFactory: Factory to use for persistence.
   init(persistentStoreFactory: PersistentLogStoreFactory) {
-    self.persistentStoreFactory = persistentStoreFactory
+    serialWriter = LogSerialWriter(persistentStoreFactory: persistentStoreFactory)
   }
 
   /// Get the existing URLs for the logs.
-  public func getLogURLs() -> [URL] {
+  nonisolated public func getLogURLs() -> [URL] {
     let fileManager = FileManager.default
 
     let directory = Self.logDirectory
@@ -104,26 +84,36 @@ public class LogArchiver: LoggerDelegate {
   /// Redacted messages will not be included.
   ///
   /// - Parameter record: The record to log.
-  public func loggerDidRecordMessage(_ record: LogRecord) {
-    os_unfair_lock_assert_not_owner(&lock)
-
+  nonisolated public func loggerDidRecordMessage(_ record: LogRecord) {
     // Unless the `DEBUG` flag is set, only archive messages with level greater than debug.
     // If the `DEBUG` flag is set, ignore the level and schedule all messages to be archived.
     #if !DEBUG
-    // Only persist records with level greater than debug.
-    guard record.level > .debug else { return }
+      // Only persist records with level greater than debug.
+      guard record.level > .debug else { return }
     #endif
 
-    os_unfair_lock_lock(&lock)
-    defer { os_unfair_lock_unlock(&lock) }
+    Task {
+      await archive(record)
+    }
+  }
 
-    pruneRecordsIfNeeded_locked()
-    records_locked.append(record)
-    // Exactly one record means the buffer has been flushed, so we need to queue new writes.
-    if records_locked.count == 1 {
-      queue.asyncAfter(deadline: .now() + Self.batchWriteDelay) {
-        self.persistRecords_onQueue()
+  /// Archive the record to the persistent store.
+  private func archive(_ record: LogRecord) {
+    pruneRecordsIfNeeded()
+    records.append(record)
+
+    // Exactly one record means the buffer has been flushed, so we need to schedule new writes.
+    guard records.count == 1 else { return }
+
+    // Schedule persistent writes after a short delay to allow for batching.
+    Task.detached(priority: .utility) {
+      do {
+        try await Task.sleep(nanoseconds: Self.batchWriteDelayNanoseconds)
+      } catch {
+        // Failure should only be for canceling this task which shouldn't happen.
+        assertionFailure("Unexpected error waiting on sleep: \(error)")
       }
+      await self.persistRecords()
     }
   }
 
@@ -131,19 +121,15 @@ public class LogArchiver: LoggerDelegate {
   ///
   /// When the record count exceeds the backlog limit, records are pruned starting at the lowest
   /// level and continuing with successively higher levels until the count falls below the limit.
-  ///
-  /// Calling this method from a thread other than from the owner of the lock will assert.
-  private func pruneRecordsIfNeeded_locked() {
-    os_unfair_lock_assert_owner(&lock)
+  private func pruneRecordsIfNeeded() {
+    guard records.count > Self.backlogLimit else { return }
 
-    guard records_locked.count > Self.backlogLimit else { return }
-
-    pruneRecords_locked(below: .standard)
-    if records_locked.count > Self.backlogLimit {
-      pruneRecords_locked(below: .error)
+    pruneRecords(below: .standard)
+    if records.count > Self.backlogLimit {
+      pruneRecords(below: .error)
     }
-    if records_locked.count > Self.backlogLimit {
-      records_locked = Array(records_locked.dropFirst(Self.backlogDropCount))
+    if records.count > Self.backlogLimit {
+      records = Array(records.dropFirst(Self.backlogDropCount))
     }
   }
 
@@ -152,28 +138,24 @@ public class LogArchiver: LoggerDelegate {
   /// Calling this method from a thread other than from the owner of the lock will assert.
   ///
   /// - Parameter level: The level below which records will be pruned.
-  private func pruneRecords_locked(below level: Logger.Level) {
-    os_unfair_lock_assert_owner(&lock)
+  private func pruneRecords(below level: Logger.Level) {
+    records = records.filter { $0.level >= level }
+  }
 
-    records_locked = records_locked.filter { $0.level >= level }
+  private func nextRecordsToPersist() -> [LogRecord] {
+    let batchRecords = records
+    records = []
+    return batchRecords
   }
 
   /// Persist all of the records and clear them from the buffer.
-  ///
-  /// Calling this method from a queue other than `queue` will assert.
-  private func persistRecords_onQueue() {
-    dispatchPrecondition(condition: .onQueue(queue))
-    os_unfair_lock_assert_not_owner(&lock)
-
-    os_unfair_lock_lock(&lock)
-    let batchRecords = records_locked
-    records_locked = []
-    os_unfair_lock_unlock(&lock)
+  nonisolated private func persistRecords() async {
+    let batchRecords = await nextRecordsToPersist()
 
     guard batchRecords.count > 0 else { return }
 
     do {
-      try writeRecords_onQueue(batchRecords)
+      try await serialWriter.write(batchRecords)
     } catch {
       os_log(
         "Error writing records: %s",
@@ -183,16 +165,40 @@ public class LogArchiver: LoggerDelegate {
       )
     }
   }
+}
 
-  /// Write the specified batch of records.
+/// Serializes the writing of log records to the perisistent store.
+private actor LogSerialWriter {
+  /// Factory for making the persistent store.
+  private let persistentStoreFactory: PersistentLogStoreFactory
+
+  /// Directory for the log files that are actively being written.
+  static var logDirectory: String {
+    #if os(iOS) || os(watchOS)
+      return NSString.path(withComponents: [
+        NSHomeDirectory(), "Documents", "Logs",
+      ])
+    #elseif os(macOS)
+      return NSString.path(withComponents: [
+        NSHomeDirectory(), "Library", "Logs", ProcessInfo.processInfo.processName,
+      ])
+    #else
+      #error("Unsupported OS for logDirectory.")
+    #endif
+  }
+
+  /// Initialize using the specified persistence.
   ///
-  /// Calling this method from a queue other than `queue` will assert.
+  /// - Parameter persistentStoreFactory: Factory to use for persistence.
+  init(persistentStoreFactory: PersistentLogStoreFactory) {
+    self.persistentStoreFactory = persistentStoreFactory
+  }
+
+  /// Serially write the specified batch of records.
   ///
   /// - Parameter records: The batch records to write to the persistent storage.
   /// - Throws: An error if the persistent log store cannot be created.
-  private func writeRecords_onQueue(_ records: [LogRecord]) throws {
-    dispatchPrecondition(condition: .onQueue(queue))
-
+  func write(_ records: [LogRecord]) throws {
     var store = try persistentStoreFactory.makeStore(
       directory: Self.logDirectory, date: Date(), carName: nil)
 

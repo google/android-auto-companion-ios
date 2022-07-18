@@ -19,7 +19,6 @@ import XCTest
 @testable import AndroidAutoConnectedDeviceTransport
 
 /// Unit tests for TransportSessionTest.
-@available(iOS 12.0, *)
 class TransportSessionTest: XCTestCase {
   private var peripheralProvider: FakePeripheralProvider!
   private var delegate: FakeTransportSessionDelegate!
@@ -110,7 +109,6 @@ class TransportSessionTest: XCTestCase {
   }
 }
 
-@available(iOS 12.0, *)
 private class FakeTransportSessionDelegate: TransportSessionDelegate {
   var discoveredAssociatedPeripherals: [AnyTransportPeripheral] = []
   var discoveredUnassociatedPeripherals: [AnyTransportPeripheral] = []

@@ -16,9 +16,8 @@ import AndroidAutoLogger
 import Foundation
 
 /// A class that stores secure session information in the keychain.
-@available(iOS 10.0, *)
 class KeychainSecureSessionManager: NSObject {
-  private static let logger = Logger(for: KeychainSecureSessionManager.self)
+  private static let log = Logger(for: KeychainSecureSessionManager.self)
 
   private func secureSessionKey(for identifier: String) -> Data {
     return Data("com.google.ios.aae.trustagentclient.secureSessionKey.\(identifier)".utf8)
@@ -57,7 +56,6 @@ class KeychainSecureSessionManager: NSObject {
 
 // MARK: - SecureSessionManager
 
-@available(iOS 10.0, *)
 extension KeychainSecureSessionManager: SecureSessionManager {
   /// The stored secure session for a given car or `nil` if none has been saved.
   ///
@@ -71,7 +69,7 @@ extension KeychainSecureSessionManager: SecureSessionManager {
     )
 
     guard status == errSecSuccess else {
-      Self.logger.error.log("Unable to secure session; err: \(status)")
+      Self.log.error("Unable to secure session; err: \(status)")
       return nil
     }
 
@@ -92,7 +90,7 @@ extension KeychainSecureSessionManager: SecureSessionManager {
     let status = SecItemAdd(addQuery as CFDictionary, nil)
 
     guard status == errSecSuccess else {
-      Self.logger.error.log("Unable to store secure session; err: \(status)")
+      Self.log.error("Unable to store secure session; err: \(status)")
       return false
     }
 

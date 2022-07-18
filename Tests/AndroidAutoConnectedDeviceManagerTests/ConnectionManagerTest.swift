@@ -26,7 +26,6 @@ private typealias OutOfBandAssociationData = Com_Google_Companionprotos_OutOfBan
 private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBandAssociationToken
 
 /// Unit tests for `CommunicationManager`. Specifically testing the version 2 flow.
-@available(iOS 10.0, *)
 class ConnectionManagerTest: XCTestCase {
   private var connectionManager: ConnectionManagerObservable!
   private var centralManagerMock: CentralManagerMock!
@@ -922,7 +921,6 @@ class ConnectionManagerTest: XCTestCase {
 
 // MARK: - secureBLEChannelFactory
 
-@available(iOS 10.0, *)
 extension ConnectionManagerTest: SecureBLEChannelFactory {
   func makeChannel() -> SecureBLEChannel {
     return SecureBLEChannelMock()

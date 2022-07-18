@@ -19,7 +19,6 @@ import XCTest
 @testable import AndroidAutoConnectedDeviceTransport
 
 /// Unit tests for default PeripheralProvider behaviors.
-@available(iOS 12.0, *)
 class PeripheralProviderTest: XCTestCase {
   private var peripheralProvider: TrialPeripheralProvider!
   private var mockDiscoveryHandler: MockPeripheralDiscoveryMonitorHandler!
@@ -70,7 +69,6 @@ class PeripheralProviderTest: XCTestCase {
   }
 }
 
-@available(iOS 12.0, *)
 private class TrialPeripheralProvider {
   var startPeripheralScanCalled = false
   var stopPeripheralScanCalled = false
@@ -91,7 +89,7 @@ private class TrialPeripheralProvider {
 extension TrialPeripheralProvider: TransportPeripheralProvider {
   typealias Peripheral = FakePeripheral
 
-  static let logger = Logger(for: TrialPeripheralProvider.self)
+  static let log = Logger(for: TrialPeripheralProvider.self)
 
   /// Start scanning in the specified mode.
   func startPeripheralScan(mode: PeripheralScanMode) -> Bool {

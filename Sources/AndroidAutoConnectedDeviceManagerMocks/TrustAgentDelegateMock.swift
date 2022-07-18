@@ -17,7 +17,6 @@ import Foundation
 @testable import AndroidAutoConnectedDeviceManager
 
 /// A mock `TrustAgentManagerDelegate` that can assert if its methods are called.
-@available(iOS 10.0, *)
 public class TrustAgentDelegateMock: TrustAgentManagerDelegate {
   public var didStartUnlockingCalled = false
   public var didFinishUnlockingCalled = false

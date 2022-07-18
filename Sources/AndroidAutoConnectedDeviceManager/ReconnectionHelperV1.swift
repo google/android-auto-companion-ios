@@ -24,9 +24,8 @@ import Foundation
 ///
 /// This version has been deprecated as a result of the privacy implications. See
 /// go/aae-batmobile-device-id-exchange for more details.
-@available(iOS 10.0, *)
 class ReconnectionHelperV1 {
-  private static let logger = Logger(for: ReconnectionHelperV1.self)
+  private static let log = Logger(for: ReconnectionHelperV1.self)
 
   let peripheral: AnyPeripheral
   var carId: String?
@@ -42,7 +41,6 @@ class ReconnectionHelperV1 {
 }
 
 // MARK: - ReconnectionHelper
-@available(iOS 10.0, *)
 extension ReconnectionHelperV1: ReconnectionHelper {
   func discoveryUUID(from config: UUIDConfig) -> CBUUID {
     config.reconnectionUUID(for: .v1)
@@ -61,7 +59,7 @@ extension ReconnectionHelperV1: ReconnectionHelper {
   /// Handle the security version resolution.
   func onResolvedSecurityVersion(_ version: MessageSecurityVersion) throws {
     guard version == .v1 else {
-      Self.logger.error.log("Resolved mismatched security version: \(version)")
+      Self.log.error("Resolved mismatched security version: \(version)")
       throw CommunicationManagerError.mismatchedSecurityVersion
     }
   }
@@ -71,7 +69,7 @@ extension ReconnectionHelperV1: ReconnectionHelper {
   /// - Parameter messageStream: Message stream to use for the handshake.
   /// - Throws: An error if sending the message fails.
   func startHandshake(messageStream: MessageStream) throws {
-    Self.logger.log(
+    Self.log(
       "Begin reconnection handshake. Sending device id to car.",
       redacting: "id: (\(DeviceIdManager.deviceId))"
     )
@@ -96,7 +94,7 @@ extension ReconnectionHelperV1: ReconnectionHelper {
     // Extract the carId from the message.
     let carId = try CBUUID(carId: message).uuidString
     self.carId = carId
-    Self.logger.log("Received device id from car.", redacting: "carId: \(carId)")
+    Self.log("Received device id from car.", redacting: "carId: \(carId)")
     return true
   }
 

@@ -20,7 +20,6 @@ import Foundation
 typealias CarAdvertisementMatch = (car: Car, hmac: Data)
 
 /// Protocol for a car authenticator.
-@available(iOS 10.0, *)
 protocol CarAuthenticator {
   /// Get the car authenticator for the specified car.
   ///
@@ -54,7 +53,6 @@ protocol CarAuthenticator {
 }
 
 /// Responsible for authenticating the car for reconnection.
-@available(iOS 10.0, *)
 struct CarAuthenticatorImpl: CarAuthenticator {
   /// Error errors performing key operations (e.g. assigning, generating, storing).
   enum KeyError: Error {
@@ -276,7 +274,7 @@ struct CarAuthenticatorImpl: CarAuthenticator {
 
   /// Storage for saving and recovering authentication data.
   private enum KeyChainStorage {
-    static private let logger = Logger(for: KeyChainStorage.self)
+    static private let log = Logger(for: KeyChainStorage.self)
 
     /// Label for the key query.
     static private let keyLabel = "com.google.ios.aae.trustagentclient.CarAuthenticatorImpl.key"
@@ -305,11 +303,11 @@ struct CarAuthenticatorImpl: CarAuthenticator {
         let updatedAttributes: [String: Any] = [kSecValueData as String: keyData]
         let updateStatus = SecItemUpdate(query as CFDictionary, updatedAttributes as CFDictionary)
         if updateStatus != errSecSuccess {
-          Self.logger.error.log("Unable to update the car authentication key; err: \(status)")
+          Self.log.error("Unable to update the car authentication key; err: \(status)")
           throw KeyError.saveFailed(status)
         }
       default:
-        Self.logger.error.log("Unable to save the car authentication key; err: \(status)")
+        Self.log.error("Unable to save the car authentication key; err: \(status)")
         throw KeyError.saveFailed(status)
       }
     }
@@ -346,7 +344,7 @@ struct CarAuthenticatorImpl: CarAuthenticator {
 
       let status = SecItemDelete(query as CFDictionary)
       guard status == errSecSuccess else {
-        Self.logger.error.log("Failed to delete the car authentication key; err: \(status)")
+        Self.log.error("Failed to delete the car authentication key; err: \(status)")
         throw KeyError.deleteFailed(status)
       }
     }

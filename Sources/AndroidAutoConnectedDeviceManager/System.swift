@@ -42,11 +42,9 @@ private protocol SomeSystem {
   import UIKit
   import LocalAuthentication
 
-  @available(iOS 10.0, *)
   extension UIDevice: AnyDevice {}
 
   /// Provides a common API to access system specific members.
-  @available(iOS 10.0, *)
   enum System: SomeSystem {
     /// Get the current device.
     static var currentDevice: UIDevice { UIDevice.current }

@@ -22,7 +22,6 @@ import CoreBluetooth
 /// to prevent device identifiers from being shared in the open.
 ///
 /// See go/aae-batmobile-hide-device-ids for details.
-@available(iOS 10.0, *)
 class ReconnectionHelperV2 {
   /// Tracks the authentication phase of a car.
   /// Phases are:
@@ -52,7 +51,7 @@ class ReconnectionHelperV2 {
   /// Length of the salt we should send as a challenge.
   private static let challengeSaltLength = 16
 
-  private static let logger = Logger(for: ReconnectionHelperV2.self)
+  private static let log = Logger(for: ReconnectionHelperV2.self)
 
   let authenticatorType: CarAuthenticator.Type
   let peripheral: AnyPeripheral
@@ -86,7 +85,7 @@ class ReconnectionHelperV2 {
     self.authenticatorType = authenticatorType
     self.peripheral = peripheral
 
-    Self.logger.debug.log("ReconnectionHelper with candidate cars: \(cars)")
+    Self.log("ReconnectionHelper with candidate cars: \(cars)")
 
     phase = .unresolved(cars)
   }
@@ -122,7 +121,6 @@ class ReconnectionHelperV2 {
 }
 
 // MARK: - ReconnectionHelper
-@available(iOS 10.0, *)
 extension ReconnectionHelperV2: ReconnectionHelper {
   /// Indicates whether advertisement data is needed to begin the handshake.
   var isReadyForHandshake: Bool {
@@ -147,7 +145,7 @@ extension ReconnectionHelperV2: ReconnectionHelper {
     guard
       let match = authenticatorType.first(among: cars, matchingData: data as Data)
     else {
-      Self.logger.log(
+      Self.log(
         """
         No associated car found to match the applied advertisement data for peripheral: \
         \(peripheral.logName).
@@ -156,10 +154,10 @@ extension ReconnectionHelperV2: ReconnectionHelper {
       throw CommunicationManagerError.unassociatedCar
     }
 
-    Self.logger.log(
+    Self.log(
       """
-      Connected to device with authentication key for id (\(match.car.id), meaning it is \
-      security version 2.
+      Will connect to device with authentication key for id (\(match.car.id), meaning it is \
+      security version >= 2.
       """
     )
 
@@ -173,7 +171,7 @@ extension ReconnectionHelperV2: ReconnectionHelper {
   func onResolvedSecurityVersion(_ version: MessageSecurityVersion) throws {
     switch version {
     case .v1:
-      Self.logger.error.log("Resolved mismatched security version: \(version)")
+      Self.log.error("Resolved mismatched security version: \(version)")
       throw CommunicationManagerError.mismatchedSecurityVersion
     case .v2, .v3, .v4:
       resolvedSecurityVersion = version
@@ -188,7 +186,7 @@ extension ReconnectionHelperV2: ReconnectionHelper {
   /// - Parameter messageStream: Message stream to use for the handshake.
   /// - Throws: An error if sending the message fails or we are in the wrong state.
   func startHandshake(messageStream: MessageStream) throws {
-    Self.logger.log(
+    Self.log(
       """
       Message stream version resolved. Sending challenge salt for peripheral: \
       \(peripheral.logName).
@@ -196,7 +194,7 @@ extension ReconnectionHelperV2: ReconnectionHelper {
     )
 
     guard case let .matchedAdvertisementHMAC(hmac) = phase else {
-      Self.logger.error.log(
+      Self.log.error(
         """
         The advertised truncated HMAC for peripheral: \(peripheral.logName) doesn't match \
         what we computed.
@@ -231,12 +229,12 @@ extension ReconnectionHelperV2: ReconnectionHelper {
   /// - Returns: Always returns `true`.
   /// - Throws: An error if we are in the wrong state or the challenge authentication fails.
   func handleMessage(messageStream: MessageStream, message: Data) throws -> Bool {
-    Self.logger.log(
+    Self.log(
       "Handling message. Verifying challenge salt HMAC for peripheral: \(peripheral.logName)."
     )
 
     guard case let .saltChallengeSent(salt) = phase else {
-      Self.logger.error.log(
+      Self.log.error(
         """
         Wrong phase: \(phase) for peripheral: \(peripheral.logName). \
         Should instead be the saltChallengeSent phase.
@@ -247,7 +245,7 @@ extension ReconnectionHelperV2: ReconnectionHelper {
     }
 
     guard let car = self.car else {
-      Self.logger.fault.log(
+      Self.log.fault(
         """
         The matching car is `nil` for peripheral: \(peripheral.logName) but should have been \
         resolved before starting the handshake.
@@ -258,7 +256,7 @@ extension ReconnectionHelperV2: ReconnectionHelper {
 
     let authenticator = try authenticatorType.init(carId: car.id)
     guard authenticator.isMatch(challenge: salt, hmac: message) else {
-      Self.logger.error.log(
+      Self.log.error(
         """
         The challenge salt HMAC for peripheral: \(peripheral.logName) doesn't match what we \
         computed.
@@ -270,7 +268,7 @@ extension ReconnectionHelperV2: ReconnectionHelper {
 
     phase = .authenticated
 
-    Self.logger.log("Authenticated challenge for peripheral: \(peripheral.logName).")
+    Self.log("Authenticated challenge for peripheral: \(peripheral.logName).")
     return true
   }
 
@@ -280,7 +278,7 @@ extension ReconnectionHelperV2: ReconnectionHelper {
     completion: @escaping (Bool) -> Void
   ) {
     guard let securityVersion = resolvedSecurityVersion else {
-      Self.logger.error.log("Missing resolved security version.")
+      Self.log.error("Missing resolved security version.")
       completion(false)
       return
     }
@@ -296,8 +294,7 @@ extension ReconnectionHelperV2: ReconnectionHelper {
           return
         }
 
-        Self.logger.log(
-          "Secure channel configured with user role: \(channel.userRole.debugDescription)")
+        Self.log("Secure channel configured with user role: \(channel.userRole.debugDescription)")
         completion(true)
       }
     }

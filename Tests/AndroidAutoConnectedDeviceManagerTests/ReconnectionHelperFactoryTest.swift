@@ -19,7 +19,6 @@ import XCTest
 @testable import AndroidAutoConnectedDeviceManager
 
 /// Unit tests for `ReconnectionHelperFactory`.
-@available(iOS 10.0, *)
 class ReconnectionHelperFactoryTest: XCTestCase {
   private static let identifier = UUID(uuidString: "f01caae0-1eb8-4753-8357-be83523828d5")!
   private let associatedCar = Car(

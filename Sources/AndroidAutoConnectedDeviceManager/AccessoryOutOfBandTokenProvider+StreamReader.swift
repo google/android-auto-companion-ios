@@ -22,11 +22,10 @@ import Foundation
 
   // MARK: - StreamReader
 
-  @available(iOS 13.0, *)
   extension AccessoryOutOfBandTokenProvider {
     /// Read out of band tokens from an input stream.
     final class StreamReader: NSObject {
-      private static let logger = Logger(for: StreamReader.self)
+      private static let log = Logger(for: StreamReader.self)
 
       /// The input stream from which to read the tokens.
       private let stream: InputStream
@@ -49,7 +48,7 @@ import Foundation
       ///   - stream: Input stream from which to read the tokens.
       ///   - handler: Handler to process tokens that are read.
       init(stream: InputStream, handler: @escaping (OutOfBandToken) -> Void) {
-        Self.logger("Opening input stream.")
+        Self.log("Opening input stream.")
 
         self.stream = stream
         self.handler = handler
@@ -77,7 +76,7 @@ import Foundation
 
       /// Service the input stream as long as there is data to be read.
       private func read() {
-        Self.logger("Reading bytes from stream.")
+        Self.log("Reading bytes from stream.")
 
         guard isOpen, stream.hasBytesAvailable else { return }
 
@@ -90,8 +89,7 @@ import Foundation
             }
           }
         } catch {
-          Self.logger.error(
-            "Error reading the token from the stream: \(error.localizedDescription)")
+          Self.log.error("Error reading the token from the stream: \(error.localizedDescription)")
         }
       }
 
@@ -104,7 +102,6 @@ import Foundation
 
   // MARK: - StreamReader StreamDelegate
 
-  @available(iOS 13.0, *)
   extension AccessoryOutOfBandTokenProvider.StreamReader: StreamDelegate {
     /// Handle stream events.
     public func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
@@ -112,24 +109,23 @@ import Foundation
       case .hasBytesAvailable:
         read()
       case .endEncountered:
-        Self.logger.error("Stream end encountered.")
+        Self.log.error("Stream end encountered.")
         invalidate()
       case .errorOccurred:
-        Self.logger.error("Stream error: \(stream.streamError?.localizedDescription ?? "Unknown")")
+        Self.log.error("Stream error: \(stream.streamError?.localizedDescription ?? "Unknown")")
         invalidate()
       default:
-        Self.logger.info("Received unhandled stream event: \(eventCode)")
+        Self.log.info("Received unhandled stream event: \(eventCode)")
       }
     }
   }
 
   // MARK: - StreamReader Buffer
 
-  @available(iOS 13.0, *)
   extension AccessoryOutOfBandTokenProvider.StreamReader {
     /// Buffer which processes input stream data to parse tokens.
     private enum Buffer<SizeType: FixedWidthInteger> {
-      private static var logger: Logger { Logger(for: Buffer<SizeType>.self) }
+      private static var log: Logger { Logger(for: Buffer<SizeType>.self) }
 
       /// Size (bytes) of the buffer for reading data from the stream in chunks.
       private static var bufferSize: Int { 1_024 }
@@ -174,22 +170,22 @@ import Foundation
         from stream: InputStream,
         pending: [UInt8]
       ) throws {
-        Self.logger("Read message pending: \(pending.count)")
+        Self.log("Read message pending: \(pending.count)")
         let maxLength = Self.bufferSize
-        Self.logger("Read message maxLength: \(maxLength)")
+        Self.log("Read message maxLength: \(maxLength)")
         var buffer: [UInt8] = Array(repeating: 0, count: maxLength)
         let readCount = stream.read(&buffer, maxLength: buffer.count)
         guard readCount > 0 else { return }
 
-        Self.logger("Read message readCount: \(readCount)")
+        Self.log("Read message readCount: \(readCount)")
         let message = pending + Array(buffer[0..<readCount])
-        Self.logger("Read message current message length: \(message.count)")
+        Self.log("Read message current message length: \(message.count)")
 
         if stream.hasBytesAvailable {
-          Self.logger("Waiting for more data.")
+          Self.log("Waiting for more data.")
           self = .message(message)
         } else {
-          Self.logger("Parsing token.")
+          Self.log("Parsing token.")
           let messageData = Data(message)
           let token = try OutOfBandAssociationToken(serializedData: messageData)
           self = .token(token)

@@ -17,7 +17,7 @@ import Foundation
 
 /// `OutOfBandTokenProvider` that provides the most recent token that was posted to it.
 class PassiveOutOfBandTokenProvider {
-  private static let logger = Logger(for: PassiveOutOfBandTokenProvider.self)
+  private static let log = Logger(for: PassiveOutOfBandTokenProvider.self)
 
   private var token: OutOfBandToken?
 

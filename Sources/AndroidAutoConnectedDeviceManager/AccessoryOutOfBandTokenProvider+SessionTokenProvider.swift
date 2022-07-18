@@ -24,11 +24,10 @@
 
   // MARK: - SessionTokenProvider
 
-  @available(iOS 13.0, *)
   extension AccessoryOutOfBandTokenProvider {
     /// Token provider for a given EASession.
     class SessionTokenProvider: NSObject {
-      private static let logger = Logger(for: SessionTokenProvider.self)
+      private static let log = Logger(for: SessionTokenProvider.self)
       private let session: EASession
       private var reader: StreamReader!
       private var token: OutOfBandToken?
@@ -52,12 +51,12 @@
         super.init()
 
         self.reader = StreamReader(stream: inputStream) { [weak self] token in
-          Self.logger("Stream reader parsed token.")
+          Self.log("Stream reader parsed token.")
           self?.token = token
         }
         accessory.delegate = self
 
-        Self.logger("New session for: \(accessory) with protocol: \(protocolString).")
+        Self.log("New session for: \(accessory) with protocol: \(protocolString).")
       }
 
       deinit {
@@ -73,7 +72,7 @@
       ///
       /// This session will no longer be usable once invalidated.
       func invalidate() {
-        Self.logger.info("Invalidating session.")
+        Self.log.info("Invalidating session.")
         reader.invalidate()
         // Close the output stream for proper cleanup even though we never directly open it.
         session.outputStream?.close()
@@ -84,24 +83,22 @@
 
   // MARK: - OutOfBandTokenProvider Conformance
 
-  @available(iOS 13.0, *)
   extension AccessoryOutOfBandTokenProvider.SessionTokenProvider: OutOfBandTokenProvider {
     func reset() {
       token = nil
     }
 
     func requestToken(completion: @escaping (OutOfBandToken?) -> Void) {
-      Self.logger("Requested token available: \(token != nil)")
+      Self.log("Requested token available: \(token != nil)")
       completion(token)
     }
   }
 
   // MARK: - EAAccessoryDelegate Conformance
 
-  @available(iOS 13.0, *)
   extension AccessoryOutOfBandTokenProvider.SessionTokenProvider: EAAccessoryDelegate {
     func accessoryDidDisconnect(_ accessory: EAAccessory) {
-      Self.logger("Accessory \(accessory) did disconnect.")
+      Self.log("Accessory \(accessory) did disconnect.")
       reader.reset()
       reset()
     }

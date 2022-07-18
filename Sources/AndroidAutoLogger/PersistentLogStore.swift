@@ -15,7 +15,7 @@
 import Foundation
 
 /// Protocol for persisting log records to storage.
-@available(iOS 10.0, macOS 10.15, *)
+@available(macOS 10.15, *)
 public protocol PersistentLogStore {
   /// Returns `true` if the specified date represents the same day as this archive's date in GMT.
   ///
@@ -37,7 +37,7 @@ public protocol PersistentLogStore {
 /// Manage the persistent storage of the log files.
 ///
 /// The log file format is in JSON with each record being an element of the array.
-@available(iOS 10.0, macOS 10.15, *)
+@available(macOS 10.15, *)
 public class FileLogStore: PersistentLogStore {
   /// Duration (seconds) to retain the log files.
   static private let logRetentionDuration: TimeInterval = 7 * 24 * 3_600
@@ -205,7 +205,7 @@ public class FileLogStore: PersistentLogStore {
 
 // MARK: - StoreError extension
 
-@available(iOS 10.0, macOS 10.15, *)
+@available(macOS 10.15, *)
 extension FileLogStore {
   /// Storage errors.
   enum StoreError: Error {

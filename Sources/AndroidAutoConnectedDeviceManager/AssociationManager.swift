@@ -23,7 +23,6 @@ import Foundation
 ///
 /// These methods are all implemented in `AssociationManager` and the associator is just a proxy
 /// which forwards these calls to the manager.
-@available(iOS 10.0, *)
 protocol Associator {
   var connectionHandle: ConnectionHandle { get }
 
@@ -57,7 +56,6 @@ protocol Associator {
 }
 
 /// Delegate that will be notified of association statuses.
-@available(iOS 10.0, *)
 protocol AssociationManagerDelegate: AnyObject {
   /// Invoked when the association manager has successfully completed associating the current
   /// device.
@@ -102,9 +100,8 @@ protocol AssociationManagerDelegate: AnyObject {
 
 /// Handles the process of pairing the current device with a specified car. The car should
 /// be advertising that it supports the association of a companion phone.
-@available(iOS 10.0, *)
 class AssociationManager: NSObject {
-  private static let logger = Logger(for: AssociationManager.self)
+  private static let log = Logger(for: AssociationManager.self)
 
   private static let streamParams = MessageStreamParams(
     recipient: Config.defaultRecipientUUID, operationType: .clientMessage)
@@ -250,7 +247,7 @@ class AssociationManager: NSObject {
 
   private func scheduleAssociationTimeout(for peripheral: BLEPeripheral) {
     let notifyAssociationError = DispatchWorkItem { [weak self] in
-      Self.logger.error.log(
+      Self.log.error(
         "Association attempt timed out for car \(peripheral.logName). Notifying delegate.")
 
       self?.notifyDelegateOfError(.timedOut)
@@ -323,9 +320,7 @@ class AssociationManager: NSObject {
   ///   - peripheral: The peripheral that hosts the given characteristics
   private func process(_ characteristics: [BLECharacteristic], for peripheral: BLEPeripheral) {
     for characteristic in characteristics {
-      Self.logger.debug.log(
-        "Processing association characteristic: \(characteristic.uuid.uuidString)"
-      )
+      Self.log.debug("Processing association characteristic: \(characteristic.uuid.uuidString)")
 
       switch characteristic.uuid {
       case UUIDConfig.writeCharacteristicUUID:
@@ -333,7 +328,7 @@ class AssociationManager: NSObject {
       case UUIDConfig.readCharacteristicUUID:
         readCharacteristic = characteristic
       default:
-        Self.logger.debug.log(
+        Self.log.debug(
           "Encountered unknown associate characteristic uuid: \(characteristic.uuid.uuidString)"
         )
       }
@@ -341,9 +336,7 @@ class AssociationManager: NSObject {
   }
 
   private func establishEncryption(using messageStream: BLEMessageStream) {
-    Self.logger.log(
-      "Attempting to establish encryption with \(messageStream.peripheral.logName)"
-    )
+    Self.log("Attempting to establish encryption with \(messageStream.peripheral.logName)")
 
     do {
       try secureBLEChannel.establish(using: messageStream)
@@ -360,7 +353,7 @@ class AssociationManager: NSObject {
     guard let savedSession = try? secureBLEChannel.saveSession(),
       secureSessionManager.storeSecureSession(savedSession, for: carId)
     else {
-      Self.logger.error.log("Cannot save the secure session. Cannot complete association.")
+      Self.log.error("Cannot save the secure session. Cannot complete association.")
       notifyDelegateOfError(.cannotStoreAssociation)
       return false
     }
@@ -425,28 +418,27 @@ class AssociationManager: NSObject {
 }
 
 // MARK: - CBPeripheralDelegate
-@available(iOS 10.0, *)
 extension AssociationManager: BLEPeripheralDelegate {
   func peripheral(_ peripheral: BLEPeripheral, didDiscoverServices error: Error?) {
     if let error = error {
-      Self.logger.error.log("Error discovering services: \(error.localizedDescription)")
+      Self.log.error("Error discovering services: \(error.localizedDescription)")
       notifyDelegateOfError(.cannotDiscoverServices)
       return
     }
 
     guard let services = peripheral.services, services.count > 0 else {
-      Self.logger.error.log("No services in the given peripheral")
+      Self.log.error("No services in the given peripheral")
       notifyDelegateOfError(.cannotDiscoverServices)
       return
     }
 
-    Self.logger.info.log("Discovered \(services.count) services.")
+    Self.log.info("Discovered \(services.count) services.")
 
     for service in services {
-      Self.logger.debug.log("Service UUID: \(service.uuid.uuidString)")
+      Self.log.debug("Service UUID: \(service.uuid.uuidString)")
 
       if service.uuid == associationUUID {
-        Self.logger.debug.log("Discovering characteristics for association service.")
+        Self.log.debug("Discovering characteristics for association service.")
 
         peripheral.discoverCharacteristics(
           [
@@ -465,37 +457,37 @@ extension AssociationManager: BLEPeripheralDelegate {
     error: Error?
   ) {
     if let error = error {
-      Self.logger.error.log("Error discovering characteristics: \(error.localizedDescription)")
+      Self.log.error("Error discovering characteristics: \(error.localizedDescription)")
       notifyDelegateOfError(.cannotDiscoverCharacteristics)
       return
     }
 
     guard service.uuid == associationUUID else {
-      Self.logger.error.log("Encountered unknown UUID: \(service.uuid.uuidString)")
+      Self.log.error("Encountered unknown UUID: \(service.uuid.uuidString)")
       notifyDelegateOfError(.cannotDiscoverCharacteristics)
       return
     }
 
     guard let characteristics = service.characteristics, characteristics.count > 0 else {
-      Self.logger.error.log("No characteristics discovered for the peripheral.")
+      Self.log.error("No characteristics discovered for the peripheral.")
       notifyDelegateOfError(.cannotDiscoverCharacteristics)
       return
     }
 
-    Self.logger.debug.log(
+    Self.log.debug(
       "Discovered \(characteristics.count) characteristics for service \(service.uuid.uuidString)"
     )
 
     process(characteristics, for: peripheral)
 
     guard writeCharacteristic != nil else {
-      Self.logger.error.log("Could not find associate characteristic for client write.")
+      Self.log.error("Could not find associate characteristic for client write.")
       notifyDelegateOfError(.cannotDiscoverCharacteristics)
       return
     }
 
     guard readCharacteristic != nil else {
-      Self.logger.error.log("Could not find associate characteristic for server write.")
+      Self.log.error("Could not find associate characteristic for server write.")
       notifyDelegateOfError(.cannotDiscoverCharacteristics)
       return
     }
@@ -524,7 +516,6 @@ extension AssociationManager: BLEPeripheralDelegate {
 
 // MARK: - SecureBLEChannelDelegate
 
-@available(iOS 10.0, *)
 extension AssociationManager: SecureBLEChannelDelegate {
   func secureBLEChannel(
     _ secureBLEChannel: SecureBLEChannel,
@@ -552,16 +543,13 @@ extension AssociationManager: SecureBLEChannelDelegate {
 
 // MARK: - MessageStreamDelegate
 
-@available(iOS 10.0, *)
 extension AssociationManager: MessageStreamDelegate {
   func messageStream(
     _ messageStream: MessageStream,
     didReceiveMessage message: Data,
     params: MessageStreamParams
   ) {
-    Self.logger.debug.log(
-      "Received message from characteristic \(messageStream.readingDebugDescription)."
-    )
+    Self.log.debug("Received message from characteristic \(messageStream.readingDebugDescription).")
 
     messageHelper?.handleMessage(message, params: params)
   }
@@ -571,7 +559,7 @@ extension AssociationManager: MessageStreamDelegate {
     didEncounterWriteError error: Error,
     to recipient: UUID
   ) {
-    Self.logger.error.log(
+    Self.log.error(
       """
       Error writing escrow token for characteristic \
       (\(messageStream.writingDebugDescription)): \(error.localizedDescription)
@@ -591,7 +579,6 @@ extension AssociationManager: MessageStreamDelegate {
 
 // MARK: - BLEVersionResolverDelegate
 
-@available(iOS 10.0, *)
 extension AssociationManager: BLEVersionResolverDelegate {
   func bleVersionResolver(
     _ bleVersionResolver: BLEVersionResolver,
@@ -604,9 +591,7 @@ extension AssociationManager: BLEVersionResolverDelegate {
     guard let readCharacteristic = readCharacteristic,
       let writeCharacteristic = writeCharacteristic
     else {
-      Self.logger.error.log(
-        "Could not find read and write characteristics after BLE version resolution."
-      )
+      Self.log.error("Could not find read and write characteristics after BLE version resolution.")
       notifyDelegateOfError(.cannotDiscoverCharacteristics)
       return
     }
@@ -636,7 +621,7 @@ extension AssociationManager: BLEVersionResolverDelegate {
   }
 
   func messageStreamEncounteredUnrecoverableError(_ messageStream: MessageStream) {
-    Self.logger.error.log(
+    Self.log.error(
       "Underlying BLEMessageStream encountered unrecoverable error. Notifying delegate."
     )
     notifyDelegateOfError(.unknown)

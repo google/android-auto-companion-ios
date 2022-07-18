@@ -17,7 +17,7 @@ import XCTest
 @testable import AndroidAutoConnectedDeviceManager
 
 /// Unit tests for PassiveOutOfBandTokenProvider.
-@available(iOS 10.0, watchOS 6.0, *)
+@available(watchOS 6.0, *)
 class PassiveOutOfBandTokenProviderTest: XCTestCase {
   // The token provider to test.
   private var testTokenProvider: PassiveOutOfBandTokenProvider!

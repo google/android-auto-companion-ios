@@ -16,9 +16,7 @@ import XCTest
 
 @testable import AndroidAutoLogger
 
-@available(iOS 10, *)
 class SignpostMetricsTest: XCTestCase {
-  @available(iOS 13, *)
   func testIsAvailable() {
     XCTAssertTrue(SignpostMetrics.isSystemSupported)
   }
@@ -58,7 +56,6 @@ class SignpostMetricsTest: XCTestCase {
   }
 }
 
-@available(iOS 10, *)
 private class SignpostMetricsHandlerMock: SignpostMetricsHandler {
   let category: String
   var isValid = false

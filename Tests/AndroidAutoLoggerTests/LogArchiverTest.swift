@@ -17,7 +17,7 @@ import XCTest
 @testable import AndroidAutoLogger
 
 /// Unit tests for `LogArchiver`.
-@available(iOS 10.0, *)
+
 class LogArchiverTest: XCTestCase {
   private let logger = Logger(for: LogArchiverTest.self)
 

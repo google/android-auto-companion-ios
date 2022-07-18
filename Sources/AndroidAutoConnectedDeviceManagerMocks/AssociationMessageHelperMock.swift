@@ -22,7 +22,6 @@ import Foundation
 @testable import AndroidAutoConnectedDeviceManager
 
 /// Mock `AssociationMessageHelper`.
-@available(iOS 10.0, *)
 final public class AssociationMessageHelperMock {
   // MARK: - Method call checks
   public var startCalled = false
@@ -34,7 +33,7 @@ final public class AssociationMessageHelperMock {
 
   // MARK: Basic Requirements
 
-  static public let logger = Logger(for: AssociationMessageHelperMock.self)
+  static public let log = Logger(for: AssociationMessageHelperMock.self)
 
   private let messageStream: MessageStream
   public let associator: Associator
@@ -56,7 +55,6 @@ final public class AssociationMessageHelperMock {
 }
 
 // MARK: - AssociationMessageHelper
-@available(iOS 10.0, *)
 extension AssociationMessageHelperMock: AssociationMessageHelper {
   public func start() {
     startCalled = true

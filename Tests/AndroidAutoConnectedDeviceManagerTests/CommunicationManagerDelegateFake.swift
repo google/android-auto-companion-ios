@@ -20,7 +20,7 @@ import XCTest
 
 /// An implementation of `CommunicationManagerDelegate` that allows for verification of its methods
 /// being called.
-@available(iOS 10.0, *)
+
 class CommunicationManagerDelegateFake: CommunicationManagerDelegate {
   var establishingSecureChannelCalled = false
   var establishingCar: Car?

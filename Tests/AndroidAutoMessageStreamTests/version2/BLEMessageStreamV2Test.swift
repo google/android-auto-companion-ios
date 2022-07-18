@@ -25,7 +25,6 @@ private typealias OperationType = Com_Google_Companionprotos_OperationType
 private typealias Packet = Com_Google_Companionprotos_Packet
 
 /// Unit tests for `BLEMessageStreamV2`.
-@available(iOS 10.0, *)
 class BLEMessageStreamV2Test: XCTestCase {
   private let recipientUUID = UUID(uuidString: "B75D6A81-635B-4560-BD8D-9CDF83F32AE7")!
 

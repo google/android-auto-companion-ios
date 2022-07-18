@@ -19,7 +19,7 @@ import Foundation
 /// See the Integer Literals subsection in the Swift documentation for details on the swift literal
 /// notation for integers:
 /// https://docs.swift.org/swift-book/ReferenceManual/LexicalStructure.html#ID414
-@available(iOS 10.0, macOS 10.15.0, *)
+@available(macOS 10.15, *)
 public enum RadixFormat {
   /// Formats as just binary digits.
   case rawBinary
@@ -60,7 +60,7 @@ public enum RadixFormat {
 }
 
 /// Formats numbers in various decimal notations.
-@available(iOS 10.0, macOS 10.15.0, *)
+@available(macOS 10.15, *)
 public enum DecimalFormat {
   /// Applies no format to the number.
   case none
@@ -118,7 +118,7 @@ public enum DecimalFormat {
 
 // MARK: - String Interpolation Extensions
 
-@available(iOS 10.0, macOS 10.15, *)
+@available(macOS 10.15, *)
 extension String.StringInterpolation {
   /// Append the string interpolation of the value using the specified radix format.
   ///

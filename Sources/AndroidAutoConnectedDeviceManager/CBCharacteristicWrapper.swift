@@ -25,7 +25,6 @@ import Foundation
 /// ```
 /// extension CBCharacteristic: BLECharacteristic {}
 /// ```
-@available(iOS 10.0, *)
 class CBCharacteristicWrapper: BLECharacteristic {
   let characteristic: CBCharacteristic
 

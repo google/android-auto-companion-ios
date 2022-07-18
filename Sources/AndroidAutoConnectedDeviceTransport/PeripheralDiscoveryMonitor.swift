@@ -13,7 +13,6 @@
 // limitations under the License.
 
 /// Generic implementation of `SomePeripheralDiscoveryMonitor`.
-@available(iOS 12.0, *)
 public class PeripheralDiscoveryMonitor<Peripheral: TransportPeripheral>:
   SomePeripheralDiscoveryMonitor
 {

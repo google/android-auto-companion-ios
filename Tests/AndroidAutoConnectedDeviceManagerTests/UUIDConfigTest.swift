@@ -18,7 +18,7 @@ import XCTest
 @testable import AndroidAutoConnectedDeviceManager
 
 /// Unit tests for `UUIDConfig`.
-@available(iOS 10.0, watchOS 6.0, *)
+@available(watchOS 6.0, *)
 class UUIDConfigTest: XCTestCase {
   private let expectedDefaultAssociationUUID =
     CBUUID(string: "5e2a68a4-27be-43f9-8d1e-4546976fabd7")

@@ -32,9 +32,8 @@ private typealias VerificationCode = Com_Google_Companionprotos_VerificationCode
 ///   4) Establish encryption.
 ///   5) Send device ID and receive car ID.
 ///   6) Complete association.
-@available(iOS 10.0, *)
 final class AssociationMessageHelperV4 {
-  static let logger = Logger(for: AssociationMessageHelperV4.self)
+  static let log = Logger(for: AssociationMessageHelperV4.self)
 
   private let messageStream: MessageStream
   private let associator: Associator
@@ -59,7 +58,6 @@ final class AssociationMessageHelperV4 {
 }
 
 // MARK: - AssociationMessageHelper
-@available(iOS 10.0, *)
 extension AssociationMessageHelperV4: AssociationMessageHelper {
   func start() {
     phase = .encryptionInProgress
@@ -69,14 +67,13 @@ extension AssociationMessageHelperV4: AssociationMessageHelper {
   func handleMessage(_ message: Data, params: MessageStreamParams) {
     switch phase {
     case .encryptionInProgress:
-      Self.logger.error.log("Invalid state of .encryptionInProgress encountered.")
+      Self.log.error("Invalid state of .encryptionInProgress encountered.")
       associator.notifyDelegateOfError(.unknown)
     case .visualConfirmation:
       do {
         let code = try VerificationCode(serializedData: message)
         guard code.state == .visualConfirmation else {
-          Self.logger.error.log(
-            "Expecting visual confirmation, but instead received: \(code.state)")
+          Self.log.error("Expecting visual confirmation, but instead received: \(code.state)")
           associator.notifyDelegateOfError(.unknown)
           return
         }
@@ -88,16 +85,14 @@ extension AssociationMessageHelperV4: AssociationMessageHelper {
       do {
         let code = try VerificationCode(serializedData: message)
         guard code.state == .oobVerification else {
-          Self.logger.error.log(
-            "Expecting Out-Of-Band confirmation, but instead received: \(code.state)")
+          Self.log.error("Expecting Out-Of-Band confirmation, but instead received: \(code.state)")
           associator.notifyDelegateOfError(.unknown)
           return
         }
 
         let confirmation = try outOfBandToken.decrypt(code.payload)
         guard confirmation == securityToken.data else {
-          Self.logger.error.log(
-            "Decrypted pairing verification code does not match the security token.")
+          Self.log.error("Decrypted pairing verification code does not match the security token.")
           associator.notifyDelegateOfError(.pairingCodeRejected)
           return
         }
@@ -107,7 +102,7 @@ extension AssociationMessageHelperV4: AssociationMessageHelper {
       }
     case .encryptionEstablished:
       guard let carId = try? extractCarId(fromMessage: message) else {
-        Self.logger.error.log("Error extracting carId from message.")
+        Self.log.error("Error extracting carId from message.")
         associator.notifyDelegateOfError(.malformedCarId)
         return
       }
@@ -121,10 +116,10 @@ extension AssociationMessageHelperV4: AssociationMessageHelper {
 
       sendDeviceIdPlusAuthenticationKey(keyData: authenticator.keyData, on: messageStream)
     case .none:
-      Self.logger.error.log("Invalid state of .none encountered.")
+      Self.log.error("Invalid state of .none encountered.")
       associator.notifyDelegateOfError(.unknown)
     case .done:
-      Self.logger.error.log("Invalid state of .done encountered.")
+      Self.log.error("Invalid state of .done encountered.")
       associator.notifyDelegateOfError(.unknown)
     }
   }
@@ -132,7 +127,7 @@ extension AssociationMessageHelperV4: AssociationMessageHelper {
   func messageDidSendSuccessfully() {
     guard case .encryptionEstablished = phase else { return }
 
-    Self.logger.log("Device id and authentication key successfully sent.")
+    Self.log("Device id and authentication key successfully sent.")
 
     guard
       let carId = associator.carId,
@@ -145,25 +140,25 @@ extension AssociationMessageHelperV4: AssociationMessageHelper {
 
     associator.connectionHandle.requestConfiguration(for: channel) { [weak self] in
       guard let self = self else { return }
-      Self.logger.log("Channel user role: \(channel.userRole.debugDescription)")
+      Self.log("Channel user role: \(channel.userRole.debugDescription)")
       self.associator.completeAssociation(channel: channel, messageStream: self.messageStream)
       self.phase = .done
     }
   }
 
   func onRequiresPairingVerification(_ verificationToken: SecurityVerificationToken) {
-    Self.logger.log("Helper requesting out of band token.")
+    Self.log("Helper requesting out of band token.")
     associator.requestOutOfBandToken { [weak self] outOfBandToken in
       guard let self = self else { return }
       do {
         var code = VerificationCode()
         if let outOfBandToken = outOfBandToken {
-          Self.logger.log("Out of band verification token will be used.")
+          Self.log("Out of band verification token will be used.")
           code.state = .oobVerification
           code.payload = try outOfBandToken.encrypt(verificationToken.data)
           self.phase = .outOfBandConfirmation(verificationToken, outOfBandToken)
         } else {
-          Self.logger.log("No out of band verification token. Will perform visual verification.")
+          Self.log("No out of band verification token. Will perform visual verification.")
           code.state = .visualVerification
           self.phase = .visualConfirmation
           self.associator.displayPairingCode(verificationToken.pairingCode)
@@ -172,7 +167,7 @@ extension AssociationMessageHelperV4: AssociationMessageHelper {
         let message = try code.serializedData()
         try self.messageStream.writeMessage(message, params: Self.handshakeMessageParams)
       } catch {
-        Self.logger.error.log("Error sending pairing verification code.")
+        Self.log.error("Error sending pairing verification code.")
         self.associator.notifyDelegateOfError(.verificationCodeFailed)
         return
       }

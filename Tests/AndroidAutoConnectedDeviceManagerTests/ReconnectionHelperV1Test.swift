@@ -22,7 +22,6 @@ import XCTest
 @testable import AndroidAutoMessageStream
 
 /// Unit tests for AssociationMessageHelperV1.
-@available(iOS 10.0, *)
 class ReconnectionHelperV1Test: XCTestCase {
   private var messageStreamMock: MessageStream!
   private var peripheralMock: PeripheralMock!

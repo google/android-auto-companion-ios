@@ -17,7 +17,7 @@ import XCTest
 @testable import AndroidAutoConnectedDeviceManager
 
 /// Tests for `TrustAgentConfig`.
-@available(iOS 10.0, watchOS 6.0, *)
+@available(watchOS 6.0, *)
 class TrustAgentConfigTest: XCTestCase {
   private let storage = UserDefaultsStorage.shared
   private let testCar = Car(id: "carId", name: "carName")

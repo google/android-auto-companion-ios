@@ -17,7 +17,6 @@ import XCTest
 @testable import AndroidAutoConnectedDeviceManager
 
 /// `CarAuthenticatorImpl` unit tests.
-@available(iOS 10.0, *)
 class CarAuthenticatorImplTest: XCTestCase {
   // MARK: - Tests
 

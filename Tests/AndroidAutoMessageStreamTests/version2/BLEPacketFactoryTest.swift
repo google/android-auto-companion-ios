@@ -21,7 +21,6 @@ private typealias Message = Com_Google_Companionprotos_Message
 private typealias OperationType = Com_Google_Companionprotos_OperationType
 
 /// Unit tests for `MessagePacketFactory`.
-@available(iOS 10.0, *)
 class MessagePacketFactoryTest: XCTestCase {
   // MARK: - Header size tests.
 

@@ -19,11 +19,11 @@ import XCTest
 @testable import AndroidAutoConnectedDeviceTransport
 
 /// Fake peripheral provider for testing transport sessions.
-@available(iOS 12.0, *)
+
 class FakePeripheralProvider: TransportPeripheralProvider {
   typealias Peripheral = FakePeripheral
 
-  static let logger = Logger(for: FakePeripheralProvider.self)
+  static let log = Logger(for: FakePeripheralProvider.self)
 
   /// Monitor for peripheral discovery.
   public var discoveryMonitor: PeripheralDiscoveryMonitor<FakePeripheral>?

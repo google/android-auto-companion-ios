@@ -15,7 +15,6 @@
 import Foundation
 
 /// Creator of `UKey2Channel`s.
-@available(iOS 10.0, *)
 public class UKey2ChannelFactory: NSObject, SecureBLEChannelFactory {
   /// Creates a new instance of a `UKey2Channel`.
   public func makeChannel() -> SecureBLEChannel {

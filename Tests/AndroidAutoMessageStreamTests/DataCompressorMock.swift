@@ -17,7 +17,6 @@ import Foundation
 @testable import AndroidAutoMessageStream
 
 /// Mock for compression/decompression operations.
-@available(iOS 10.0, *)
 class DataCompressorMock: DataCompressor {
   // MARK: - Method call checks
   public var compressCalled = false

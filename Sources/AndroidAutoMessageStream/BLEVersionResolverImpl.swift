@@ -53,9 +53,8 @@ private protocol MessageExchangeDelegate: AnyObject {
 }
 
 /// Resolver of the messaging protocol to use.
-@available(iOS 10.0, *)
 public class BLEVersionResolverImpl: NSObject, BLEVersionResolver {
-  private static let logger = Logger(for: BLEVersionResolverImpl.self)
+  private static let log = Logger(for: BLEVersionResolverImpl.self)
 
   private var peripheral: BLEPeripheral?
   private var readCharacteristic: BLECharacteristic?
@@ -130,7 +129,7 @@ extension BLEVersionResolverImpl: MessageExchangeDelegate {
 
     switch exchange {
     case .resolved(let resolution):
-      Self.logger.log(
+      Self.log(
         """
         Resolved versions. Stream: \(resolution.streamVersion), \
         Security: \(resolution.securityVersion)
@@ -158,7 +157,6 @@ extension BLEVersionResolverImpl: MessageExchangeDelegate {
 
 // MARK: - BLEPeripheralDelegate
 
-@available(iOS 10.0, *)
 extension BLEVersionResolverImpl: BLEPeripheralDelegate {
   public func peripheral(
     _ peripheral: BLEPeripheral,
@@ -166,13 +164,13 @@ extension BLEVersionResolverImpl: BLEPeripheralDelegate {
     error: Error?
   ) {
     guard error == nil else {
-      Self.logger.error.log("Error during update: \(error!.localizedDescription)")
+      Self.log.error("Error during update: \(error!.localizedDescription)")
       delegate?.bleVersionResolver(self, didEncounterError: .failedToRead, for: peripheral)
       return
     }
 
     guard let message = characteristic.value else {
-      Self.logger.error.log("Empty message from peripheral: \(peripheral.logName)")
+      Self.log.error("Empty message from peripheral: \(peripheral.logName)")
       delegate?.bleVersionResolver(self, didEncounterError: .emptyResponse, for: peripheral)
       return
     }
@@ -198,7 +196,7 @@ extension BLEVersionResolverImpl: BLEPeripheralDelegate {
 }
 
 private struct VersionExchangeHandler: ResolutionExchangeHandler {
-  private static let logger = Logger(for: VersionExchangeHandler.self)
+  private static let log = Logger(for: VersionExchangeHandler.self)
 
   // The supported versions for the communication and security protocol.
   //
@@ -225,12 +223,12 @@ private struct VersionExchangeHandler: ResolutionExchangeHandler {
 
     guard let serializedProto = try? Self.createVersionExchangeProto().serializedData() else {
       // This shouldn't fail because nothing dynamic is going into the proto.
-      Self.logger.error.log("Could not serialize version exchange proto")
+      Self.log.error("Could not serialize version exchange proto")
       delegate.process(.failure(.failedToCreateProto))
       return
     }
 
-    Self.logger.log("Sending supported versions to car \(peripheral.logName)")
+    Self.log("Sending supported versions to car \(peripheral.logName)")
 
     delegate.writeMessage(serializedProto)
   }
@@ -238,7 +236,7 @@ private struct VersionExchangeHandler: ResolutionExchangeHandler {
   // MARK: ResolutionExchangeHandler conformance
   func resolveMessage(_ message: Data) {
     guard let versionExchange = try? VersionExchange(serializedData: message) else {
-      Self.logger.error.log("Cannot serialize a version exchange proto from message")
+      Self.log.error("Cannot serialize a version exchange proto from message")
 
       delegate?.process(.failure(.failedToParseResponse))
       return
@@ -317,7 +315,7 @@ private struct VersionExchangeHandler: ResolutionExchangeHandler {
     // specified in the version exchange.
     guard maxJointlySupportedSecurityVersion >= versionExchange.minSupportedSecurityVersion
     else {
-      Self.logger.error.log(
+      Self.log.error(
         """
         No supported security version. \
         Min security version: \(versionExchange.minSupportedSecurityVersion)
@@ -332,7 +330,7 @@ private struct VersionExchangeHandler: ResolutionExchangeHandler {
     guard
       let securityVersion = MessageSecurityVersion(rawValue: maxJointlySupportedSecurityVersion)
     else {
-      Self.logger.error.log(
+      Self.log.error(
         """
         No supported security version. \
         Max security version: \(versionExchange.maxSupportedSecurityVersion)"
@@ -360,7 +358,7 @@ private struct VersionExchangeHandler: ResolutionExchangeHandler {
 
     // This should only happen if the received proto itself is not well-formed.
     guard maxVersion >= minVersion else {
-      Self.logger.error.log(
+      Self.log.error(
         """
         Malformed messaging version. \
         Max version (\(versionExchange.maxSupportedMessagingVersion)) is not >= min \
@@ -378,7 +376,7 @@ private struct VersionExchangeHandler: ResolutionExchangeHandler {
     case 2:
       return .v2(false)
     default:
-      Self.logger.error.log(
+      Self.log.error(
         """
         No supported messaging version. Min/Max messaging version: \
         (\(versionExchange.minSupportedMessagingVersion), \
@@ -395,7 +393,7 @@ private struct VersionExchangeHandler: ResolutionExchangeHandler {
 /// Sends empty capabilities to satisfy V3 security requirements. Since V4 deprecates capabilities
 /// exchange, we don't need to build it out any further.
 private struct EmptyCapabilitiesExchangeHandler: ResolutionExchangeHandler {
-  private static let logger = Logger(for: EmptyCapabilitiesExchangeHandler.self)
+  private static let log = Logger(for: EmptyCapabilitiesExchangeHandler.self)
 
   private let resolution: ExchangeResolution
   private let peripheral: BLEPeripheral
@@ -417,12 +415,12 @@ private struct EmptyCapabilitiesExchangeHandler: ResolutionExchangeHandler {
     // Sends empty capabilities to meet the minimal requirements for the exchange.
     guard let serializedProto = try? CapabilitiesExchange().serializedData() else {
       // This shouldn't fail because nothing dynamic is going into the proto.
-      Self.logger.error.log("Could not serialize capabilities exchange proto")
+      Self.log.error("Could not serialize capabilities exchange proto")
       delegate.process(.failure(.failedToCreateProto))
       return
     }
 
-    Self.logger.log("Sending empty capabilities to car \(peripheral.logName)")
+    Self.log("Sending empty capabilities to car \(peripheral.logName)")
 
     delegate.writeMessage(serializedProto)
   }

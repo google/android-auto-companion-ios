@@ -16,7 +16,7 @@ import AndroidAutoLogger
 import Foundation
 
 /// Protocol configuration for the TrustAgent library.
-@available(iOS 10.0, watchOS 6.0, *)
+@available(watchOS 6.0, *)
 protocol TrustAgentConfig: AnyObject {
 
   /// Whether a passcode is required for enrolling and unlocking.
@@ -51,7 +51,7 @@ protocol TrustAgentConfig: AnyObject {
 /// A configuration for the trust agent whose storage is backed by `UserDefaults`.
 ///
 /// Due to the usage of `UserDefaults`, each instance of this class will utilize the same storage.
-@available(iOS 10.0, watchOS 6.0, *)
+@available(watchOS 6.0, *)
 class TrustAgentConfigUserDefaults: TrustAgentConfig {
   #if os(watchOS)
     // we don't currently have a way to enforce this on watch, so for now no requirement
@@ -60,7 +60,7 @@ class TrustAgentConfigUserDefaults: TrustAgentConfig {
     private static let defaultPasscodeRequirement = true
   #endif
 
-  private static let logger = Logger(for: TrustAgentConfigUserDefaults.self)
+  private static let log = Logger(for: TrustAgentConfigUserDefaults.self)
 
   static let unlockHistoryKey = "UnlockHistoryEnabled"
 
@@ -149,7 +149,7 @@ class TrustAgentConfigUserDefaults: TrustAgentConfig {
   private func fetchIndividualCarConfig(for car: Car) -> IndividualCarConfig {
     guard let savedConfig = storage.data(forKey: trustedDeviceConfigurationKey(forCarId: car.id))
     else {
-      Self.logger.debug.log(
+      Self.log.debug(
         "No individual car configuration found for car id. Empty config will be returned.",
         redacting: "car id: \(car.id)"
       )
@@ -157,7 +157,7 @@ class TrustAgentConfigUserDefaults: TrustAgentConfig {
     }
     guard let loadedConfig = try? JSONDecoder().decode(IndividualCarConfig.self, from: savedConfig)
     else {
-      Self.logger.error.log(
+      Self.log.error(
         "Cannot decode individual car configuration for car id. Empty config will be returned.",
         redacting: "car id: \(car.id)"
       )
@@ -168,7 +168,7 @@ class TrustAgentConfigUserDefaults: TrustAgentConfig {
 
   private func saveIndividualCarConfig(config: IndividualCarConfig, for car: Car) {
     guard let encoded = try? JSONEncoder().encode(config) else {
-      Self.logger.error.log(
+      Self.log.error(
         "Cannot encode individual car configuration for car id. Not saving config.",
         redacting: "car id: \(car.id)"
       )

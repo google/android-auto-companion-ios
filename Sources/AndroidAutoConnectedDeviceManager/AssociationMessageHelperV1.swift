@@ -25,12 +25,11 @@ import Foundation
 ///   1) Send device ID and receive car ID.
 ///   2) Establish encryption.
 ///   3) Complete association.
-@available(iOS 10.0, *)
 final class AssociationMessageHelperV1 {
   private static let encryptionSetUpParams = MessageStreamParams(
     recipient: Config.defaultRecipientUUID, operationType: .encryptionHandshake)
 
-  static let logger = Logger(for: AssociationMessageHelperV1.self)
+  static let log = Logger(for: AssociationMessageHelperV1.self)
 
   private let messageStream: MessageStream
   private let associator: Associator
@@ -55,12 +54,11 @@ final class AssociationMessageHelperV1 {
       params: Self.encryptionSetUpParams
     )
 
-    Self.logger.log("Sending device id:", redacting: "\(deviceId.uuidString)")
+    Self.log("Sending device id:", redacting: "\(deviceId.uuidString)")
   }
 }
 
 // MARK: - AssociationMessageHelper
-@available(iOS 10.0, *)
 extension AssociationMessageHelperV1: AssociationMessageHelper {
   func start() {
     sendDeviceId()
@@ -70,7 +68,7 @@ extension AssociationMessageHelperV1: AssociationMessageHelper {
     switch phase {
     case .idSent:
       guard let carId = try? extractCarId(fromMessage: message) else {
-        Self.logger.error.log("The carId cannot be extracted from the message.")
+        Self.log.error("The carId cannot be extracted from the message.")
         associator.notifyDelegateOfError(.malformedCarId)
         return
       }
@@ -91,16 +89,16 @@ extension AssociationMessageHelperV1: AssociationMessageHelper {
       }
     case .none:
       // Should never get here, no-op.
-      Self.logger.error.log("Invalid state of .none encountered")
+      Self.log.error("Invalid state of .none encountered")
     case .done:
       // Should never get here, no-op.
-      Self.logger.error.log("Invalid state of .done encountered")
+      Self.log.error("Invalid state of .done encountered")
     }
   }
 
   func messageDidSendSuccessfully() {
     if phase == .none {
-      Self.logger.log("Device id successfully sent")
+      Self.log("Device id successfully sent")
       phase = .idSent
     }
   }
@@ -113,7 +111,7 @@ extension AssociationMessageHelperV1: AssociationMessageHelper {
 
   func onEncryptionEstablished() {
     guard let carId = associator.carId else {
-      Self.logger.error.log(
+      Self.log.error(
         "No car id found after secure channel established. Cannot complete association."
       )
       associator.notifyDelegateOfError(.cannotStoreAssociation)

@@ -16,7 +16,7 @@ import Foundation
 import os.log
 
 /// Handler which feeds the logs to system log using os_log.
-@available(iOS 10.0, macOS 10.15, *)
+@available(macOS 10.15, *)
 public class SystemLogHandler: LoggerDelegate {
   /// Log the record to the system log.
   ///
@@ -44,7 +44,7 @@ public class SystemLogHandler: LoggerDelegate {
 }
 
 /// System log extensions for Logger.Level.
-@available(iOS 10.0, macOS 10.15, *)
+@available(macOS 10.15, *)
 extension Logger.Level {
   /// Get the corresponding `OSLogType`.
   var osLogType: OSLogType {

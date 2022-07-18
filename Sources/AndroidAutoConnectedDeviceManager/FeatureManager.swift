@@ -31,7 +31,7 @@ public enum FeatureManagerError: Error {
 ///
 /// Each feature manager should have a unique UUID that identifies them. Ensure that the `featureID`
 /// property is overridden, or this class will crash.
-@available(iOS 10.0, watchOS 6.0, *)
+@available(watchOS 6.0, *)
 open class FeatureManager {
   private let connectedCarManager: ConnectedCarManager
 

@@ -17,7 +17,7 @@ import XCTest
 @testable import AndroidAutoLogger
 
 /// Unit tests for `RadixFormat` including string interpolation.
-@available(iOS 10.0, *)
+
 class RadixFormatTest: XCTestCase {
   public func testRawBinaryFormat() {
     XCTAssertEqual(RadixFormat.rawBinary.format(0b100_11010010), "10011010010")
@@ -56,7 +56,7 @@ class RadixFormatTest: XCTestCase {
 }
 
 /// Unit tests for `DecimalFormat` including string interpolation.
-@available(iOS 10.0, *)
+
 class DecimalFormatTest: XCTestCase {
   public func testNoneFormat() {
     XCTAssertEqual(DecimalFormat.none.format(12_345.6789123), "12345.6789123")

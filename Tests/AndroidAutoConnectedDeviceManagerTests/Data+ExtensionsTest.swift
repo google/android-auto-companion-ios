@@ -17,7 +17,7 @@ import XCTest
 @testable import AndroidAutoConnectedDeviceManager
 
 /// Unit tests for Data+Extensions.
-@available(iOS 10.0, watchOS 6.0, *)
+@available(watchOS 6.0, *)
 class DataExtensionsTest: XCTestCase {
   func testDataFromValidHexString_notNil() {
     XCTAssertNotNil(Data(hex: "2AF8"))

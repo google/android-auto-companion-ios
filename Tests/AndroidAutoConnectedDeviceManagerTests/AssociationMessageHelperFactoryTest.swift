@@ -22,7 +22,7 @@ import XCTest
 @testable import AndroidAutoMessageStream
 
 /// Unit tests for AssociationMessageHelperV1.
-@available(iOS 10.0, watchOS 6.0, *)
+@available(watchOS 6.0, *)
 class AssociationMessageHelperFactoryTest: XCTestCase {
   private var associatorMock: Associator!
   private var messageStreamMock: MessageStream!

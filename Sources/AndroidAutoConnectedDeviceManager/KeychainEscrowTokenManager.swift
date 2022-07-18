@@ -17,9 +17,8 @@ import Foundation
 
 /// A class that handles the process of generating and storing a unique identifier for a trusted
 /// device registration session.
-@available(iOS 10.0, *)
 class KeychainEscrowTokenManager: NSObject, EscrowTokenManager {
-  private static let logger = Logger(for: KeychainEscrowTokenManager.self)
+  private static let log = Logger(for: KeychainEscrowTokenManager.self)
 
   /// Generates an escrow token that can be used to uniquely identify an association session.
   ///
@@ -106,7 +105,7 @@ class KeychainEscrowTokenManager: NSObject, EscrowTokenManager {
     )
 
     guard status == errSecSuccess else {
-      Self.logger.error.log("Unable to retrieve generated escrow token; err: \(status)")
+      Self.log.error("Unable to retrieve generated escrow token; err: \(status)")
       return nil
     }
 
@@ -126,7 +125,7 @@ class KeychainEscrowTokenManager: NSObject, EscrowTokenManager {
     )
 
     guard status == errSecSuccess else {
-      Self.logger.error.log("Unable to retrieve association handle; err: \(status)")
+      Self.log.error("Unable to retrieve association handle; err: \(status)")
       return nil
     }
 
@@ -153,7 +152,7 @@ class KeychainEscrowTokenManager: NSObject, EscrowTokenManager {
     let status = SecItemAdd(addQuery as CFDictionary, nil)
 
     guard status == errSecSuccess else {
-      Self.logger.error.log("Unable to store generated escrow token; err: \(status)")
+      Self.log.error("Unable to store generated escrow token; err: \(status)")
       return nil
     }
 
@@ -176,7 +175,7 @@ class KeychainEscrowTokenManager: NSObject, EscrowTokenManager {
     let status = SecItemAdd(addQuery as CFDictionary, nil)
 
     guard status == errSecSuccess else {
-      Self.logger.error.log("Unable to store association handle; err: \(status)")
+      Self.log.error("Unable to store association handle; err: \(status)")
       return false
     }
 

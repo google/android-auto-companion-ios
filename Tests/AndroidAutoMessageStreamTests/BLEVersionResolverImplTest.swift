@@ -23,7 +23,6 @@ import AndroidAutoCompanionProtos
 private typealias VersionExchange = Com_Google_Companionprotos_VersionExchange
 
 /// Unit tests for `BLEVersionResolverImpl`.
-@available(iOS 10.0, *)
 class BLEVersionResolverImplTest: XCTestCase {
   private var bleVersionResolver: BLEVersionResolverImpl!
 

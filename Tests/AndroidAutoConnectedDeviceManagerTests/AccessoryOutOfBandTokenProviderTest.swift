@@ -17,7 +17,6 @@ import XCTest
 @testable import AndroidAutoConnectedDeviceManager
 
 /// Unit tests for AnyOutOfBandTokenProvider.
-@available(iOS 13.0, *)
 class AccessoryOutOfBandTokenProviderTest: XCTestCase {
   private static let accessoryProtocolsKey = "UISupportedExternalAccessoryProtocols"
 

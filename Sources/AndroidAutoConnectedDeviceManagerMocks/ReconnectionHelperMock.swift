@@ -18,7 +18,6 @@ import CoreBluetooth
 @testable import AndroidAutoConnectedDeviceManager
 
 /// Mock for the ReconnectionHelper so we can track calls from tests.
-@available(iOS 10.0, *)
 final public class ReconnectionHelperMock {
   // MARK: - Configuration
   public var shouldThrowInvalidMessage = false
@@ -50,7 +49,6 @@ final public class ReconnectionHelperMock {
 }
 
 // MARK: - ReconnectionHelper
-@available(iOS 10.0, *)
 extension ReconnectionHelperMock: ReconnectionHelper {
   public func discoveryUUID(from config: UUIDConfig) -> CBUUID {
     config.reconnectionUUID(for: securityVersion)

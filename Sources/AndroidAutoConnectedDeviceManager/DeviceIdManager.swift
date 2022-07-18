@@ -17,9 +17,8 @@ import CoreBluetooth
 import Foundation
 
 /// Manager for a id that will uniquely identify the current device.
-@available(iOS 10.0, *)
 enum DeviceIdManager {
-  private static let logger = Logger(for: DeviceIdManager.self)
+  private static let log = Logger(for: DeviceIdManager.self)
 
   private static let deviceIdKey = "deviceIdKey"
 
@@ -33,7 +32,7 @@ enum DeviceIdManager {
     let randomUUID = CBUUID(string: UUID().uuidString)
     UserDefaultsStorage.shared.set(randomUUID.uuidString, forKey: deviceIdKey)
 
-    logger.debug.log("No previous device id found. Creating a new one: \(randomUUID.uuidString)")
+    log.debug("No previous device id found. Creating a new one: \(randomUUID.uuidString)")
 
     return randomUUID
   }

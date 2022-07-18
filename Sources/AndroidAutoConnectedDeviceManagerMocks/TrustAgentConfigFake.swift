@@ -17,7 +17,6 @@ import Foundation
 @testable import AndroidAutoConnectedDeviceManager
 
 /// A fake `TrustAgentConfig` that stores values in memory.
-@available(iOS 10.0, *)
 public class TrustAgentConfigFake: TrustAgentConfig {
   /// `true` to simulate the user setting a password on the current device.
   public var isPasscodeSet = false

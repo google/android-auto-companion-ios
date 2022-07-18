@@ -19,7 +19,6 @@ import Foundation
 
 /// A `ReconnectionHandler` that also supports the ability to trigger the establishment of
 /// encryption.
-@available(iOS 10.0, *)
 public class ReconnectionHandlerFake: ReconnectionHandler {
   public let car: Car
   public let peripheral: BLEPeripheral

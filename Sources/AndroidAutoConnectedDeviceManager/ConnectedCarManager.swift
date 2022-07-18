@@ -16,7 +16,6 @@ import CoreBluetooth
 import Foundation
 
 /// A manager for discovering and connecting to BLE peripheral devices.
-@available(iOS 10.0, *)
 public protocol ConnectedCarManager: AnyObject {
   /// The currently available channels for car communication.
   var securedChannels: [SecuredCarChannel] { get }

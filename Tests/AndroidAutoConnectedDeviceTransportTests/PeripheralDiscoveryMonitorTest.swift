@@ -18,7 +18,7 @@ import XCTest
 @testable import AndroidAutoConnectedDeviceTransport
 
 /// Unit tests for PeripheralDiscoveryMonitor.
-@available(iOS 12.0, *)
+
 class PeripheralDiscoveryMonitorTest: XCTestCase {
   private var mockHandler: MockPeripheralDiscoveryMonitorHandler!
   private var monitor: PeripheralDiscoveryMonitor<FakePeripheral>!

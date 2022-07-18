@@ -18,7 +18,7 @@ import Foundation
 
 /// Holds common methods and properties related to service and characteristic UUIDs that are
 /// scanned for and inspected throughout this library.
-@available(iOS 10.0, watchOS 6.0, *)
+@available(watchOS 6.0, *)
 class UUIDConfig {
   static let associationUUIDKey = "AssociationServiceUUID"
   static let associationDataUUIDKey = "AssociationDataUUID"

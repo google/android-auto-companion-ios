@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import AndroidAutoConnectedDeviceManagerMocks
 import AndroidAutoSecureChannel
 import XCTest
-import AndroidAutoConnectedDeviceManagerMocks
 
 @testable import AndroidAutoConnectedDeviceManager
 
@@ -27,7 +27,7 @@ private enum Constants {
 }
 
 /// Unit tests for `FeatureManager`.
-@available(iOS 10.0, watchOS 6.0, *)
+@available(watchOS 6.0, *)
 class FeatureManagerTest: XCTestCase {
   private var connectedCarManagerMock: ConnectedCarManagerMock!
   private var featureManager: ObservableFeatureManager!
@@ -340,7 +340,7 @@ class FeatureManagerTest: XCTestCase {
 }
 
 /// A `FeatureManager` implementation that allows for assertions on its event methods.
-@available(iOS 10.0, watchOS 6.0, *)
+@available(watchOS 6.0, *)
 private class ObservableFeatureManager: FeatureManager {
   override var featureID: UUID {
     return Constants.featureID

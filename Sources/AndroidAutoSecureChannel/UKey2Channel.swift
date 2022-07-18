@@ -22,11 +22,10 @@ import Foundation
 /// A channel that utilizes UKey2 (go/ukey2) to establish secure communication.
 ///
 /// UKey2 is a Diffie-Hellman based authenticated key exchange protocol.
-@available(iOS 10.0, *)
 class UKey2Channel: SecureBLEChannel {
   /// Token used for verification when establishing a UKey2 channel.
   struct VerificationToken: SecurityVerificationToken {
-    private static let logger = Logger(for: VerificationToken.self)
+    private static let log = Logger(for: VerificationToken.self)
 
     /// Length of the visual pairing code.
     private static var pairingCodeLength: Int { UKey2Channel.pairingCodeLength }
@@ -42,7 +41,7 @@ class UKey2Channel: SecureBLEChannel {
         Character("\($0 % 10)")
       }
       let code = String(digits)
-      Self.logger.log("Generated pairing code: \(code)")
+      Self.log("Generated pairing code: \(code)")
       return code
     }
 
@@ -51,7 +50,7 @@ class UKey2Channel: SecureBLEChannel {
     }
   }
 
-  private static let logger = Logger(for: UKey2Channel.self)
+  private static let log = Logger(for: UKey2Channel.self)
 
   /// An info that is prefixed to an HMAC from this phone to a car.
   private static let clientInfoPrefix = Data("CLIENT".utf8)
@@ -108,14 +107,14 @@ class UKey2Channel: SecureBLEChannel {
       state = .failed
 
       let handshakeError = ukey2.lastHandshakeError
-      Self.logger.error.log("Init message failed: \(handshakeError)")
+      Self.log.error("Init message failed: \(handshakeError)")
       throw SecureBLEChannelError.handshakeMessageGenerationFailed(handshakeError)
     }
 
     self.messageStream = messageStream
     messageStream.delegate = self
 
-    Self.logger.log("Writing init handshake message.")
+    Self.log("Writing init handshake message.")
 
     state = .inProgress
 
@@ -162,7 +161,7 @@ class UKey2Channel: SecureBLEChannel {
   /// - Throws: An error if the acceptance of the pairing code has failed.
   func notifyPairingCodeAccepted() throws {
     guard state == .verificationNeeded else {
-      Self.logger.error.log("Can't accept pairing code because state is not verification needed")
+      Self.log.error("Can't accept pairing code because state is not verification needed")
       throw SecureBLEChannelError.methodCalledOutOfOrder
     }
 
@@ -219,7 +218,7 @@ class UKey2Channel: SecureBLEChannel {
   }
 
   private func notifyDelegateOfError(_ error: Error) {
-    Self.logger.error.log("Error encountered during handshake: \(error.localizedDescription)")
+    Self.log.error("Error encountered during handshake: \(error.localizedDescription)")
 
     state = .failed
     delegate?.secureBLEChannel(self, encounteredError: error)
@@ -249,7 +248,7 @@ class UKey2Channel: SecureBLEChannel {
       notifyDelegateOfError(SecureBLEChannelError.handshakeFailed(ukey2.lastHandshakeError))
 
     default:
-      Self.logger.error.log("Invalid handshake state: \(state.rawValue)")
+      Self.log.error("Invalid handshake state: \(state.rawValue)")
     }
   }
 
@@ -257,7 +256,7 @@ class UKey2Channel: SecureBLEChannel {
     // This shouldn't happen because this method is only called after a peripheral and
     // characteristic has been set.
     guard let messageStream = messageStream else {
-      Self.logger.error.log("No stream when attempting to process state.")
+      Self.log.error("No stream when attempting to process state.")
       notifyDelegateOfError(SecureBLEChannelError.methodCalledOutOfOrder)
       return
     }
@@ -268,12 +267,12 @@ class UKey2Channel: SecureBLEChannel {
       return
     }
 
-    Self.logger.log("Sending next handshake message.")
+    Self.log("Sending next handshake message.")
 
     do {
       try messageStream.writeMessage(message, params: UKey2Channel.streamParams)
     } catch {
-      Self.logger.error.log("Cannot send next handshake message: \(error.localizedDescription).")
+      Self.log.error("Cannot send next handshake message: \(error.localizedDescription).")
       notifyDelegateOfError(SecureBLEChannelError.cannotSendMessage)
       return
     }
@@ -295,7 +294,7 @@ class UKey2Channel: SecureBLEChannel {
     // This shouldn't happen because this method should only be called after `establish()` is
     // called.
     guard let messageStream = messageStream else {
-      Self.logger.error.log("No stream when attempting to process verification bytes.")
+      Self.log.error("No stream when attempting to process verification bytes.")
       notifyDelegateOfError(SecureBLEChannelError.methodCalledOutOfOrder)
       return
     }
@@ -347,7 +346,7 @@ class UKey2Channel: SecureBLEChannel {
   private func sendResumptionHMAC(withCombinedKey combinedSessionKey: Data) {
     // This shouldn't happen because the message stream should have been set during resumption.
     guard let messageStream = messageStream else {
-      Self.logger.error.log("No stream when attempting to send resumption HMAC.")
+      Self.log.error("No stream when attempting to send resumption HMAC.")
       notifyDelegateOfError(SecureBLEChannelError.methodCalledOutOfOrder)
       return
     }
@@ -364,12 +363,12 @@ class UKey2Channel: SecureBLEChannel {
       return
     }
 
-    Self.logger.log("Sending resumption information.")
+    Self.log("Sending resumption information.")
 
     do {
       try messageStream.writeMessage(resumeHMAC!, params: UKey2Channel.streamParams)
     } catch {
-      Self.logger.error.log(
+      Self.log.error(
         "Encountered error sending resumption information: \(error.localizedDescription)")
 
       notifyDelegateOfError(
@@ -405,12 +404,12 @@ class UKey2Channel: SecureBLEChannel {
 
     // This shouldn't happen because the message stream should have been set during resumption.
     guard messageStream != nil else {
-      Self.logger.error.log("No stream when attempting to verify server HMAC")
+      Self.log.error("No stream when attempting to verify server HMAC")
       notifyDelegateOfError(SecureBLEChannelError.methodCalledOutOfOrder)
       return
     }
 
-    Self.logger.log("Session resumption complete. Notifying delegate.")
+    Self.log("Session resumption complete. Notifying delegate.")
 
     notifySecureSessionEstablished()
   }
@@ -418,7 +417,6 @@ class UKey2Channel: SecureBLEChannel {
 
 // MARK: - MessageEncryptor
 
-@available(iOS 10.0, *)
 extension UKey2Channel: MessageEncryptor {
   /// Encrypts the given message for sending.
   ///
@@ -466,21 +464,18 @@ extension UKey2Channel: MessageEncryptor {
 
 // MARK: - MessageStreamDelegate
 
-@available(iOS 10.0, *)
 extension UKey2Channel: MessageStreamDelegate {
   func messageStream(
     _ messageStream: MessageStream,
     didReceiveMessage message: Data,
     params: MessageStreamParams
   ) {
-    Self.logger.debug.log(
-      "Received message from stream. \(messageStream.readingDebugDescription)"
-    )
+    Self.log.debug("Received message from stream. \(messageStream.readingDebugDescription)")
 
     // The `OperationType` should only be checked from version 2 onwards.
     if messageStream.version != .passthrough {
       guard params.operationType == .encryptionHandshake else {
-        Self.logger.error.log(
+        Self.log.error(
           """
           Received message with incorrect operation type \
           (\(String(describing: params.operationType))). Ignoring message.
@@ -512,7 +507,7 @@ extension UKey2Channel: MessageStreamDelegate {
     didEncounterWriteError error: Error,
     to recipient: UUID
   ) {
-    Self.logger.error.log(
+    Self.log.error(
       """
       Received error during write. \
       (\(messageStream.writingDebugDescription)) \
@@ -527,11 +522,11 @@ extension UKey2Channel: MessageStreamDelegate {
   }
 
   func messageStreamDidWriteMessage(_ messageStream: MessageStream, to recipient: UUID) {
-    Self.logger.debug.log("Successfully wrote message during state: \(state)")
+    Self.log.debug("Successfully wrote message during state: \(state)")
   }
 
   func messageStreamEncounteredUnrecoverableError(_ messageStream: MessageStream) {
-    Self.logger.error.log(
+    Self.log.error(
       "Underlying BLEMessageStream encountered unrecoverable error. Notifying delegate")
     notifyDelegateOfError(SecureBLEChannelError.unknown)
   }

@@ -25,7 +25,6 @@ extension PeripheralMock: SomePeripheral {
 }
 
 /// A mock central manager for testing ConnectionManager independent of CoreBluetooth.
-@available(iOS 10.0, *)
 public class CentralManagerMock: SomeCentralManager {
   // MARK: - Required properties
   public var state = CBManagerState.poweredOn
@@ -71,7 +70,6 @@ public class CentralManagerMock: SomeCentralManager {
 }
 
 /// A `ConnectionManager` that allows for assertions on its lifecycle methods.
-@available(iOS 10.0, *)
 public class ConnectionManagerObservable: ConnectionManager<CentralManagerMock> {
   public var connectCalledCount = 0
   public var peripheralToConnect: Peripheral?

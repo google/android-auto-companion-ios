@@ -72,9 +72,8 @@ extension BLEMessageStreamV2Error: LocalizedError {
 }
 
 /// Version 2 of the message stream.
-@available(iOS 10.0, *)
 class BLEMessageStreamV2: NSObject {
-  private static let logger = Logger(for: BLEMessageStreamV2.self)
+  private static let log = Logger(for: BLEMessageStreamV2.self)
 
   /// The maximum number of bytes that can be sent each time across BLE.
   ///
@@ -215,7 +214,7 @@ class BLEMessageStreamV2: NSObject {
       reportedMaxWriteLength
     )
 
-    Self.logger.debug.log(
+    Self.log.debug(
       """
       Write message of length: \(message.count), \
       maximumWriteValueLength: \(maximumWriteValueLength)
@@ -241,12 +240,12 @@ class BLEMessageStreamV2: NSObject {
         maxSize: maximumWriteValueLength
       )
     } catch {
-      Self.logger.error.log(
+      Self.log.error(
         "Error during attempt to chunk message for sending: \(error.localizedDescription)")
       throw BLEMessageStreamV2Error.cannotSerializeMessage
     }
 
-    Self.logger.info.log("Number of chunks for streaming message: \(newPackets.count)")
+    Self.log.info("Number of chunks for streaming message: \(newPackets.count)")
 
     // Reversing so that the first message to send will be at the end. This ensures that we can
     // call removeLast() rather than removeFirst(), the latter of which is an O(n) operation.
@@ -265,13 +264,13 @@ class BLEMessageStreamV2: NSObject {
 
   private func writeNextMessageInStack() {
     guard !isWriteInProgress else {
-      Self.logger.info.log(
+      Self.log.info(
         "Request to write next message, but a write is currently in progress. Will wait.")
       return
     }
 
     guard let blePacket = writeMessageStack.last else {
-      Self.logger.error.log(
+      Self.log.error(
         "Requested to write next message to peripheral, but no remaining messages to be written.")
       return
     }
@@ -281,19 +280,18 @@ class BLEMessageStreamV2: NSObject {
       peripheral.writeValue(serializedMessage, for: writeCharacteristic)
       isWriteInProgress = true
 
-      Self.logger.info.log(
+      Self.log.info(
         """
         Writing packet \(blePacket.packetNumber) of \(blePacket.totalPackets). \
         Message ID: \(blePacket.messageID).
         """
       )
     } catch {
-      Self.logger.error.log(
-        "Error serializing message for sending: \(error.localizedDescription)")
+      Self.log.error("Error serializing message for sending: \(error.localizedDescription)")
 
       // This should not happen because every message should have a recipient.
       guard let recipient = pendingMessages[blePacket.messageID] else {
-        Self.logger.error.log(
+        Self.log.error(
           """
           Unexpected. No recipient for messageID: \(blePacket.messageID). \
           Cannot notify of write error.
@@ -322,7 +320,7 @@ class BLEMessageStreamV2: NSObject {
       // represent a duplicate packet. All other cases will trigger an exception when the packet
       // is parsed into a `BleDeviceMessage`.
       if blePacket.packetNumber != 1, blePacket.packetNumber == blePacket.totalPackets {
-        Self.logger.log(
+        Self.log(
           """
           Received possible duplicate last packet. \
           MessagePacket number \(blePacket.packetNumber), message ID: \(messageID)
@@ -350,9 +348,9 @@ class BLEMessageStreamV2: NSObject {
     // A duplicate packet can just be ignored, while an out-of-order packet should notify the
     // delegate that the stream should be closed.
     if lastReceivedMessage.lastPacketNumber == blePacket.packetNumber {
-      Self.logger.log("Received a duplicate packet (\(blePacket.packetNumber)). Ignoring.")
+      Self.log("Received a duplicate packet (\(blePacket.packetNumber)). Ignoring.")
     } else {
-      Self.logger.error.log(
+      Self.log.error(
         """
         Received out-of-order packet \(blePacket.packetNumber). \
         Expecting \(lastReceivedMessage.lastPacketNumber + 1).
@@ -369,7 +367,7 @@ class BLEMessageStreamV2: NSObject {
     receivedMessages[messageID] = nil
 
     guard let deviceMessage = try? BleDeviceMessage(serializedData: payload) else {
-      Self.logger.error.log(
+      Self.log.error(
         "Unable to deserialize received message (id: \(messageID)) into a BleDeviceMessage")
       delegate?.messageStreamEncounteredUnrecoverableError(self)
       return
@@ -381,7 +379,7 @@ class BLEMessageStreamV2: NSObject {
       do {
         payload = try decryptMessage(deviceMessage.payload)
       } catch {
-        Self.logger.error.log("Unable to decrypt message for ID: \(messageID)")
+        Self.log.error("Unable to decrypt message for ID: \(messageID)")
         delegate?.messageStreamEncounteredUnrecoverableError(self)
         return
       }
@@ -393,7 +391,7 @@ class BLEMessageStreamV2: NSObject {
     do {
       try decompressPayloadIfNeeded(&payload, originalSize: Int(deviceMessage.originalSize))
     } catch {
-      Self.logger.error.log("Unable to decompress message for ID: \(messageID)")
+      Self.log.error("Unable to decompress message for ID: \(messageID)")
       delegate?.messageStreamEncounteredUnrecoverableError(self)
       return
     }
@@ -420,7 +418,7 @@ class BLEMessageStreamV2: NSObject {
     for recipient: UUID,
     characteristic: BLECharacteristic
   ) {
-    Self.logger.error.log(
+    Self.log.error(
       """
       Error during write for characteristic (\(characteristic.uuid.uuidString)): \
       \(error.localizedDescription)
@@ -457,7 +455,6 @@ class BLEMessageStreamV2: NSObject {
 
 // MARK: - BLEMessageStream
 
-@available(iOS 10.0, *)
 extension BLEMessageStreamV2: BLEMessageStream {
   /// Writes the given message to the peripheral associated with this stream.
   ///
@@ -487,7 +484,6 @@ extension BLEMessageStreamV2: BLEMessageStream {
 
 // MARK: - BLEPeripheralDelegate
 
-@available(iOS 10.0, *)
 extension BLEMessageStreamV2: BLEPeripheralDelegate {
   public func peripheral(
     _ peripheral: BLEPeripheral,
@@ -495,13 +491,13 @@ extension BLEMessageStreamV2: BLEPeripheralDelegate {
     error: Error?
   ) {
     guard error == nil else {
-      Self.logger.error.log("Error on characteristic update: \(error!.localizedDescription)")
+      Self.log.error("Error on characteristic update: \(error!.localizedDescription)")
       return
     }
 
     // This should never happen because we only call `setNotifyValue` for this characteristic.
     guard characteristic.uuid == readCharacteristic.uuid else {
-      Self.logger.error.log(
+      Self.log.error(
         """
         Received a message from an unexpected characteristic \
         (\(characteristic.uuid.uuidString)). Expected \(readCharacteristic.uuid.uuidString).
@@ -513,13 +509,12 @@ extension BLEMessageStreamV2: BLEPeripheralDelegate {
     guard let message = characteristic.value else {
       // An empty message is not necessarily an error. Just ignore and see if the characteristic
       // updates to a valid one.
-      Self.logger.debug.log(
-        "Received empty message from characteristic \(characteristic.uuid.uuidString)")
+      Self.log.debug("Received empty message from characteristic \(characteristic.uuid.uuidString)")
       return
     }
 
     guard let blePacket = try? MessagePacket(serializedData: message) else {
-      Self.logger.error.log(
+      Self.log.error(
         """
         Received message for characteristic (\(characteristic.uuid.uuidString)), \
         but could not parse.
@@ -528,7 +523,7 @@ extension BLEMessageStreamV2: BLEPeripheralDelegate {
       return
     }
 
-    Self.logger.info.log(
+    Self.log.info(
       """
       Received message for readCharacteristic (\(readCharacteristic.uuid.uuidString)). \
       Packet \(blePacket.packetNumber) of \(blePacket.totalPackets). \
@@ -547,7 +542,7 @@ extension BLEMessageStreamV2: BLEPeripheralDelegate {
     guard let blePacket = writeMessageStack.last,
       let recipient = pendingMessages[blePacket.messageID]
     else {
-      Self.logger.error.log(
+      Self.log.error(
         "Unexpected. Message write successful, but no message in the stack or recipient")
       return
     }
@@ -556,7 +551,7 @@ extension BLEMessageStreamV2: BLEPeripheralDelegate {
     // already checked that the stack was not empty.
     writeMessageStack.removeLast()
 
-    Self.logger.info.log(
+    Self.log.info(
       """
       Successfully wrote packet \(blePacket.packetNumber) of \(blePacket.totalPackets). \
       Message ID: \(blePacket.messageID). Remaining message: \(writeMessageStack.count)

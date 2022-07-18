@@ -19,9 +19,9 @@ import Foundation
 ///
 /// Forwards token events from its providers to its token handler and maintains the most recently
 /// posted token.
-@available(iOS 10.0, watchOS 6.0, *)
+@available(watchOS 6.0, *)
 struct CoalescingOutOfBandTokenProvider<Provider: OutOfBandTokenProvider> {
-  private static var logger: Logger { Logger(for: CoalescingOutOfBandTokenProvider<Provider>.self) }
+  private static var log: Logger { Logger(for: CoalescingOutOfBandTokenProvider<Provider>.self) }
 
   /// The child providers.
   private(set) var providers: [Provider]
@@ -53,7 +53,7 @@ struct CoalescingOutOfBandTokenProvider<Provider: OutOfBandTokenProvider> {
   }
 }
 
-@available(iOS 10.0, watchOS 6.0, *)
+@available(watchOS 6.0, *)
 extension CoalescingOutOfBandTokenProvider: OutOfBandTokenProvider {
   /// Prepare the registered providers for token requests.
   func prepareForRequests() {

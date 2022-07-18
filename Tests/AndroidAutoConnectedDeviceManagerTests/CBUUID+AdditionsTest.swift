@@ -18,7 +18,7 @@ import XCTest
 @testable import AndroidAutoConnectedDeviceManager
 
 /// Unit tests for our `CBUUID` extensions.
-@available(iOS 10.0, watchOS 6.0, *)
+@available(watchOS 6.0, *)
 class CBUUID_AdditionsTest: XCTestCase {
   // MARK: - Tests
 

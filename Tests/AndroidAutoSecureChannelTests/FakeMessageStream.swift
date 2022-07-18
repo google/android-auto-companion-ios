@@ -22,7 +22,7 @@ import Foundation
 ///
 /// This stream also exposes methods to toggle if writing messages should succeed or not.
 class FakeMessageStream: NSObject, MessageStream {
-  private static let logger = Logger(for: FakeMessageStream.self)
+  private static let log = Logger(for: FakeMessageStream.self)
 
   // This force-unwrap is safe as the UUID string is valid and cannot change.
   private static let defaultRecipient = UUID(uuidString: "ba4bdcfb-b5dd-4560-9e03-1444bcb0fcb6")!

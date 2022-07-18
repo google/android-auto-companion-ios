@@ -19,7 +19,6 @@ import Foundation
 @testable import AndroidAutoConnectedDeviceManager
 
 /// A mock manager that can manually trigger observations.
-@available(iOS 10.0, *)
 public class ConnectedCarManagerMock: NSObject {
   private var observations = (
     state: [UUID: (ConnectedCarManager, RadioState) -> Void](),
@@ -62,7 +61,6 @@ public class ConnectedCarManagerMock: NSObject {
   }
 }
 
-@available(iOS 10.0, *)
 extension ConnectedCarManagerMock: ConnectedCarManager {
   public func securedChannel(for car: Car) -> SecuredCarChannel? {
     return securedChannels.first(where: { $0.car.id == car.id })

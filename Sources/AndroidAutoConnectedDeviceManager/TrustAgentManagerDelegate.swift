@@ -48,7 +48,6 @@ public enum TrustAgentManagerError: Error {
 }
 
 /// A delegate to be notified of the current state of unlocking.
-@available(iOS 10.0, *)
 public protocol TrustAgentManagerDelegate: AnyObject {
   /// Invoked when an enrollment has completed with an associated car.
   ///

@@ -25,9 +25,8 @@ import Foundation
 ///   1) Establish encryption.
 ///   2) Send device ID and receive car ID.
 ///   3) Complete association.
-@available(iOS 10.0, *)
 final class AssociationMessageHelperV2 {
-  static let logger = Logger(for: AssociationMessageHelperV2.self)
+  static let log = Logger(for: AssociationMessageHelperV2.self)
 
   private let messageStream: MessageStream
   private let associator: Associator
@@ -50,7 +49,6 @@ final class AssociationMessageHelperV2 {
 }
 
 // MARK: - AssociationMessageHelper
-@available(iOS 10.0, *)
 extension AssociationMessageHelperV2: AssociationMessageHelper {
   func start() {
     phase = .encryptionInProgress
@@ -60,11 +58,11 @@ extension AssociationMessageHelperV2: AssociationMessageHelper {
   func handleMessage(_ message: Data, params: MessageStreamParams) {
     switch phase {
     case .encryptionInProgress:
-      Self.logger.error.log("Invalid state of .encryptionInProgress encountered.")
+      Self.log.error("Invalid state of .encryptionInProgress encountered.")
       associator.notifyDelegateOfError(.unknown)
     case .encryptionEstablished:
       guard let carId = try? extractCarId(fromMessage: message) else {
-        Self.logger.error.log("Error extracting carId from message.")
+        Self.log.error("Error extracting carId from message.")
         associator.notifyDelegateOfError(.malformedCarId)
         return
       }
@@ -78,10 +76,10 @@ extension AssociationMessageHelperV2: AssociationMessageHelper {
 
       sendDeviceIdPlusAuthenticationKey(keyData: authenticator.keyData, on: messageStream)
     case .none:
-      Self.logger.error.log("Invalid state of .none encountered.")
+      Self.log.error("Invalid state of .none encountered.")
       associator.notifyDelegateOfError(.unknown)
     case .done:
-      Self.logger.error.log("Invalid state of .done encountered.")
+      Self.log.error("Invalid state of .done encountered.")
       associator.notifyDelegateOfError(.unknown)
     }
   }
@@ -89,7 +87,7 @@ extension AssociationMessageHelperV2: AssociationMessageHelper {
   func messageDidSendSuccessfully() {
     guard phase == .encryptionEstablished else { return }
 
-    Self.logger.log("Device id and authentication key successfully sent.")
+    Self.log("Device id and authentication key successfully sent.")
 
     guard
       let carId = associator.carId,

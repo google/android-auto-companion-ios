@@ -16,7 +16,6 @@ import Compression
 import Foundation
 
 /// Provide data compression/decompression operations.
-@available(iOS 10.0, *)
 protocol DataCompressor {
   /// Compress the specified input data.
   ///
@@ -36,7 +35,6 @@ protocol DataCompressor {
 }
 
 /// Errors that can be thrown during compressor operations.
-@available(iOS 10.0, *)
 enum DataCompressorError: Error {
   /// The size of the data doesn't meet the minimum required for compression.
   case minDataSize(Int)
@@ -52,7 +50,6 @@ enum DataCompressorError: Error {
 }
 
 /// Utility extension for visualizing data.
-@available(iOS 10.0, *)
 extension Data {
   /// Generate a description in hexadecimal format useful for visualizing the data.
   var hexadecimalDescription: String {

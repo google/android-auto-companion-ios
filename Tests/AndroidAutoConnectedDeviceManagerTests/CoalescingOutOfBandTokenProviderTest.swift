@@ -17,7 +17,7 @@ import XCTest
 @testable import AndroidAutoConnectedDeviceManager
 
 /// Unit tests for CoalescingOutOfBandTokenProvider.
-@available(iOS 10.0, watchOS 6.0, *)
+@available(watchOS 6.0, *)
 class CoalescingOutOfBandTokenProviderTest: XCTestCase {
   // The token provider to test.
   private var testTokenProvider: CoalescingOutOfBandTokenProvider<MockOutOfBandTokenProvider>!
@@ -247,7 +247,7 @@ private struct FakeOutOfBandToken: OutOfBandToken {
 }
 
 /// Mock Out-Of-Band Token Provider.
-@available(iOS 10.0, watchOS 6.0, *)
+@available(watchOS 6.0, *)
 class MockOutOfBandTokenProvider: OutOfBandTokenProvider {
   private var completion: ((OutOfBandToken?) -> Void)?
   private var token: OutOfBandToken? = nil

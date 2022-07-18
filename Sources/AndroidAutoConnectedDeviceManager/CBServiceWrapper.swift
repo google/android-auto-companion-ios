@@ -17,7 +17,6 @@ import CoreBluetooth
 import Foundation
 
 /// A wrapper around `CBSService` that will make it conform to `BLEService`.
-@available(iOS 10.0, *)
 class CBServiceWrapper: NSObject, BLEService {
   let service: CBService
 

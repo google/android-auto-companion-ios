@@ -15,7 +15,7 @@
 import Foundation
 
 /// Protocol for factories which make log stores.
-@available(iOS 10.0, macOS 10.15, *)
+@available(macOS 10.15, *)
 public protocol PersistentLogStoreFactory {
   /// Make storage for logs with the specified date.
   ///
@@ -32,7 +32,7 @@ public protocol PersistentLogStoreFactory {
 }
 
 /// Factory which persists the logs to a file.
-@available(iOS 10.0, macOS 10.15, *)
+@available(macOS 10.15, *)
 public struct FileLogStoreFactory: PersistentLogStoreFactory {
   /// Creates a new instance of this factory.
   public init() {}

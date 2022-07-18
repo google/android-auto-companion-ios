@@ -17,7 +17,6 @@ import XCTest
 @testable import AndroidAutoMessageStream
 
 /// Unit tests for `DataCompressorImpl`.
-@available(iOS 10.0, *)
 class DataCompressorImplTest: XCTestCase {
   func testRawZlib_Compresses() {
     let rawData = repeatingData(count: 1000)

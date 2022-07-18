@@ -19,9 +19,8 @@ import AndroidAutoLogger
 import Foundation
 
 /// A car that can be used to send encrypted messages.
-@available(iOS 10.0, *)
 class ReconnectionHandlerImpl: NSObject, ReconnectionHandler {
-  private static let logger = Logger(for: ReconnectionHandlerImpl.self)
+  private static let log = Logger(for: ReconnectionHandlerImpl.self)
 
   let messageStream: BLEMessageStream
 
@@ -86,7 +85,7 @@ class ReconnectionHandlerImpl: NSObject, ReconnectionHandler {
   }
 
   func establishEncryption() throws {
-    Self.logger.log("Starting setup of secure channel with car (id: \(car.id)).")
+    Self.log("Starting setup of secure channel with car (id: \(car.id)).")
 
     state = .keyExchangeInProgress
 
@@ -99,7 +98,6 @@ class ReconnectionHandlerImpl: NSObject, ReconnectionHandler {
 
 // MARK: - SecureBLEChannelDelegate
 
-@available(iOS 10.0, *)
 extension ReconnectionHandlerImpl: SecureBLEChannelDelegate {
   public func secureBLEChannel(
     _ secureBLEChannel: SecureBLEChannel,
@@ -107,7 +105,7 @@ extension ReconnectionHandlerImpl: SecureBLEChannelDelegate {
     messageStream: MessageStream
   ) {
     // Since we're resuming a session, this method should never be called.
-    Self.logger.error.log(
+    Self.log.error(
       "Received unexpected request to show PIN. Was establish() called with a saved session?")
 
     state = .error
@@ -123,7 +121,7 @@ extension ReconnectionHandlerImpl: SecureBLEChannelDelegate {
     guard let secureSession = try? secureBLEChannel.saveSession(),
       secureSessionManager.storeSecureSession(secureSession, for: car.id)
     else {
-      Self.logger.error.log("Cannot save the secure session")
+      Self.log.error("Cannot save the secure session")
 
       state = .error
       delegate?.reconnectionHandler(self, didEncounterError: .cannotEstablishEncryption)
@@ -144,7 +142,7 @@ extension ReconnectionHandlerImpl: SecureBLEChannelDelegate {
   public func secureBLEChannel(_ secureBLEChannel: SecureBLEChannel, encounteredError error: Error)
   {
     // TODO(b/133505558): Define error states if unlock cannot be done.
-    Self.logger.error.log("Error during session resumption: \(error.localizedDescription)")
+    Self.log.error("Error during session resumption: \(error.localizedDescription)")
 
     state = .error
 

@@ -17,26 +17,25 @@ import XCTest
 @testable import AndroidAutoLogger
 
 /// Unit tests for Logger.
-@available(iOS 10.0, *)
 class LoggerTest: XCTestCase {
-  var logger = Logger(subsystem: "TestSystem", category: "TestCat")
+  var log = Logger(subsystem: "TestSystem", category: "TestCat")
   fileprivate let delegateMock = LoggerDelegateMock()
 
   override func setUp() {
     super.setUp()
 
-    logger.delegate = delegateMock
+    log.delegate = delegateMock
   }
 
   override func tearDown() {
     super.tearDown()
 
-    logger.delegate = nil
+    log.delegate = nil
   }
 
   /// Tests that the expected category is created given the mangled type name (for private types).
   public func testInferredCategoryForPrivateType() {
-    let logger = Logger(for: PrivateSampleTarget.self)
+    let log = Logger(for: PrivateSampleTarget.self)
 
     let moduleName = "third_party_swift_AndroidAutoCompanion_LoggerTestsLib"
 
@@ -45,13 +44,13 @@ class LoggerTest: XCTestCase {
     XCTAssertNotEqual("\(moduleName).PrivateSampleTarget", typeName)
     XCTAssertTrue(typeName.contains(")"))
 
-    XCTAssertEqual(logger.subsystem, moduleName)
-    XCTAssertEqual(logger.category, "PrivateSampleTarget")
+    XCTAssertEqual(log.subsystem, moduleName)
+    XCTAssertEqual(log.category, "PrivateSampleTarget")
   }
 
   /// Tests that the expected category is created given the unmangled type names.
   public func testInferredCategoryForInternalType() {
-    let logger = Logger(for: InternalSampleTarget.self)
+    let log = Logger(for: InternalSampleTarget.self)
 
     let moduleName = "third_party_swift_AndroidAutoCompanion_LoggerTestsLib"
 
@@ -60,13 +59,13 @@ class LoggerTest: XCTestCase {
     XCTAssertEqual("\(moduleName).InternalSampleTarget", typeName)
     XCTAssertFalse(typeName.contains(")"))
 
-    XCTAssertEqual(logger.subsystem, moduleName)
-    XCTAssertEqual(logger.category, "InternalSampleTarget")
+    XCTAssertEqual(log.subsystem, moduleName)
+    XCTAssertEqual(log.category, "InternalSampleTarget")
   }
 
   public func testLoggerLogsRecord() {
-    let line = #line + 1  // This line must be kept right before the logger.log() call line.
-    logger.log("Test")
+    let line = #line + 1  // This line must be kept right before the log() call line.
+    log("Test")
 
     XCTAssertNotNil(delegateMock.lastRecord)
     guard let record = delegateMock.lastRecord else { return }
@@ -85,32 +84,31 @@ class LoggerTest: XCTestCase {
     XCTAssertEqual(record.threadId, 1)
   }
 
-  // Test calling the logger as a function.
-  #if swift(>=5.2)
-    public func testLoggerCallLogsRecord() {
-      let line = #line + 1  // This line must be kept right before the logger() call line.
-      logger("Test")
+  // Test calling the log as a function.
+  public func testLoggerCallLogsRecord() {
+    let line = #line + 1  // This line must be kept right before the log() call line.
+    log("Test")
 
-      XCTAssertNotNil(delegateMock.lastRecord)
-      guard let record = delegateMock.lastRecord else { return }
+    XCTAssertNotNil(delegateMock.lastRecord)
+    guard let record = delegateMock.lastRecord else { return }
 
-      XCTAssertEqual(record.subsystem, "TestSystem")
-      XCTAssertEqual(record.category, "TestCat")
-      XCTAssertEqual(record.level, .standard)
-      XCTAssertEqual(record.message, "Test")
-      XCTAssertNil(record.redactableMessage)
-      XCTAssertNil(record.metadata)
-      XCTAssertEqual(record.file, #file)
-      XCTAssertEqual(record.function, #function)
-      XCTAssertEqual(record.line, line)
+    XCTAssertEqual(record.subsystem, "TestSystem")
+    XCTAssertEqual(record.category, "TestCat")
+    XCTAssertEqual(record.level, .standard)
+    XCTAssertEqual(record.message, "Test")
+    XCTAssertNil(record.redactableMessage)
+    XCTAssertNil(record.metadata)
+    XCTAssertEqual(record.file, #file)
+    XCTAssertEqual(record.function, #function)
+    XCTAssertEqual(record.line, line)
 
-      // Since the test is run on the main thread, we should be on thread number 1.
-      XCTAssertEqual(record.threadId, 1)
-    }
-  #endif
+    // Since the test is run on the main thread, we should be on thread number 1.
+    XCTAssertEqual(record.threadId, 1)
+  }
+
 
   public func testLoggerRedaction() {
-    logger("Test", redacting: "abc123")
+    log("Test", redacting: "abc123")
 
     XCTAssertNotNil(delegateMock.lastRecord)
     guard let record = delegateMock.lastRecord else { return }
@@ -122,21 +120,21 @@ class LoggerTest: XCTestCase {
 
   public func testLoggerLevelModifiers() {
     // Test modifier methods.
-    XCTAssertEqual(logger.level(.debug).level, Logger.Level.debug)
-    XCTAssertEqual(logger.level(.info).level, Logger.Level.info)
-    XCTAssertEqual(logger.level(.standard).level, Logger.Level.standard)
-    XCTAssertEqual(logger.level(.error).level, Logger.Level.error)
-    XCTAssertEqual(logger.level(.fault).level, Logger.Level.fault)
+    XCTAssertEqual(log.level(.debug).level, Logger.Level.debug)
+    XCTAssertEqual(log.level(.info).level, Logger.Level.info)
+    XCTAssertEqual(log.level(.standard).level, Logger.Level.standard)
+    XCTAssertEqual(log.level(.error).level, Logger.Level.error)
+    XCTAssertEqual(log.level(.fault).level, Logger.Level.fault)
 
     // Test convenience modifier computed properties.
-    XCTAssertEqual(logger.debug.level, Logger.Level.debug)
-    XCTAssertEqual(logger.info.level, Logger.Level.info)
-    XCTAssertEqual(logger.error.level, Logger.Level.error)
-    XCTAssertEqual(logger.fault.level, Logger.Level.fault)
+    XCTAssertEqual(log.debug.level, Logger.Level.debug)
+    XCTAssertEqual(log.info.level, Logger.Level.info)
+    XCTAssertEqual(log.error.level, Logger.Level.error)
+    XCTAssertEqual(log.fault.level, Logger.Level.fault)
   }
 
   public func testLoggerDebugLogRecord() {
-    logger.debug.log("Test")
+    log.debug("Test")
 
     XCTAssertNotNil(delegateMock.lastRecord)
     guard let record = delegateMock.lastRecord else { return }
@@ -145,7 +143,7 @@ class LoggerTest: XCTestCase {
   }
 
   public func testLoggerInfoLogRecord() {
-    logger.info.log("Test")
+    log.info("Test")
 
     XCTAssertNotNil(delegateMock.lastRecord)
     guard let record = delegateMock.lastRecord else { return }
@@ -154,7 +152,7 @@ class LoggerTest: XCTestCase {
   }
 
   public func testLoggerErrorLogRecord() {
-    logger.error.log("Test")
+    log.error("Test")
 
     XCTAssertNotNil(delegateMock.lastRecord)
     guard let record = delegateMock.lastRecord else { return }
@@ -164,12 +162,7 @@ class LoggerTest: XCTestCase {
 
   public func testLoggerFaultLogRecord() {
     let backTrace = Thread.callStackSymbols
-
-    #if swift(>=5.2)
-      logger.fault("Test")
-    #else
-      logger.fault.log("Test")
-    #endif
+    log.fault("Test")
 
     XCTAssertNotNil(delegateMock.lastRecord)
     guard let record = delegateMock.lastRecord else { return }
@@ -178,33 +171,30 @@ class LoggerTest: XCTestCase {
 
     // Verify that the backtrace is not nil and the length matches.
     // Note the stack symbol prefixes will not match since the stack trace was captured in the
-    // logger call with the first symbol stripped to exclude the log in the backtrace.
+    // log call with the first symbol stripped to exclude the log in the backtrace.
     XCTAssertNotNil(record.backTrace)
     XCTAssertEqual(backTrace.count, record.backTrace?.count ?? 0)
   }
 
-  #if swift(>=5.2)
-    public func testLoggerCallFaultLogRecord() {
-      let backTrace = Thread.callStackSymbols
+  public func testLoggerCallFaultLogRecord() {
+    let backTrace = Thread.callStackSymbols
 
-      logger.fault("Test")
+    log.fault("Test")
 
-      XCTAssertNotNil(delegateMock.lastRecord)
-      guard let record = delegateMock.lastRecord else { return }
+    XCTAssertNotNil(delegateMock.lastRecord)
+    guard let record = delegateMock.lastRecord else { return }
 
-      XCTAssertEqual(record.level, .fault)
+    XCTAssertEqual(record.level, .fault)
 
-      // Verify that the backtrace is not nil and the length matches.
-      // Note the stack symbol prefixes will not match since the stack trace was captured in the
-      // logger call with the first symbol stripped to exclude the log in the backtrace.
-      XCTAssertNotNil(record.backTrace)
-      XCTAssertEqual(backTrace.count, record.backTrace?.count ?? 0)
-    }
-  #endif
+    // Verify that the backtrace is not nil and the length matches.
+    // Note the stack symbol prefixes will not match since the stack trace was captured in the
+    // log call with the first symbol stripped to exclude the log in the backtrace.
+    XCTAssertNotNil(record.backTrace)
+    XCTAssertEqual(backTrace.count, record.backTrace?.count ?? 0)
+  }
 }
 
 /// Mock for the Logger delegate.
-@available(iOS 10.0, *)
 private class LoggerDelegateMock: LoggerDelegate {
   var lastRecord: LogRecord? = nil
 
@@ -214,9 +204,7 @@ private class LoggerDelegateMock: LoggerDelegate {
 }
 
 /// Private type for which we can test Logger category inference.
-@available(iOS 10.0, *)
 private enum PrivateSampleTarget {}
 
 /// Internal type for which we can test Logger category inference.
-@available(iOS 10.0, *)
 enum InternalSampleTarget {}

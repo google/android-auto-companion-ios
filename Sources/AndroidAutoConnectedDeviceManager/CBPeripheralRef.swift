@@ -18,7 +18,6 @@ import CoreBluetooth
 import Foundation
 
 /// A wrapper around a `CBPeripheral` that will make it conform to `BLEPeripheral`.
-@available(iOS 10.0, *)
 class CBPeripheralRef: NSObject, BLEPeripheral {
   private var serviceObserver: ((BLEPeripheral, [BLEService]) -> Void)? = nil
 
@@ -98,7 +97,6 @@ class CBPeripheralRef: NSObject, BLEPeripheral {
   }
 }
 
-@available(iOS 10.0, *)
 extension CBPeripheralRef: CBPeripheralDelegate {
   func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
     delegate?.peripheral(self, didDiscoverServices: error)

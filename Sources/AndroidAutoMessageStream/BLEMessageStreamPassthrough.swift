@@ -20,9 +20,8 @@ import Foundation
 ///
 /// It will assume that all messages will fit and directly call a write to the peripheral it is
 /// initialized with. It will also assume all messages from the peripheral are complete messages.
-@available(iOS 10.0, *)
 class BLEMessageStreamPassthrough: NSObject, BLEMessageStream {
-  private static let logger = Logger(for: BLEMessageStreamPassthrough.self)
+  private static let log = Logger(for: BLEMessageStreamPassthrough.self)
 
   // This force-unwrap is safe as the UUID string is valid and cannot change.
   private static let defaultRecipient = UUID(uuidString: "B75D6A81-635B-4560-BD8D-9CDF83F32AE7")!
@@ -88,7 +87,7 @@ class BLEMessageStreamPassthrough: NSObject, BLEMessageStream {
   }
 
   private func logUpdateError(_ error: Error, for characteristic: BLECharacteristic) {
-    Self.logger.error.log(
+    Self.log.error(
       """
       Error during update value for characteristic (\(characteristic.uuid.uuidString)): \
       \(error.localizedDescription)
@@ -97,7 +96,7 @@ class BLEMessageStreamPassthrough: NSObject, BLEMessageStream {
   }
 
   private func notifyWriteError(_ error: Error, for characteristic: BLECharacteristic) {
-    Self.logger.error.log(
+    Self.log.error(
       """
       Error during write for characteristic (\(characteristic.uuid.uuidString)): \
       \(error.localizedDescription)
@@ -114,7 +113,6 @@ class BLEMessageStreamPassthrough: NSObject, BLEMessageStream {
 
 // MARK: - BLEPeripheralDelegate
 
-@available(iOS 10.0, *)
 extension BLEMessageStreamPassthrough: BLEPeripheralDelegate {
   public func peripheral(
     _ peripheral: BLEPeripheral,
@@ -129,8 +127,7 @@ extension BLEMessageStreamPassthrough: BLEPeripheralDelegate {
     guard let message = characteristic.value else {
       // An empty message is not necessarily an error. Just continue waiting and see if the
       // characteristic updates to a valid one.
-      Self.logger.debug.log(
-        "Received empty message from characteristic \(characteristic.uuid.uuidString)")
+      Self.log.debug("Received empty message from characteristic \(characteristic.uuid.uuidString)")
       return
     }
 

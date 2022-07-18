@@ -19,19 +19,14 @@ import Foundation
 /// Factory which makes an out of band token provider for an accessory.
 ///
 /// Hides details of the underlying support so it's safe to call from anywhere.
-@available(iOS 10.0, *)
 struct AccessoryOutOfBandTokenProviderFactory {
-  private static let logger = Logger(for: AccessoryOutOfBandTokenProviderFactory.self)
+  private static let log = Logger(for: AccessoryOutOfBandTokenProviderFactory.self)
 
   /// Make new provider if supported on the platform.
   ///
   /// - Returns: The new provider or `nil` if not supported on the platform.
   func makeProvider() -> OutOfBandTokenProvider? {
     #if canImport(ExternalAccessory)
-      guard #available(iOS 13.0, *) else {
-        Self.logger.error("Accessory token provider only supported in iOS 13 and higher.")
-        return nil
-      }
       return AccessoryOutOfBandTokenProvider()
     #else
       return nil

@@ -15,7 +15,7 @@
 import AndroidAutoConnectedDeviceManagerMocks
 import CoreBluetooth
 import XCTest
-import AndroidAutoCompanionProtos
+@_implementationOnly import AndroidAutoCompanionProtos
 
 @testable import AndroidAutoConnectedDeviceManager
 
@@ -229,7 +229,7 @@ class SystemFeatureManagerTest: XCTestCase {
   func testOnMessageReceived_doesNotSendQueryResponse() {
     connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
 
-    channel.triggerMessageReceived(Data("message".utf8),from: SystemFeatureManager.recipientUUID)
+    channel.triggerMessageReceived(Data("message".utf8), from: SystemFeatureManager.recipientUUID)
 
     XCTAssertTrue(channel.writtenQueryResponses.isEmpty)
     XCTAssertTrue(channel.writtenMessages.isEmpty)

@@ -20,7 +20,6 @@ import Foundation
 @testable import AndroidAutoConnectedDeviceManager
 
 /// A creator of fake `ReconnectionHandler`s.
-@available(iOS 10.0, *)
 public class ReconnectionHandlerFactoryFake: ReconnectionHandlerFactory {
   // When making channels, sets `establishEncryptionShouldFail` accordingly.
   public var makeChannelEstablishEncryptionShouldFail = false

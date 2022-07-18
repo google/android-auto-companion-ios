@@ -22,7 +22,6 @@ import XCTest
 @testable import AndroidAutoConnectedDeviceManager
 
 /// Unit tests for `AssociationManager`.
-@available(iOS 10.0, *)
 class AssociationManagerTest: XCTestCase {
   private let associatedCarsManagerMock = AssociatedCarsManagerMock()
   private let secureSessionManagerMock = SecureSessionManagerMock()
@@ -937,7 +936,8 @@ class AssociationManagerTest: XCTestCase {
   /// Invokes a callback on the `associationManager` acknowledging that a message was just
   /// successfully sent to the recipient with the given `UUID`.
   private func notifyMessageSentSuccessfully(to recipient: UUID) {
-    associationManager.messageStreamDidWriteMessage(associationManager.messageStream!, to: recipient)
+    associationManager.messageStreamDidWriteMessage(
+      associationManager.messageStream!, to: recipient)
   }
 }
 
@@ -945,7 +945,6 @@ class AssociationManagerTest: XCTestCase {
 
 /// A mock `AssociationManagerDelegate` that can assert if its `onAssociationComplete` method was
 /// called and with what value.
-@available(iOS 10.0, *)
 class AssociationDelegateMock: AssociationManagerDelegate {
   var didCompleteAssociationCalled = false
   var associatedCar: Car? = nil

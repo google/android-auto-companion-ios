@@ -16,7 +16,6 @@ import XCTest
 
 @testable import AndroidAutoLogger
 
-@available(iOS 10, *)
 class SignpostMarkerTest: XCTestCase {
   public func testDefaultRole_isEvent() {
     let marker = SignpostMarker("Test")

@@ -20,7 +20,7 @@ private typealias OutOfBandAssociationData = Com_Google_Companionprotos_OutOfBan
 
 /// Opaque type that wraps out of band association data parsed from some content.
 public class OutOfBandAssociationDataSource {
-  private static let logger = Logger(for: OutOfBandAssociationDataSource.self)
+  private static let log = Logger(for: OutOfBandAssociationDataSource.self)
 
   private let outOfBandData: OutOfBandAssociationData
 
@@ -49,29 +49,29 @@ extension OutOfBandAssociationDataSource {
 
   /// Performs the parsing of the URL's association query.
   enum AssociationURLParser {
-    private static let logger = Logger(for: AssociationURLParser.self)
+    private static let log = Logger(for: AssociationURLParser.self)
 
     private static let queryKey = "oobData"
 
     fileprivate static func parse(_ url: URL) throws -> OutOfBandAssociationData {
       guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
-        logger.error.log("URL could components could not be extracted.")
+        log.error("URL could components could not be extracted.")
         throw Error.invalidURL
       }
 
       // Extract the key/value pair assignments from the query.
       guard let assignments = components.queryItems else {
-        logger.error.log("No query items to process.")
+        log.error("No query items to process.")
         throw Error.missingQuery
       }
 
       guard let queryAssignment = assignments.first(where: { $0.name == queryKey }) else {
-        Self.logger.error.log("URL query is missing out of band data.")
+        Self.log.error("URL query is missing out of band data.")
         throw Error.missingOutOfBandData
       }
 
       guard let oobComponent = queryAssignment.value else {
-        Self.logger.error.log("No value associated with out of band query.")
+        Self.log.error("No value associated with out of band query.")
         throw Error.missingOutOfBandData
       }
 
@@ -80,14 +80,12 @@ extension OutOfBandAssociationDataSource {
         let oobTokenData = Data(
           base64Encoded: String(oobBase64String), options: .ignoreUnknownCharacters)
       else {
-        Self.logger.error.log("URL query out of band data could not be base64 decoded.")
+        Self.log.error("URL query out of band data could not be base64 decoded.")
         throw Error.invalidBase64Encoding
       }
       let outOfBandData = try OutOfBandAssociationData(serializedData: oobTokenData)
 
-      Self.logger.log(
-        "Parsed out of band data from URL for car: \(outOfBandData.deviceIdentifier.hex)"
-      )
+      Self.log("Parsed out of band data from URL for car: \(outOfBandData.deviceIdentifier.hex)")
 
       return outOfBandData
     }
@@ -109,7 +107,7 @@ extension OutOfBandAssociationDataSource {
           .replacingOccurrences(of: "_", with: "/")
           .replacingOccurrences(of: "-", with: "+")
       else {
-        Self.logger.error.log("Failed to decode URL Safe Base64 encoding.")
+        Self.log.error("Failed to decode URL Safe Base64 encoding.")
         throw Error.invalidBase64Encoding
       }
       return base64String

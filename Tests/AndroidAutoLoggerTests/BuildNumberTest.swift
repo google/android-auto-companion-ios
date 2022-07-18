@@ -17,7 +17,6 @@ import XCTest
 @testable import AndroidAutoLogger
 
 /// `BuildNumber` unit tests.
-@available(iOS 10.0, *)
 class BuildNumberTest: XCTestCase {
   // MARK: - Tests
 

@@ -36,28 +36,28 @@ When the logger is initialized, the subsystem is inferred from the calling
 context, and the category is derived from the type and the subsystem.
 
 ```swift
-let logger = Logger(for: TestType.self)
+let log = Logger(for: TestType.self)
 ```
 
-It follows the modifier pattern in which a logger instance is immutable from
-the public API, and a modifier can configure and return a new logger. The
+It follows the modifier pattern in which a log instance is immutable from
+the public API, and a modifier can configure and return a new log. The
 most common property that can be configured this way is the level.
 
 ```swift
-logger.info.log("Test")
+log.info("Test")
 ```
 
 The log record may contain information to be redacted when persisted as such:
 
 ```swift
-logger.info.log("Test for id:", redacting: "abc123")
+log.info("Test for id:", redacting: "abc123")
 ```
 
 In Swift 5.2 and later, the `log()` method can be left off since logging is
 intrinsic to what the lagger does:
 
 ```swift
-logger.info("Test")
+log.info("Test")
 ```
 
 #### Levels in order of increasing significance.

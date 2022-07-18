@@ -12,19 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import AndroidAutoConnectedDeviceManagerMocks
 import AndroidAutoCoreBluetoothProtocols
 import AndroidAutoCoreBluetoothProtocolsMocks
 import AndroidAutoSecureChannel
 import CoreBluetooth
 import LocalAuthentication
 import XCTest
-import AndroidAutoConnectedDeviceManagerMocks
 import AndroidAutoTrustAgentProtos
 
 @testable import AndroidAutoConnectedDeviceManager
 
 /// Unit tests for `TrustAgentManager`.
-@available(iOS 10.0, *)
 class TrustAgentManagerTest: XCTestCase {
   // The default name that is used when `setUpValidChannel(withCarId:)` is called.
   private let defaultChannelName = "mock car"

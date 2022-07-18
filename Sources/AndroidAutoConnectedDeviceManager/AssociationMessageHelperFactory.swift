@@ -19,7 +19,6 @@ import CoreBluetooth
 import Foundation
 
 /// Protocol to be adopted by factories which make message exchange helpers.
-@available(iOS 10.0, *)
 protocol AssociationMessageHelperFactory {
   func makeHelper(
     associator: Associator,
@@ -29,7 +28,6 @@ protocol AssociationMessageHelperFactory {
 }
 
 /// The default factory for making message exchange helpers.
-@available(iOS 10.0, *)
 struct AssociationMessageHelperFactoryImpl: AssociationMessageHelperFactory {
   func makeHelper(
     associator: Associator,

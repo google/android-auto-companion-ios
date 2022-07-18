@@ -17,7 +17,7 @@ import XCTest
 @testable import AndroidAutoLogger
 
 /// Unit tests for `LoggingHandlers`.
-@available(iOS 10.0, *)
+
 class LoggingHandlersTest: XCTestCase {
   func testSharedIsStandard() {
     XCTAssertTrue(LoggingHandlers.shared === LoggingHandlers.standard)
@@ -25,7 +25,7 @@ class LoggingHandlersTest: XCTestCase {
 }
 
 /// Unit tests for `CompoundLogHandler`.
-@available(iOS 10.0, *)
+
 class CompoundLogHandlerTest: XCTestCase {
   public func testForwardingToChildHandlers() {
     let mockChild1 = LogHandlerMock()
@@ -44,7 +44,7 @@ class CompoundLogHandlerTest: XCTestCase {
 }
 
 /// Mock for testing handler calls.
-@available(iOS 10.0, *)
+
 class LogHandlerMock: LoggerDelegate {
   var didLogRecord = false
 

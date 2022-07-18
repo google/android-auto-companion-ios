@@ -16,7 +16,7 @@ import AndroidAutoLogger
 import Foundation
 
 /// A loader that is able to read values from a .plist file.
-@available(iOS 10.0, watchOS 6.0, *)
+@available(watchOS 6.0, *)
 protocol PListLoader {
   /// Returns a dictionary that represents values the OEM wishes to overlay over default values
   /// used within this library.
@@ -28,9 +28,9 @@ protocol PListLoader {
 
 /// The default loader that will look for a `.plist` file with the file name passed to the
 /// constructor and load the values from it.
-@available(iOS 10.0, watchOS 6.0, *)
+@available(watchOS 6.0, *)
 struct PListLoaderImpl: PListLoader {
-  private static let logger = Logger(for: PListLoaderImpl.self)
+  private static let log = Logger(for: PListLoaderImpl.self)
 
   private static let plistExtension = "plist"
 
@@ -46,8 +46,7 @@ struct PListLoaderImpl: PListLoader {
       let url =
         Bundle.main.url(forResource: plistFileName, withExtension: Self.plistExtension)
     else {
-      Self.logger.log(
-        "No custom overlay \(plistFileName).plist found. Returning empty configuration")
+      Self.log("No custom overlay \(plistFileName).plist found. Returning empty configuration")
       return Overlay()
     }
 
@@ -60,7 +59,7 @@ struct PListLoaderImpl: PListLoader {
           format: nil
         ) as? [String: Any]
       else {
-        Self.logger.log(
+        Self.log(
           """
           Custom overlay plist found, but not in expected key/value pair of String/Any. \
           Returning empty configuration
@@ -69,10 +68,10 @@ struct PListLoaderImpl: PListLoader {
         return Overlay()
       }
 
-      Self.logger.log("Custom overlay plist found: \(plist)")
+      Self.log("Custom overlay plist found: \(plist)")
       return Overlay(plist)
     } catch {
-      Self.logger.error.log(
+      Self.log.error(
         "Encountered error loading custom overlay plist: \(error.localizedDescription)"
       )
       return Overlay()

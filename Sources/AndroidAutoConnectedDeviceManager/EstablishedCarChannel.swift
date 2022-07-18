@@ -23,9 +23,8 @@ private typealias QueryProto = Com_Google_Companionprotos_Query
 private typealias QueryResponseProto = Com_Google_Companionprotos_QueryResponse
 
 /// A car that can be used to send encrypted messages.
-@available(iOS 10.0, *)
 class EstablishedCarChannel: NSObject, SecuredCarChannelPeripheral {
-  private static let logger = Logger(for: EstablishedCarChannel.self)
+  private static let log = Logger(for: EstablishedCarChannel.self)
 
   let messageStream: MessageStream
   private let connectionHandle: ConnectionHandle
@@ -108,7 +107,6 @@ class EstablishedCarChannel: NSObject, SecuredCarChannelPeripheral {
 
 // MARK: - SecuredCarChannel
 
-@available(iOS 10.0, *)
 extension EstablishedCarChannel: SecuredCarChannel {
   public func observeMessageReceived(
     from recipient: UUID,
@@ -187,8 +185,7 @@ extension EstablishedCarChannel: SecuredCarChannel {
       // of notifying handlers when a write is complete because a closure can always be called.
       writeCompletionHandlers.append(completion ?? noop)
     } catch {
-      Self.logger.error.log(
-        "Attempt to write encrypted message failed: \(error.localizedDescription)")
+      Self.log.error("Attempt to write encrypted message failed: \(error.localizedDescription)")
 
       throw SecuredCarChannelError.cannotEncryptMessage
     }
@@ -215,7 +212,7 @@ extension EstablishedCarChannel: SecuredCarChannel {
       writeCompletionHandlers.append(noop)
       queryResponseHandlers[queryID] = response
     } catch {
-      Self.logger.error.log("Attempt to send query failed: \(error.localizedDescription)")
+      Self.log.error("Attempt to send query failed: \(error.localizedDescription)")
       throw SecuredCarChannelError.cannotEncryptMessage
     }
   }
@@ -235,7 +232,7 @@ extension EstablishedCarChannel: SecuredCarChannel {
       // ensures all out-standing messages have completion handlers.
       writeCompletionHandlers.append(noop)
     } catch {
-      Self.logger.error.log("Attempt to send query response failed: \(error.localizedDescription)")
+      Self.log.error("Attempt to send query response failed: \(error.localizedDescription)")
       throw SecuredCarChannelError.cannotEncryptMessage
     }
   }
@@ -259,7 +256,6 @@ extension EstablishedCarChannel: SecuredCarChannel {
 }
 
 // MARK: - SecuredConnectedDeviceChannel
-@available(iOS 10.0, *)
 extension EstablishedCarChannel: SecuredConnectedDeviceChannel {
   public func configure(
     using provider: ChannelFeatureProvider,
@@ -270,10 +266,10 @@ extension EstablishedCarChannel: SecuredConnectedDeviceChannel {
 
       defer { completion(self) }
       if let role = role {
-        Self.logger.info.log("requestUserRole completed with role: \(role)")
+        Self.log.info("requestUserRole completed with role: \(role)")
         self.userRole = role
       } else {
-        Self.logger.error.log("requestUserRole failed with no role.")
+        Self.log.error("requestUserRole failed with no role.")
       }
     }
   }
@@ -281,14 +277,13 @@ extension EstablishedCarChannel: SecuredConnectedDeviceChannel {
 
 // MARK: - MessageStreamDelegate
 
-@available(iOS 10.0, *)
 extension EstablishedCarChannel: MessageStreamDelegate {
   public func messageStream(
     _ messageStream: MessageStream,
     didEncounterWriteError error: Error,
     to recipient: UUID
   ) {
-    Self.logger.error.log(
+    Self.log.error(
       """
       Encountered error when writing to stream. \
       \(messageStream.writingDebugDescription): \
@@ -300,7 +295,7 @@ extension EstablishedCarChannel: MessageStreamDelegate {
     guard !writeCompletionHandlers.isEmpty else {
       assertionFailure("No completion handler to call after a message write failure.")
 
-      Self.logger.fault.log(
+      Self.log.fault(
         "Unexpected. No completion handler able to call after a message write failure.")
       return
     }
@@ -318,27 +313,26 @@ extension EstablishedCarChannel: MessageStreamDelegate {
     case .clientMessage:
       handleClientMessage(message, from: params.recipient)
     case .queryResponse:
-      Self.logger.debug.log("Received query response for recipient with UUID \(params.recipient)")
+      Self.log.debug("Received query response for recipient with UUID \(params.recipient)")
       handleQueryResponse(message)
     case .query:
-      Self.logger.debug.log("Received query for recipient with UUID \(params.recipient)")
+      Self.log.debug("Received query for recipient with UUID \(params.recipient)")
       handleQuery(message, for: params.recipient)
     default:
-      Self.logger.error.log(
+      Self.log.error(
         "Received message of unexpected operation type: \(params.operationType). Ignoring")
     }
   }
 
   private func handleClientMessage(_ message: Data, from recipient: UUID) {
     if let observationUUID = messageRecipientToObservations[recipient] {
-      Self.logger.debug.log(
-        "Received client message. Passing onto feature with UUID \(recipient)")
+      Self.log.debug("Received client message. Passing onto feature with UUID \(recipient)")
 
       receivedMessageObservations[observationUUID]?(self, message)
       return
     }
 
-    Self.logger.log(
+    Self.log(
       "Received client message for \(recipient), but no registered observer. Saving message.")
 
     if missedMessagesForRecipients[recipient] == nil {
@@ -350,12 +344,12 @@ extension EstablishedCarChannel: MessageStreamDelegate {
 
   private func handleQueryResponse(_ message: Data) {
     guard let query = try? QueryResponseProto(serializedData: message) else {
-      Self.logger.error.log("Received query response but unable to parse. Ignoring.")
+      Self.log.error("Received query response but unable to parse. Ignoring.")
       return
     }
 
     guard let responseHandler = queryResponseHandlers.removeValue(forKey: query.queryID) else {
-      Self.logger.error.log(
+      Self.log.error(
         """
         Unexpected. Received query response with id \(query.queryID), \
         but no callback registered. Ignoring.
@@ -369,7 +363,7 @@ extension EstablishedCarChannel: MessageStreamDelegate {
 
   private func handleQuery(_ message: Data, for recipient: UUID) {
     guard let query = try? QueryProto(serializedData: message) else {
-      Self.logger.error.log("Received query but unable to parse. Ignoring.")
+      Self.log.error("Received query but unable to parse. Ignoring.")
       return
     }
 
@@ -380,7 +374,7 @@ extension EstablishedCarChannel: MessageStreamDelegate {
       return
     }
 
-    Self.logger.error.log(
+    Self.log.error(
       "Received query for recipient \(recipient) but no registered observation. Saving query")
 
     if missedQueriesForRecipients[recipient] == nil {
@@ -398,7 +392,7 @@ extension EstablishedCarChannel: MessageStreamDelegate {
     guard !writeCompletionHandlers.isEmpty else {
       assertionFailure("No completion handler to call after a successful message write.")
 
-      Self.logger.fault.log(
+      Self.log.fault(
         "Unexpected. No completion handler able to call after a successful message write.")
       return
     }
@@ -408,8 +402,7 @@ extension EstablishedCarChannel: MessageStreamDelegate {
   }
 
   public func messageStreamEncounteredUnrecoverableError(_ messageStream: MessageStream) {
-    Self.logger.error.log(
-      "Underlying BLEMessageStream encountered unrecoverable error. Disconnecting.")
+    Self.log.error("Underlying BLEMessageStream encountered unrecoverable error. Disconnecting.")
     connectionHandle.disconnect(messageStream)
   }
 }

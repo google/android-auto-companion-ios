@@ -18,13 +18,13 @@ import AndroidAutoCoreBluetoothProtocolsMocks
 import AndroidAutoSecureChannel
 import CoreBluetooth
 import XCTest
-import AndroidAutoCompanionProtos
+@_implementationOnly import AndroidAutoCompanionProtos
 
 @testable import AndroidAutoConnectedDeviceManager
 @testable import AndroidAutoMessageStream
 
 /// Unit tests for AssociationMessageHelperV4.
-@available(iOS 10.0, watchOS 6.0, *)
+@available(watchOS 6.0, *)
 class AssociationMessageHelperV4Test: XCTestCase {
   private typealias VerificationCodeState = Com_Google_Companionprotos_VerificationCodeState
   private typealias VerificationCode = Com_Google_Companionprotos_VerificationCode

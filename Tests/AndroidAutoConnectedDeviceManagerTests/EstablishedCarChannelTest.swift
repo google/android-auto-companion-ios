@@ -22,7 +22,6 @@ import XCTest
 @testable import AndroidAutoConnectedDeviceManager
 
 /// Unit tests for `EstablishedCarChannel`.
-@available(iOS 10.0, *)
 class EstablishedCarChannelTest: XCTestCase {
   private let carId = "carId"
   private let car = PeripheralMock(name: "carName")

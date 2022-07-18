@@ -31,7 +31,7 @@ public protocol TransportSessionDelegate: AnyObject {
 public class TransportSession<Provider: TransportPeripheralProvider> {
   public typealias Peripheral = Provider.Peripheral
 
-  private let logger = Logger(for: TransportSession.self)
+  private let log = Logger(for: TransportSession.self)
 
   /// Monitor for peripheral discovery.
   private var peripheralDiscoveryMonitor: PeripheralActivityMonitor?

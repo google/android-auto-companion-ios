@@ -29,7 +29,7 @@ protocol AppNameProvider {
 
 /// A feature manager that is responsible to responding to device level queries.
 class SystemFeatureManager: FeatureManager {
-  private static let logger = Logger(for: SystemFeatureManager.self)
+  private static let log = Logger(for: SystemFeatureManager.self)
 
   static let recipientUUID = UUID(uuidString: "892ac5d9-e9a5-48dc-874a-c01e3cb00d5d")!
 
@@ -64,16 +64,16 @@ class SystemFeatureManager: FeatureManager {
     responseHandle: QueryResponseHandle
   ) {
     guard let systemQuery = try? SystemQuery(serializedData: query.request) else {
-      Self.logger.error.log("Received query from car \(car) but unable to parse. Ignoring.")
+      Self.log.error("Received query from car \(car) but unable to parse. Ignoring.")
       return
     }
 
-    Self.logger.debug.log("Received query from car \(car).")
+    Self.log.debug("Received query from car \(car).")
 
     do {
       try respondToQueryMessage(systemQuery, from: car, responseHandle: responseHandle)
     } catch {
-      Self.logger.error.log("Could not send response to car: \(error.localizedDescription)")
+      Self.log.error("Could not send response to car: \(error.localizedDescription)")
     }
   }
 
@@ -85,15 +85,15 @@ class SystemFeatureManager: FeatureManager {
     switch systemQuery.type {
     case SystemQueryType.deviceName:
       let deviceName = nameProvider.name
-      Self.logger.log("Received device name query. Responding with \(deviceName)")
+      Self.log("Received device name query. Responding with \(deviceName)")
       try responseHandle.respond(with: Data(deviceName.utf8), isSuccessful: true)
 
     case SystemQueryType.appName:
       if let appName = appNameProvider.appName {
-        Self.logger.log("Received app name query. Responding with \(appName)")
+        Self.log("Received app name query. Responding with \(appName)")
         try responseHandle.respond(with: Data(appName.utf8), isSuccessful: true)
       } else {
-        Self.logger.error.log(
+        Self.log.error(
           """
           Received app name query but unable to retrieve name. \
           Sending unsuccessful query response.
@@ -103,7 +103,7 @@ class SystemFeatureManager: FeatureManager {
       }
 
     default:
-      Self.logger.error.log(
+      Self.log.error(
         """
         Received query from \(car) of unknown type \(systemQuery.type). \
         Sending unsuccessful query response.
@@ -126,10 +126,10 @@ extension SystemFeatureManager: ChannelFeatureProvider {
       systemQuery.type = .userRole
       let systemQueryData = try systemQuery.serializedData()
       let query = Query(request: systemQueryData, parameters: nil)
-      Self.logger.log("Sending system query for user role.")
+      Self.log("Sending system query for user role.")
       try channel.sendQuery(query, to: Self.recipientUUID) { queryResponse in
         guard queryResponse.isSuccessful else {
-          Self.logger.error.log("Query response for user role failed.")
+          Self.log.error("Query response for user role failed.")
           completion(nil)
           return
         }
@@ -142,7 +142,7 @@ extension SystemFeatureManager: ChannelFeatureProvider {
         completion(UserRole(response.role))
       }
     } catch {
-      Self.logger.error.log("Error sending user role query: \(error.localizedDescription)")
+      Self.log.error("Error sending user role query: \(error.localizedDescription)")
       completion(nil)
     }
   }

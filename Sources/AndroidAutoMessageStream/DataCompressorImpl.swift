@@ -22,7 +22,6 @@ import Foundation
 ///
 /// See: https://developer.apple.com/documentation/accelerate/compressing_and_decompressing_data_with_buffer_compression
 ///
-@available(iOS 10.0, *)
 struct DataCompressorImpl: DataCompressor {
   /// `DataCompressor` using the ZLIB compression algorithm for raw compressed bytes plus
   /// annotated with a header and checksum.
@@ -124,7 +123,6 @@ struct DataCompressorImpl: DataCompressor {
 }
 
 /// Some algorithms (e.g. ZLIB) have optional annotations for the compressed data.
-@available(iOS 10.0, *)
 private protocol DataAnnotator {
   /// Annotate the compressed data.
   func annotate(compressed: inout Data, input: Data)
@@ -134,7 +132,6 @@ private protocol DataAnnotator {
 }
 
 /// Extension for ZLIB constants and operations.
-@available(iOS 10.0, *)
 extension DataCompressorImpl {
   private struct ZlibAnnotator: DataAnnotator {
     /// Header for the zlib annotated compressed data.

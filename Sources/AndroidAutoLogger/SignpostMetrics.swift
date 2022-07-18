@@ -15,162 +15,147 @@
 import Foundation
 import os.log
 
-#if os(iOS) || os(watchOS)
+#if canImport(MetricKit)
+  import MetricKit
+#endif
 
-  #if canImport(MetricKit)
-    import MetricKit
-  #endif
+/// Signpost metric handler providing the internal implementation for a signpost.
+///
+/// This protocol is only intended for private use, but is marked internal here to accommodate
+/// unit testing.
+@available(macOS 12.0, *)
+protocol SignpostMetricsHandler {
+  /// Indicates whether this handler is valid for posting metrics.
+  var isValid: Bool { get }
 
-  /// Signpost metric handler providing the internal implementation for a signpost.
+  /// Create a handler with the specified category.
   ///
-  /// This protocol is only intended for private use, but is marked internal here to accommodate
-  /// unit testing.
-  @available(iOS 10, macOS 12.0, *)
-  protocol SignpostMetricsHandler {
-    /// Indicates whether this handler is valid for posting metrics.
-    var isValid: Bool { get }
+  /// - Parameter category: Name of the category for the custom metric.
+  init(category: String)
 
-    /// Create a handler with the specified category.
-    ///
-    /// - Parameter category: Name of the category for the custom metric.
-    init(category: String)
-
-    /// Post the signpost marker for metrics aggregation if supported.
-    ///
-    /// For the system handler if available on the current system, post the signpost metric using
-    /// `MetricKit` for on-device aggregation.
-    ///
-    /// See https://developer.apple.com/documentation/metrickit/3214364-mxsignpost
-    ///
-    /// If it's an unsupported handler, errors will be logged.
-    ///
-    /// - Parameters:
-    ///   - marker: Signpost marker to post.
-    ///   - dso: Do not specify as the value is automatically assigned internally.
-    func post(_ marker: SignpostMarker, dso: UnsafeRawPointer)
-  }
-
-  /// Wrapper for the signpost metrics that checks for `MetricKit` support on the current system and
-  /// provides a fallback that logs error messages if not.
+  /// Post the signpost marker for metrics aggregation if supported.
   ///
-  /// An instance represents a single category and role used for posting named signposts.
-  @available(iOS 10, macOS 12.0, *)
-  public struct SignpostMetrics {
-    /// Indicates whether signpost metric logging is available on the current system.
-    public static let isSystemSupported: Bool = {
-      #if canImport(MetricKit)
-        if #available(iOS 13, macOS 12.0, *) {
-          return true
-        } else {
-          return false
-        }
-      #else
-        return false
-      #endif
-    }()
+  /// For the system handler if available on the current system, post the signpost metric using
+  /// `MetricKit` for on-device aggregation.
+  ///
+  /// See https://developer.apple.com/documentation/metrickit/3214364-mxsignpost
+  ///
+  /// If it's an unsupported handler, errors will be logged.
+  ///
+  /// - Parameters:
+  ///   - marker: Signpost marker to post.
+  ///   - dso: Do not specify as the value is automatically assigned internally.
+  func post(_ marker: SignpostMarker, dso: UnsafeRawPointer)
+}
 
-    /// Handler providing the internal implementation.
-    private let handler: SignpostMetricsHandler
-
-    /// Creates a new signpost metric with the specified category.
-    ///
-    /// - Parameter category: Category for the new signpost metrics.
-    public init(category: String) {
-      #if canImport(MetricKit) && os(iOS)
-        if #available(iOS 13, *) {
-          handler = SystemSignpostMetrics(category: category)
-        } else {
-          handler = UnavailableSignpostMetrics(category: category)
-        }
-      #else
-        handler = UnavailableSignpostMetrics(category: category)
-      #endif
-    }
-
-    init(handler: SignpostMetricsHandler) {
-      self.handler = handler
-    }
-
-    /// Post the signpost metric using `MetricKit` if it's available on the current system.
-    ///
-    /// Errors will be logged if the system doesn't support `MetricKit`.
-    ///
-    /// See https://developer.apple.com/documentation/metrickit/3214364-mxsignpost
-    ///
-    /// - Parameters:
-    ///   - marker: Marker to post.
-    ///   - dso: Do not specify as the value is automatically assigned internally.
-    public func post(_ marker: SignpostMarker, dso: UnsafeRawPointer = #dsohandle) {
-      handler.post(marker, dso: dso)
-    }
-
-    /// Post the signpost metric if the system supports it, otherwise it's a no-op.
-    ///
-    /// See https://developer.apple.com/documentation/metrickit/3214364-mxsignpost
-    /// - Parameters:
-    ///   - marker: Marker to post.
-    ///   - dso: Do not specify as the value is automatically assigned internally.
-    public func postIfAvailable(_ marker: SignpostMarker, dso: UnsafeRawPointer = #dsohandle) {
-      if handler.isValid {
-        post(marker, dso: dso)
-      }
-    }
-  }
-
-  #if canImport(MetricKit)
-    /// Signpost Metrics handler implemented using `MetricKit`.
-    #if os(iOS)
-      @available(iOS 13, *)
-      private struct SystemSignpostMetrics: SignpostMetricsHandler {
-        private let logHandle: OSLog
-
-        var isValid: Bool { true }
-
-        fileprivate init(category: String) {
-          logHandle = MXMetricManager.makeLogHandle(category: category)
-        }
-
-        fileprivate func post(_ marker: SignpostMarker, dso: UnsafeRawPointer = #dsohandle) {
-          mxSignpost(marker.role.systemType, dso: dso, log: logHandle, name: marker.name)
-        }
-      }
+/// Wrapper for the signpost metrics that checks for `MetricKit` support on the current system and
+/// provides a fallback that logs error messages if not.
+///
+/// An instance represents a single category and role used for posting named signposts.
+@available(macOS 12.0, *)
+public struct SignpostMetrics {
+  /// Indicates whether signpost metric logging is available on the current system.
+  public static let isSystemSupported: Bool = {
+    #if canImport(MetricKit)
+      return true
+    #else
+      return false
     #endif
+  }()
 
-    // MARK: - Role Conversions
+  /// Handler providing the internal implementation.
+  private let handler: SignpostMetricsHandler
 
-    @available(iOS 13, *)
-    extension SignpostMarker.Role {
-      /// Convert the role to the corresponding `OSSignpostType`.
-      fileprivate var systemType: OSSignpostType {
-        switch self {
-        case .event: return .event
-        case .begin: return .begin
-        case .end: return .end
-        }
+  /// Creates a new signpost metric with the specified category.
+  ///
+  /// - Parameter category: Category for the new signpost metrics.
+  public init(category: String) {
+    #if canImport(MetricKit) && os(iOS)
+      handler = SystemSignpostMetrics(category: category)
+    #else
+      handler = UnavailableSignpostMetrics(category: category)
+    #endif
+  }
+
+  init(handler: SignpostMetricsHandler) {
+    self.handler = handler
+  }
+
+  /// Post the signpost metric using `MetricKit` if it's available on the current system.
+  ///
+  /// Errors will be logged if the system doesn't support `MetricKit`.
+  ///
+  /// See https://developer.apple.com/documentation/metrickit/3214364-mxsignpost
+  ///
+  /// - Parameters:
+  ///   - marker: Marker to post.
+  ///   - dso: Do not specify as the value is automatically assigned internally.
+  public func post(_ marker: SignpostMarker, dso: UnsafeRawPointer = #dsohandle) {
+    handler.post(marker, dso: dso)
+  }
+
+  /// Post the signpost metric if the system supports it, otherwise it's a no-op.
+  ///
+  /// See https://developer.apple.com/documentation/metrickit/3214364-mxsignpost
+  /// - Parameters:
+  ///   - marker: Marker to post.
+  ///   - dso: Do not specify as the value is automatically assigned internally.
+  public func postIfAvailable(_ marker: SignpostMarker, dso: UnsafeRawPointer = #dsohandle) {
+    if handler.isValid {
+      post(marker, dso: dso)
+    }
+  }
+}
+
+#if canImport(MetricKit)
+  /// Signpost Metrics handler implemented using `MetricKit`.
+  #if os(iOS)
+    private struct SystemSignpostMetrics: SignpostMetricsHandler {
+      private let logHandle: OSLog
+
+      var isValid: Bool { true }
+
+      fileprivate init(category: String) {
+        logHandle = MXMetricManager.makeLogHandle(category: category)
+      }
+
+      fileprivate func post(_ marker: SignpostMarker, dso: UnsafeRawPointer = #dsohandle) {
+        mxSignpost(marker.role.systemType, dso: dso, log: logHandle, name: marker.name)
       }
     }
   #endif
 
-  /// Signpost Metrics handler implemented to support systems without `MetricKit`.
-  ///
-  /// Calling methods on this implementation do not log any metrics. Rather they provide a safe
-  /// implementation that simply logs errors for such attempts.
-  @available(iOS 10, macOS 12.0, *)
-  private struct UnavailableSignpostMetrics: SignpostMetricsHandler {
-    static let logger = Logger(for: UnavailableSignpostMetrics.self)
+  // MARK: - Role Conversions
 
-    /// Just a placeholder since no valid handler is available.
-    var isValid: Bool { false }
-
-    fileprivate init(category: String) {
-      Self.logger.error.log(
-        "Instantiating signpost metric for category: [\(category)] on unsupported platform.")
-    }
-
-    fileprivate func post(_ marker: SignpostMarker, dso: UnsafeRawPointer = #dsohandle) {
-      Self.logger.error.log(
-        "Attempt to post signpost metric: [\(marker.name)] on unsupported platform.")
+  extension SignpostMarker.Role {
+    /// Convert the role to the corresponding `OSSignpostType`.
+    fileprivate var systemType: OSSignpostType {
+      switch self {
+      case .event: return .event
+      case .begin: return .begin
+      case .end: return .end
+      }
     }
   }
+#endif
 
-#endif  // iOS or watchOS
+/// Signpost Metrics handler implemented to support systems without `MetricKit`.
+///
+/// Calling methods on this implementation do not log any metrics. Rather they provide a safe
+/// implementation that simply logs errors for such attempts.
+@available(macOS 12.0, *)
+private struct UnavailableSignpostMetrics: SignpostMetricsHandler {
+  static let log = Logger(for: UnavailableSignpostMetrics.self)
+
+  /// Just a placeholder since no valid handler is available.
+  var isValid: Bool { false }
+
+  fileprivate init(category: String) {
+    Self.log.error(
+      "Instantiating signpost metric for category: [\(category)] on unsupported platform.")
+  }
+
+  fileprivate func post(_ marker: SignpostMarker, dso: UnsafeRawPointer = #dsohandle) {
+    Self.log.error("Attempt to post signpost metric: [\(marker.name)] on unsupported platform.")
+  }
+}

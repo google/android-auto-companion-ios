@@ -16,7 +16,6 @@ import AndroidAutoLogger
 import XCTest
 
 /// Mock `PersistentLogStoreFactory`
-@available(iOS 10.0, *)
 public class MockLogStoreFactory: PersistentLogStoreFactory {
   public var makeStoreExpectation: XCTestExpectation?
 

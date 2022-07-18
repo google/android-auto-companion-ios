@@ -18,7 +18,6 @@ import os.log
 @testable import AndroidAutoLogger
 
 /// Unit tests for the `SystemLogHandler`.
-@available(iOS 10.0, *)
 class SystemLogHandlerTest: XCTestCase {
   public func testOSLogTypeConversions() {
     XCTAssertEqual(Logger.Level.debug.osLogType, OSLogType.debug)

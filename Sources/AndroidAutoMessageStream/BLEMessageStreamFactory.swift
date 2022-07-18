@@ -16,7 +16,6 @@ import AndroidAutoCoreBluetoothProtocols
 import Foundation
 
 /// Creator of different message streams.
-@available(iOS 10.0, *)
 public enum BLEMessageStreamFactory {
   /// Creates a message stream of the given version.
   ///

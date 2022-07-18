@@ -16,7 +16,6 @@ import CoreBluetooth
 import Foundation
 
 /// Factory for making the reconnection helpers.
-@available(iOS 10.0, *)
 protocol ReconnectionHelperFactory {
   /// Make a helper of the appropriate version depending on the advertisement.
   ///
@@ -38,7 +37,6 @@ protocol ReconnectionHelperFactory {
 }
 
 /// Factory for making reconnection helpers based on the advertisement.
-@available(iOS 10.0, *)
 struct ReconnectionHelperFactoryImpl: ReconnectionHelperFactory {
   /// Make a helper of the appropriate version depending on the advertisement.
   ///

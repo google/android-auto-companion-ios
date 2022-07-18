@@ -16,7 +16,7 @@ import AndroidAutoLogger
 import Foundation
 
 /// Type erasing out of band token provider.
-@available(iOS 10.0, watchOS 6.0, *)
+@available(watchOS 6.0, *)
 struct AnyOutOfBandTokenProvider: OutOfBandTokenProvider {
   /// Source provider whose type is erased.
   let source: OutOfBandTokenProvider
@@ -46,7 +46,7 @@ struct AnyOutOfBandTokenProvider: OutOfBandTokenProvider {
 
 // MARK: - CoalescingOutOfBandTokenProvider extension for AnyOutOfBandTokenProvider
 
-@available(iOS 10.0, watchOS 6.0, *)
+@available(watchOS 6.0, *)
 extension CoalescingOutOfBandTokenProvider where Provider == AnyOutOfBandTokenProvider {
   /// Register the provider by wrapping it within a type erasing token provider.
   ///

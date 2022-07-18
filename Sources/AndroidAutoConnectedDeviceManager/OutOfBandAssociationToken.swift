@@ -21,7 +21,6 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
   import CryptoKit
 
   /// Extensions for CryptoKit.
-  @available(iOS 13.0, *)
   extension OutOfBandAssociationToken {
     /// Nonce used for decrypting a message.
     private var decryptionNonce: AES.GCM.Nonce? {
@@ -45,10 +44,6 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     private static let tagSize = 16
 
     func encrypt(_ message: Data) throws -> Data {
-      guard #available(iOS 13.0, *) else {
-        throw OutOfBandTokenError.unsupportedPlatform
-      }
-
       guard let encryptionNonce = encryptionNonce else {
         throw OutOfBandTokenError.invalidNonce
       }
@@ -58,10 +53,6 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     }
 
     func decrypt(_ message: Data) throws -> Data {
-      guard #available(iOS 13.0, *) else {
-        throw OutOfBandTokenError.unsupportedPlatform
-      }
-
       guard let decryptionNonce = decryptionNonce else {
         throw OutOfBandTokenError.invalidNonce
       }

@@ -17,7 +17,6 @@ import CoreBluetooth
 import Foundation
 
 /// Protocol implemented by helpers which manage the reconnection handshake.
-@available(iOS 10.0, *)
 protocol ReconnectionHelper: AnyObject {
   /// The peripheral for which reconnection is being attempted.
   var peripheral: AnyPeripheral { get }

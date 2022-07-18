@@ -21,9 +21,8 @@ import Foundation
 
 /// Helper for handling `AssociationManager` message exchange allowing support for different
 /// versions of the association message exchange.
-@available(iOS 10.0, *)
 protocol AssociationMessageHelper {
-  static var logger: Logger { get }
+  static var log: Logger { get }
 
   /// Start the message exchange.
   func start()
@@ -52,7 +51,6 @@ protocol AssociationMessageHelper {
 }
 
 // MARK: - Common Methods
-@available(iOS 10.0, *)
 extension AssociationMessageHelper {
   static var handshakeMessageParams: MessageStreamParams {
     MessageStreamParams(recipient: Config.defaultRecipientUUID, operationType: .encryptionHandshake)
@@ -64,7 +62,7 @@ extension AssociationMessageHelper {
   /// - Throws: An error if the message does not meet the required form for a valid car Id.
   func extractCarId(fromMessage message: Data) throws -> String {
     let carId = try CBUUID(carId: message).uuidString
-    Self.logger.log("Received id from car: \(carId)")
+    Self.log("Received id from car: \(carId)")
     return carId
   }
 
@@ -76,7 +74,7 @@ extension AssociationMessageHelper {
   func isPairingCodeConfirmation(_ message: Data) -> Bool {
     let valueStr = String(data: message, encoding: .utf8)
     guard valueStr == AssociationManager.pairingCodeConfirmationValue else {
-      Self.logger.error.log(
+      Self.log.error(
         """
         Received wrong confirmation for pairing code. Expected \
         <\(AssociationManager.pairingCodeConfirmationValue)>, \
@@ -101,6 +99,6 @@ extension AssociationMessageHelper {
       params: Self.handshakeMessageParams
     )
 
-    Self.logger.log("Sending device id: <\(deviceId.uuidString)> plus authentication key.")
+    Self.log("Sending device id: <\(deviceId.uuidString)> plus authentication key.")
   }
 }

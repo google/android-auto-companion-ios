@@ -22,7 +22,6 @@ import XCTest
 @testable import AndroidAutoMessageStream
 
 /// Fake authenticator we can configure for testing the helper.
-@available(iOS 10.0, *)
 private struct CarAuthenticatorFake: CarAuthenticator {
   static var hmacWillMatchForChallenge: Bool = true
   static var match: CarAdvertisementMatch? = nil
@@ -51,7 +50,6 @@ private struct CarAuthenticatorFake: CarAuthenticator {
 }
 
 /// Unit tests for AssociationMessageHelperV1.
-@available(iOS 10.0, *)
 class ReconnectionHelperV2Test: XCTestCase {
   private var messageStreamMock: MessageStream!
   private var peripheralMock: PeripheralMock!

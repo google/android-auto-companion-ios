@@ -26,9 +26,8 @@ enum MessagePacketFactoryError: Error {
 }
 
 /// A creator of `MessagePacket`s.
-@available(iOS 10.0, *)
 enum MessagePacketFactory {
-  private static let logger = Logger(for: MessagePacketFactory.self)
+  private static let log = Logger(for: MessagePacketFactory.self)
 
   /// The size in bytes of a `fixed32` field in the proto.
   private static let fixed32Size = 4
@@ -102,7 +101,7 @@ enum MessagePacketFactory {
       packetPayload = try bleDeviceMessage.serializedData()
     } catch {
       // This error shouldn't happen because the device message should be properly formed.
-      Self.logger.error.log(
+      Self.log.error(
         "Unexpected, unable to serialize BLEDeviceMessage: \(error.localizedDescription)")
       throw MessagePacketFactoryError.cannotFormMessage
     }
@@ -189,7 +188,7 @@ enum MessagePacketFactory {
 
     // It shouldn't be possible to reach here. If it does, that means an `Int32` is not big enough
     // to encode the number of packets.
-    Self.logger.error.log(
+    Self.log.error(
       """
       The number of packets required is too large for an Int32 to encode. \
       Requires \(totalPackets) packets.
