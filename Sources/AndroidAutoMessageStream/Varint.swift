@@ -78,4 +78,52 @@ enum Varint {
     }
     return n
   }
+
+  /// Attempt to decode a `Varint` from the specified `BinaryDelimited` data.
+  ///
+  /// For `BinaryDelimited` data, the first few bytes are an encoded `Varint` which specifies the
+  /// size of the serialized data that follows it. The `Varint` itself has a variable size encoding
+  /// depending on the size of the subsequent data it measures.
+  ///
+  /// This method is useful for attempting to decode a `Varint` from incoming data which may be
+  /// incomplete for the `Varint` repesentation. The error will indicate if more data is needed.
+  ///
+  /// Based on google3/third_party/swift/swift_protobuf/Sources/SwiftProtobuf/BinaryDelimited.swift
+  /// Specifically, see the decodeVarint(:InputStream) implementation.
+  ///
+  /// - Parameter data: The data with the leading `Varint`.
+  /// - Returns: The number of bytes for the `Varint` itself and the size of data it measures.
+  /// - Throws: A DecodingError if either more data is needed or the data is malformed.
+  static func decodeFirstVarint(from data: Data) throws -> (numRead: Int, size: Int) {
+    var value: UInt64 = 0
+    var shift: UInt64 = 0
+    var numRead = 0
+    for byte in data {
+      numRead += 1
+      value |= UInt64(byte & 0x7f) << shift
+      if byte & 0x80 == 0 {
+        return (numRead: numRead, size: Int(value))
+      }
+      shift += 7
+      if shift > 63 {
+        throw DecodingError.malformedData
+      }
+    }
+
+    // More data is needed to form a valid Varint.
+    throw DecodingError.incompleteData
+  }
+}
+
+// MARK: - Varint.DecodingError
+
+extension Varint {
+  /// Error when decoding a `Varint`.
+  enum DecodingError: Error, Equatable {
+    /// More data is needed to complete the `Varint` representation.
+    case incompleteData
+
+    /// The data is incompatible with a `Varint` representation.
+    case malformedData
+  }
 }

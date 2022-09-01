@@ -1,20 +1,26 @@
 # Android Auto Companion Library
 
-Library that will abstract away the process of associating a phone with an
-Android Auto head unit. Once associated, a device will gain the ability to
-unlock the head unit via BLE.
+Library that abstracts away the process of associating a phone with an Android
+Auto head unit. Once associated, a device will gain the ability to unlock the
+head unit via BLE.
+
+Please see the [reference app](https://github.com/google/android-auto-companion-app)
+for an example usage.
+
+When linking these libraries with your build target, you must also link the
+libc++ library.
 
 ## AndroidAutoConnectedDeviceManager
 
 The main library that supplies the ability to associate and connect to an
 Android Auto vehicle. Full usage instructions, can be found on the
-[Phone SDK Integration Guide](https://docs.partner.android.com/automotive/integrate/companion_app/cd_phone_sdk).
+[Phone SDK Integration Guide](https://docs.partner.android.com/gas/integrate/companion_app/cd_phone_sdk).
 
-### AndroidAutoUKey2Wrapper
+## AndroidAutoUKey2Wrapper
 
 This helper library wraps the [ukey2](https://github.com/google/ukey2) library.
-It is included as a prebuilt `.xcframework` file in order to allow for
-easier compilation via Swift Package Manager.
+It is included as a prebuilt `.xcframework` file to allow for easier
+compilation via Swift Package Manager.
 
 ## Message Stream Module
 
