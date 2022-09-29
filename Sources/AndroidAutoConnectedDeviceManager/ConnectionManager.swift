@@ -133,7 +133,7 @@ private enum ConnectionManagerSignposts {
 
 extension BuildNumber {
   /// The version of this SDK.
-  fileprivate static let sdkVersion = BuildNumber(major: 2, minor: 0, patch: 2)
+  fileprivate static let sdkVersion = BuildNumber(major: 2, minor: 0, patch: 3)
 }
 
 /// Holds all the necessary information to try a reconnection for a `Peripheral`.
