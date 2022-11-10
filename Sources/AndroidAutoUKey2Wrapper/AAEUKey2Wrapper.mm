@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #import "AAEUKey2Wrapper.h"
+#import <os/log.h>
 
 #include "security/cryptauth/lib/securegcm/ukey2_handshake.h"
 
@@ -39,6 +40,12 @@ static string CPPStringFromData(const NSData *data) {
   return string(static_cast<const char *>([data bytes]), [data length]);
 }
 
+#define CREATE_UKEY2_LOGGER() os_log_create("AndroidAutoUKey2Wrapper", "AAEUKey2Wrapper")
+
+@interface AAEUKey2Wrapper ()
+@property(nonnull, nonatomic, readonly) os_log_t logger;
+@end
+
 @implementation AAEUKey2Wrapper {
   std::unique_ptr<securegcm::UKey2Handshake> _handshake;
   std::unique_ptr<securegcm::D2DConnectionContextV1> _context;
@@ -51,6 +58,7 @@ static string CPPStringFromData(const NSData *data) {
     return nil;
   }
 
+  _logger = CREATE_UKEY2_LOGGER();
   _context = securegcm::D2DConnectionContextV1::FromSavedSession(CPPStringFromData(savedSession));
 
   if (!_context) {
@@ -63,6 +71,8 @@ static string CPPStringFromData(const NSData *data) {
 - (instancetype)initWithRole:(AAERole)role {
   self = [super init];
   if (self) {
+    _logger = CREATE_UKEY2_LOGGER();
+
     if (role == AAERoleResponder) {
       _handshake = securegcm::UKey2Handshake::ForResponder(
           securegcm::UKey2Handshake::HandshakeCipher::P256_SHA512);
@@ -159,6 +169,7 @@ static string CPPStringFromData(const NSData *data) {
 
 - (NSData *)encodeMessage:(NSData *)message {
   if (![self ensureConnectionContext]) {
+    os_log_error(self.logger, "Message encoding failed due to missing connection context.");
     return nil;
   }
 
@@ -167,14 +178,28 @@ static string CPPStringFromData(const NSData *data) {
 
 - (NSData *)decodeMessage:(NSData *)message {
   if (![self ensureConnectionContext]) {
+    os_log_error(self.logger, "Message decoding failed due to missing connection context.");
     return nil;
   }
 
-  return DataFromString(_context->DecodeMessageFromPeer(CPPStringFromData(message)));
+  string rawMessage = CPPStringFromData(message);
+  std::unique_ptr<std::string> decodedMessage = _context->DecodeMessageFromPeer(rawMessage);
+  if (decodedMessage) {
+    return DataFromString(decodedMessage);
+  } else {
+    NSString *reason = [self lastHandshakeError];
+    if (reason && [reason length] > 0) {
+      os_log_error(self.logger, "Message decoding failed with handshake error: %@", reason);
+    } else {
+      os_log_error(self.logger, "Message decoding failed.");
+    }
+    return nil;
+  }
 }
 
 - (NSData *)saveSession {
   if (![self ensureConnectionContext]) {
+    os_log_error(self.logger, "Saving session failed due to missing connection context.");
     return nil;
   }
 

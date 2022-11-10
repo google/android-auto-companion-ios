@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoMessageStream
-import AndroidAutoLogger
 import AndroidAutoConnectedDeviceTransport
 import AndroidAutoConnectedDeviceTransportFakes
+import AndroidAutoLogger
+import AndroidAutoMessageStream
 import Foundation
 
 /// A message stream that stores any messages to be written in a local list for assertion.
@@ -29,6 +29,8 @@ class FakeMessageStream: NSObject, MessageStream {
 
   public let peripheral: AnyTransportPeripheral
   public let version: MessageStreamVersion
+
+  public var isValid: Bool { true }
 
   var readingDebugDescription = ""
   var writingDebugDescription = ""

@@ -38,7 +38,7 @@ public class BLEMessageStreamFake: BLEMessageStream {
   /// Messages that have been written via a call to `writeEncryptedMessage(_:params:)`
   public var writtenEncryptedMessages: [WrittenMessage] = []
 
-  private var isValid: Bool {
+  public var isValid: Bool {
     return peripheral.state == .connected
   }
 

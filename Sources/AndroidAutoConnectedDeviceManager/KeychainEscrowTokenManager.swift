@@ -105,7 +105,11 @@ class KeychainEscrowTokenManager: NSObject, EscrowTokenManager {
     )
 
     guard status == errSecSuccess else {
-      Self.log.error("Unable to retrieve generated escrow token; err: \(status)")
+      if status == errSecItemNotFound {
+        Self.log("No escrow token found.")
+      } else {
+        Self.log.error("Unable to retrieve generated escrow token; err: \(status)")
+      }
       return nil
     }
 

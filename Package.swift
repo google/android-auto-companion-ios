@@ -1,4 +1,4 @@
-// swift-tools-version:5.3
+// swift-tools-version:5.7
 
 // Copyright 2021 Google LLC
 //
@@ -30,10 +30,7 @@ let package = Package(
       targets: ["AndroidAutoConnectedDeviceManagerMocks"]),
   ],
   dependencies: [
-    .package(
-      name: "SwiftProtobuf",
-      url: "https://github.com/apple/swift-protobuf.git",
-      from: "1.18.0")
+    .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.20.0")
   ],
   targets: [
     .binaryTarget(
@@ -47,10 +44,15 @@ let package = Package(
       dependencies: ["AndroidAutoConnectedDeviceTransport"]),
     .target(
       name: "AndroidAutoCompanionProtos",
-      dependencies: ["SwiftProtobuf"]),
+      dependencies: [.product(name: "SwiftProtobuf", package: "swift-protobuf")],
+      plugins: [.plugin(name: "ProtoSourceGenerator")]
+
+    ),
     .target(
       name: "AndroidAutoTrustAgentProtos",
-      dependencies: ["SwiftProtobuf"]),
+      dependencies: [.product(name: "SwiftProtobuf", package: "swift-protobuf")],
+      plugins: [.plugin(name: "ProtoSourceGenerator")]
+    ),
     .target(
       name: "AndroidAutoMessageStream",
       dependencies: [
@@ -58,8 +60,9 @@ let package = Package(
         "AndroidAutoConnectedDeviceTransport",
         "AndroidAutoCoreBluetoothProtocols",
         "AndroidAutoLogger",
-        "SwiftProtobuf",
-      ]),
+        .product(name: "SwiftProtobuf", package: "swift-protobuf"),
+      ]
+    ),
     .target(
       name: "AndroidAutoSecureChannel",
       dependencies: [
@@ -74,7 +77,9 @@ let package = Package(
         "AndroidAutoMessageStream",
         "AndroidAutoSecureChannel",
         "AndroidAutoTrustAgentProtos",
-      ]),
+      ]
+    ),
+    .plugin(name: "ProtoSourceGenerator", capability: .buildTool()),
     .target(
       name: "AndroidAutoConnectedDeviceManagerMocks",
       dependencies: [

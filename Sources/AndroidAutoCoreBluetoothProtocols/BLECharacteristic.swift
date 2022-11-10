@@ -22,4 +22,7 @@ public protocol BLECharacteristic: AnyObject {
 
   /// The value of this characteristic.
   var value: Data? { get }
+
+  /// UUID of the characteristic's service.
+  var serviceUUID: String? { get }
 }

@@ -133,7 +133,7 @@ private enum ConnectionManagerSignposts {
 
 extension BuildNumber {
   /// The version of this SDK.
-  fileprivate static let sdkVersion = BuildNumber(major: 2, minor: 0, patch: 3)
+  fileprivate static let sdkVersion = BuildNumber(major: 2, minor: 0, patch: 5)
 }
 
 /// Holds all the necessary information to try a reconnection for a `Peripheral`.
@@ -821,13 +821,20 @@ where CentralManager: SomeCentralManager {
   /// If it does, then this manager will disconnect from the given `Car` as messages are no longer
   /// able to be sent and received.
   fileprivate func inspectServices(_ invalidatedServices: [BLEService], on car: Car) {
-    log("Received notification that car (\(car.logName)) has modified its services")
+    log("Car (\(car.logName)) has invalidated services: \(invalidatedServices.map{$0.uuid})")
 
-    // If the services this manager cares about is now invalidated, then disconnect.
-    if invalidatedServices.contains(where: { $0.uuid == associationConfig.associationUUID }) {
+    if let serviceID = invalidatedServices.lazy.map({ $0.uuid.uuidString }).first(where: {
+      if $0 == associationConfig.associationUUID.uuidString {
+        return true
+      } else if areAnySecuredCarChannelsInvalid(car) {
+        return true
+      } else {
+        return false
+      }
+    }) {
       log(
         """
-        Required service \(associationConfig.associationUUID) invalidated for car \
+        Required service \(serviceID) invalidated for car \
         (\(car.logName)). Disconnecting if currently connected.
         """
       )
@@ -836,11 +843,20 @@ where CentralManager: SomeCentralManager {
     }
   }
 
+  /// Determines whether the specified car's secured channels are valid.
+  private func areAnySecuredCarChannelsInvalid(_ car: Car) -> Bool {
+    securedChannels.filter { $0.car.id == car.id }.lazy
+      .contains {
+        return !$0.isValid
+      }
+  }
+
   /// Attempts to disconnect the given car if it is currently connected.
   private func disconnect(_ car: Car) {
     let connectedChannels = securedChannels.filter { $0.car.id == car.id }
     connectedChannels.forEach { channel in
       if let peripheral = peripheral(from: channel) {
+        log("peripheral state: \(peripheral.state)")
         disconnect(peripheral)
       }
     }

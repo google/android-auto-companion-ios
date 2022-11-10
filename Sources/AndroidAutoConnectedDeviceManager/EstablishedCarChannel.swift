@@ -79,7 +79,7 @@ class EstablishedCarChannel: NSObject, SecuredCarChannelPeripheral {
   }
 
   public var isValid: Bool {
-    return messageStream.peripheral.isConnected
+    return messageStream.peripheral.isConnected && messageStream.isValid
   }
 
   /// Initializes this channel with a stream that already has encryption established and is

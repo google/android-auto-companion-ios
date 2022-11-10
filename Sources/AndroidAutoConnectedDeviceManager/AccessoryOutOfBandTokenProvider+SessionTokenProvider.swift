@@ -73,6 +73,7 @@
       /// This session will no longer be usable once invalidated.
       func invalidate() {
         Self.log.info("Invalidating session.")
+        accessory?.delegate = nil
         reader.invalidate()
         // Close the output stream for proper cleanup even though we never directly open it.
         session.outputStream?.close()

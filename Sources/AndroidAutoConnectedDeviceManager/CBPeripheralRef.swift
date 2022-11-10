@@ -23,6 +23,8 @@ class CBPeripheralRef: NSObject, BLEPeripheral {
 
   let peripheral: CBPeripheral
 
+  private var invalidatedServiceIDs: Set<String> = []
+
   weak var delegate: BLEPeripheralDelegate?
 
   var identifier: UUID {
@@ -60,6 +62,10 @@ class CBPeripheralRef: NSObject, BLEPeripheral {
     self.peripheral = peripheral
     super.init()
     peripheral.delegate = self
+  }
+
+  func isServiceInvalidated(uuids: Set<String>) -> Bool {
+    !invalidatedServiceIDs.isDisjoint(with: uuids)
   }
 
   func observeServiceModifications(
@@ -134,7 +140,9 @@ extension CBPeripheralRef: CBPeripheralDelegate {
     _ peripheral: CBPeripheral,
     didModifyServices invalidatedServices: [CBService]
   ) {
-    serviceObserver?(self, invalidatedServices.map { CBServiceWrapper(service: $0) })
+    let invalidatedServiceWrappers = invalidatedServices.map { CBServiceWrapper(service: $0) }
+    invalidatedServiceIDs.formUnion(invalidatedServiceWrappers.map { $0.uuid.uuidString })
+    serviceObserver?(self, invalidatedServiceWrappers)
   }
 }
 

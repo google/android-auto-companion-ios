@@ -80,7 +80,7 @@ class UKey2Channel: SecureBLEChannel {
   /// used to create HMACs to the phone.
   private var combinedSessionKey: Data?
 
-  var messageStream: MessageStream?
+  private(set) var messageStream: MessageStream?
 
   /// The state of the secure channel.
   private(set) var state: SecureBLEChannelState = .uninitialized
@@ -428,10 +428,12 @@ extension UKey2Channel: MessageEncryptor {
   /// - Throws: An error if the encryption of the message failed.
   func encrypt(_ message: Data) throws -> Data {
     guard state == .established else {
+      Self.log.error("Encryption error caused by out of order method call.")
       throw SecureBLEChannelError.methodCalledOutOfOrder
     }
 
     guard let encryptedMessage = ukey2.encode(message) else {
+      Self.log.error("Encryption error caused by message encoding failure.")
       throw SecureBLEChannelError.encryptionFailed
     }
 
@@ -451,10 +453,12 @@ extension UKey2Channel: MessageEncryptor {
   /// - Throws: An error if the decryption of the message failed.
   func decrypt(_ message: Data) throws -> Data {
     guard state == .established else {
+      Self.log.error("Decryption error caused by out of order method call.")
       throw SecureBLEChannelError.methodCalledOutOfOrder
     }
 
     guard let decryptedMessage = ukey2.decode(message) else {
+      Self.log.error("Decryption error caused by message decoding failure.")
       throw SecureBLEChannelError.decryptionFailed
     }
 

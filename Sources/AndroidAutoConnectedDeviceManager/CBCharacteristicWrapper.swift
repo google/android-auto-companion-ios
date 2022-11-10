@@ -32,6 +32,8 @@ class CBCharacteristicWrapper: BLECharacteristic {
     return characteristic.uuid
   }
 
+  var serviceUUID: String? { characteristic.service?.uuid.uuidString }
+
   var value: Data? {
     return characteristic.value
   }

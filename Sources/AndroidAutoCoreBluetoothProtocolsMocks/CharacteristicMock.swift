@@ -20,6 +20,7 @@ import Foundation
 public class CharacteristicMock: NSObject, BLECharacteristic {
   public let uuid: CBUUID
   public var value: Data?
+  public var serviceUUID: String? { nil }
 
   public init(uuid: CBUUID, value: Data?) {
     self.uuid = uuid

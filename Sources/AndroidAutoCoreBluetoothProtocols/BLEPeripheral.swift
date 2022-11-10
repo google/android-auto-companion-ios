@@ -82,6 +82,12 @@ public protocol BLEPeripheral: AnyTransportPeripheral {
   /// The maximum length in bytes that can be written per message for this peripheral.
   var maximumWriteValueLength: Int { get }
 
+  /// Determine whether the peripheral contains an invalidated service.
+  ///
+  /// - Parameter uuids: The UUIDs of the services to check.
+  /// - Returns: `true` if any specified service is invalidated.
+  func isServiceInvalidated(uuids: Set<String>) -> Bool
+
   /// Registers the `observation` to be called when this peripheral has modified its
   /// services.
   ///

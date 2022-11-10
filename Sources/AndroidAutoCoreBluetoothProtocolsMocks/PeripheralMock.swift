@@ -37,6 +37,7 @@ public class PeripheralMock: NSObject, BLEPeripheral {
   public var discoverServicesCalled = false
 
   public var serviceUUIDs: [CBUUID]?
+  public var invalidatedServiceIDs: Set<String> = []
 
   public var discoverCharacteristicsCalled = false
   public var characteristicUUIDs: [CBUUID]?
@@ -67,8 +68,13 @@ public class PeripheralMock: NSObject, BLEPeripheral {
     self.init(name: name, services: nil)
   }
 
+  public func isServiceInvalidated(uuids: Set<String>) -> Bool {
+    !invalidatedServiceIDs.isDisjoint(with: uuids)
+  }
+
   /// Simulates an event where the peripheral's services has changed.
   public func triggerServiceModification(invalidatedServices: [BLEService]) {
+    invalidatedServiceIDs.formUnion(invalidatedServices.map { $0.uuid.uuidString })
     serviceObserver?(self, invalidatedServices)
   }
 

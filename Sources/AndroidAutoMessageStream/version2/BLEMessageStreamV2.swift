@@ -127,6 +127,14 @@ class BLEMessageStreamV2: NSObject {
   public let readCharacteristic: BLECharacteristic
   public let writeCharacteristic: BLECharacteristic
 
+  /// Determine whether this stream is still valid for reading and writing.
+  var isValid: Bool {
+    guard let readServiceUUID = readCharacteristic.serviceUUID else { return false }
+    guard let writeServiceUUID = writeCharacteristic.serviceUUID else { return false }
+
+    return !peripheral.isServiceInvalidated(uuids: [readServiceUUID, writeServiceUUID])
+  }
+
   /// The encryptor responsible for encrypting and decrypting messages.
   public var messageEncryptor: MessageEncryptor?
 
@@ -379,7 +387,8 @@ class BLEMessageStreamV2: NSObject {
       do {
         payload = try decryptMessage(deviceMessage.payload)
       } catch {
-        Self.log.error("Unable to decrypt message for ID: \(messageID)")
+        Self.log.error(
+          "Unable to decrypt message with ID: \(messageID) reason: \(error.localizedDescription)")
         delegate?.messageStreamEncounteredUnrecoverableError(self)
         return
       }

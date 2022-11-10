@@ -36,6 +36,13 @@ class BLEMessageStreamPassthrough: NSObject, BLEMessageStream {
 
   public weak var delegate: MessageStreamDelegate?
 
+  var isValid: Bool {
+    guard let readServiceUUID = readCharacteristic.serviceUUID else { return false }
+    guard let writeServiceUUID = writeCharacteristic.serviceUUID else { return false }
+
+    return !peripheral.isServiceInvalidated(uuids: [readServiceUUID, writeServiceUUID])
+  }
+
   /// Debug description for reading.
   var readingDebugDescription: String {
     "Read characteristic with uuid: \(readCharacteristic.uuid.uuidString)"

@@ -77,6 +77,9 @@ public protocol MessageStream: AnyObject {
   /// The peripheral to send messages to.
   var peripheral: AnyTransportPeripheral { get }
 
+  /// Indicates whether this stream is valid for reading and writing.
+  var isValid: Bool { get }
+
   /// Debug description for reading.
   var readingDebugDescription: String { get }
 
