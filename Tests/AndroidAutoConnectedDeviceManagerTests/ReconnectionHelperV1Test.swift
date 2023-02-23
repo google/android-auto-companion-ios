@@ -22,15 +22,15 @@ import XCTest
 @testable import AndroidAutoMessageStream
 
 /// Unit tests for AssociationMessageHelperV1.
-class ReconnectionHelperV1Test: XCTestCase {
+@MainActor class ReconnectionHelperV1Test: XCTestCase {
   private var messageStreamMock: MessageStream!
   private var peripheralMock: PeripheralMock!
 
   // The helper under test.
   private var testHelper: ReconnectionHelperV1!
 
-  override func setUp() {
-    super.setUp()
+  override func setUp() async throws {
+    try await super.setUp()
 
     peripheralMock = PeripheralMock(name: "Test")
 

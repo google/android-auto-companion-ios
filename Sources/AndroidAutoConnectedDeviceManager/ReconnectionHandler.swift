@@ -30,7 +30,7 @@ enum ReconnectionHandlerError: Error {
 }
 
 /// A delegate to be notified when a secure channel has been set up.
-protocol ReconnectionHandlerDelegate: AnyObject {
+@MainActor protocol ReconnectionHandlerDelegate: AnyObject {
   /// Invoked when a secure channel has been established.
   ///
   /// After this call, `writeEncryptedMessage` can be called without an error being thrown.
@@ -56,7 +56,7 @@ protocol ReconnectionHandlerDelegate: AnyObject {
 
 /// A handler that is able to establish a secure session based off of previously stored encryption
 /// keys.
-protocol ReconnectionHandler {
+@MainActor protocol ReconnectionHandler {
   /// The car that is being connected with.
   var car: Car { get }
 
@@ -74,7 +74,7 @@ protocol ReconnectionHandler {
 }
 
 /// A channel that also exposes its backing peripheral.
-protocol SecuredCarChannelPeripheral {
+@MainActor protocol SecuredCarChannelPeripheral {
   /// The underlying peripheral that this channel provides secure communication with.
   var peripheral: AnyTransportPeripheral { get }
 }

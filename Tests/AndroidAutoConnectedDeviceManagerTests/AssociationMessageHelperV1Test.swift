@@ -23,15 +23,15 @@ import XCTest
 
 /// Unit tests for AssociationMessageHelperV1.
 @available(watchOS 6.0, *)
-class AssociationMessageHelperV1Test: XCTestCase {
+@MainActor class AssociationMessageHelperV1Test: XCTestCase {
   private var associatorMock: AssociatorMock!
   private var messageStreamMock: MessageStream!
 
   // The helper under test.
   private var messageHelper: AssociationMessageHelperV1!
 
-  override func setUp() {
-    super.setUp()
+  override func setUp() async throws {
+    try await super.setUp()
 
     associatorMock = AssociatorMock()
 

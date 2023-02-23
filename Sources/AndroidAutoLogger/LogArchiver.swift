@@ -46,7 +46,7 @@ public actor LogArchiver: LoggerDelegate {
   private var serialWriter: LogSerialWriter
 
   /// Initialize with `FileLogStoreFactory` for persistence.
-  convenience init() {
+  init() {
     self.init(persistentStoreFactory: FileLogStoreFactory())
   }
 

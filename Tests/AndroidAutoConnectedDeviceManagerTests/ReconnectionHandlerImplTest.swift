@@ -24,7 +24,7 @@ import XCTest
 
 /// Unit tests for `ReconnectionHandlerImpl`.
 
-class ReconnectionHandlerImplTest: XCTestCase {
+@MainActor class ReconnectionHandlerImplTest: XCTestCase {
   private let carId = "carId"
   private let car = PeripheralMock(name: "carName")
   private let savedSession = SecureBLEChannelMock.mockSavedSession
@@ -36,8 +36,8 @@ class ReconnectionHandlerImplTest: XCTestCase {
   private var reconnectionHandler: ReconnectionHandlerImpl!
   private var connectionHandle: ConnectionHandleFake!
 
-  override func setUp() {
-    super.setUp()
+  override func setUp() async throws {
+    try await super.setUp()
     continueAfterFailure = false
 
     UserDefaultsStorage.shared.clearAll()

@@ -23,7 +23,7 @@ import Foundation
 ///
 /// These methods are all implemented in `AssociationManager` and the associator is just a proxy
 /// which forwards these calls to the manager.
-protocol Associator {
+@MainActor protocol Associator {
   var connectionHandle: ConnectionHandle { get }
 
   var carId: String? { get nonmutating set }
@@ -56,7 +56,7 @@ protocol Associator {
 }
 
 /// Delegate that will be notified of association statuses.
-protocol AssociationManagerDelegate: AnyObject {
+@MainActor protocol AssociationManagerDelegate: AnyObject {
   /// Invoked when the association manager has successfully completed associating the current
   /// device.
   ///
@@ -100,7 +100,7 @@ protocol AssociationManagerDelegate: AnyObject {
 
 /// Handles the process of pairing the current device with a specified car. The car should
 /// be advertising that it supports the association of a companion phone.
-class AssociationManager: NSObject {
+@MainActor class AssociationManager: NSObject {
   private static let log = Logger(for: AssociationManager.self)
 
   private static let streamParams = MessageStreamParams(

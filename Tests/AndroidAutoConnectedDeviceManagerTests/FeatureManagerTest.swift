@@ -28,12 +28,12 @@ private enum Constants {
 
 /// Unit tests for `FeatureManager`.
 @available(watchOS 6.0, *)
-class FeatureManagerTest: XCTestCase {
+@MainActor class FeatureManagerTest: XCTestCase {
   private var connectedCarManagerMock: ConnectedCarManagerMock!
   private var featureManager: ObservableFeatureManager!
 
-  override func setUp() {
-    super.setUp()
+  override func setUp() async throws {
+    try await super.setUp()
 
     continueAfterFailure = false
 

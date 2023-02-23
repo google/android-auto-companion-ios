@@ -25,7 +25,7 @@ import Foundation
 ///   1) Send device ID and receive car ID.
 ///   2) Establish encryption.
 ///   3) Complete association.
-final class AssociationMessageHelperV1 {
+@MainActor final class AssociationMessageHelperV1 {
   private static let encryptionSetUpParams = MessageStreamParams(
     recipient: Config.defaultRecipientUUID, operationType: .encryptionHandshake)
 

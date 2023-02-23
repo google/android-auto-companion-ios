@@ -20,7 +20,7 @@ import Foundation
 @testable import AndroidAutoConnectedDeviceManager
 
 /// Mock for the Associator so we can track calls from tests.
-final public class AssociatorMock {
+@MainActor final public class AssociatorMock {
   // MARK: - Configuration
   public var shouldThrowWhenNotifyingPairingCodeAccepted = false
 

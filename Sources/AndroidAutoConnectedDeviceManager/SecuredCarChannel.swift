@@ -33,7 +33,7 @@ enum SecuredCarChannelError: Error {
 }
 
 /// A channel for a car that can be used to send encrypted messages.
-public protocol SecuredCarChannel: AnyObject {
+@MainActor public protocol SecuredCarChannel: AnyObject {
   /// A car that messages are being sent to and from.
   var car: Car { get }
 

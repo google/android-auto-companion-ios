@@ -22,7 +22,7 @@ import XCTest
 @testable import AndroidAutoConnectedDeviceManager
 
 /// Unit tests for `EstablishedCarChannel`.
-class EstablishedCarChannelTest: XCTestCase {
+@MainActor class EstablishedCarChannelTest: XCTestCase {
   private let carId = "carId"
   private let car = PeripheralMock(name: "carName")
   private let savedSession = SecureBLEChannelMock.mockSavedSession
@@ -31,8 +31,8 @@ class EstablishedCarChannelTest: XCTestCase {
   private var channel: EstablishedCarChannel!
   private var connectionHandle: ConnectionHandleFake!
 
-  override func setUp() {
-    super.setUp()
+  override func setUp() async throws {
+    try await super.setUp()
     continueAfterFailure = false
 
     car.reset()

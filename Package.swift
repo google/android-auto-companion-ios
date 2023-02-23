@@ -28,6 +28,12 @@ let package = Package(
     .library(
       name: "AndroidAutoConnectedDeviceManagerMocks",
       targets: ["AndroidAutoConnectedDeviceManagerMocks"]),
+    .library(
+      name: "AndroidAutoLogger",
+      targets: ["AndroidAutoLogger"]),
+    .plugin(
+      name: "ProtoSourceGenerator",
+      targets: ["ProtoSourceGenerator"]),
   ],
   dependencies: [
     .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.20.0")
@@ -35,7 +41,7 @@ let package = Package(
   targets: [
     .binaryTarget(
       name: "AndroidAutoUKey2Wrapper",
-      path: "Binary/AndroidAutoUKey2Wrapper.xcframework"),
+      path: "Binaries/AndroidAutoUKey2Wrapper.xcframework"),
     .target(
       name: "AndroidAutoLogger",
       dependencies: []),

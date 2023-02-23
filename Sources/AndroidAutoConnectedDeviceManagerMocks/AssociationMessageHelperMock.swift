@@ -22,7 +22,7 @@ import Foundation
 @testable import AndroidAutoConnectedDeviceManager
 
 /// Mock `AssociationMessageHelper`.
-final public class AssociationMessageHelperMock {
+@MainActor final public class AssociationMessageHelperMock {
   // MARK: - Method call checks
   public var startCalled = false
   public var handleMessageCalled = false

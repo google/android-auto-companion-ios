@@ -48,7 +48,7 @@ public enum TrustAgentManagerError: Error {
 }
 
 /// A delegate to be notified of the current state of unlocking.
-public protocol TrustAgentManagerDelegate: AnyObject {
+@MainActor public protocol TrustAgentManagerDelegate: AnyObject {
   /// Invoked when an enrollment has completed with an associated car.
   ///
   /// - Parameters:

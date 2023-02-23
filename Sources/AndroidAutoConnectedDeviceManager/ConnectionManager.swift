@@ -21,7 +21,7 @@ import CoreBluetooth
 import Foundation
 
 /// Delegate that will be notified of the status of association.
-public protocol ConnectionManagerAssociationDelegate: AnyObject {
+@MainActor public protocol ConnectionManagerAssociationDelegate: AnyObject {
   /// Invoked when a car has been discovered and is available for association.
   ///
   /// - Parameters:
@@ -83,11 +83,11 @@ enum StartAssociationError: Error {
 }
 
 /// Heterogeneous protocol adopted by a connection manager
-public protocol AnyConnectionManager {
+@MainActor public protocol AnyConnectionManager {
 }
 
 /// Homogeneous protocol adopted by a connection manager for type specific extensions.
-protocol SomeConnectionManager {
+@MainActor protocol SomeConnectionManager {
   associatedtype Peripheral
 
   func peripheral(from channel: SecuredCarChannel) -> Peripheral?
@@ -98,7 +98,7 @@ protocol SomeConnectionManager {
 // MARK: - ConnectionHandle
 
 /// Manages connection status of various endpoints connected to a remote car.
-protocol ConnectionHandle {
+@MainActor protocol ConnectionHandle {
   /// Disconnects the specified `MessageStream` from its remote car.
   func disconnect(_ messageStream: MessageStream)
 
@@ -133,7 +133,7 @@ private enum ConnectionManagerSignposts {
 
 extension BuildNumber {
   /// The version of this SDK.
-  fileprivate static let sdkVersion = BuildNumber(major: 2, minor: 0, patch: 5)
+  fileprivate static let sdkVersion = BuildNumber(major: 3, minor: 0, patch: 1)
 }
 
 /// Holds all the necessary information to try a reconnection for a `Peripheral`.
@@ -169,7 +169,7 @@ private struct ConnectionRetryState {
 /// However, it is recommended that the user configure these to be unique to their application.
 /// Simply generating random UUIDs for these values should be sufficient for uniqueness as UUID
 /// collisions are statistically impossible.
-public class CoreBluetoothConnectionManager: ConnectionManager<CBCentralManager> {
+@MainActor public class CoreBluetoothConnectionManager: ConnectionManager<CBCentralManager> {
   /// The time after which a connection is retried.
   ///
   /// See `maxConnectionRetryCount` for an explanation of why these intervals are
@@ -375,7 +375,7 @@ public class CoreBluetoothConnectionManager: ConnectionManager<CBCentralManager>
 }
 
 /// Listens to and manages state changes on the bluetooth stack.
-public class ConnectionManager<CentralManager>:
+@MainActor public class ConnectionManager<CentralManager>:
   NSObject,
   SomeConnectionManager,
   AnyConnectionManager
@@ -968,7 +968,7 @@ where CentralManager: SomeCentralManager {
 
 /// Wrapper around a `ConnectionManager` so that it can be passed without having to worry about
 /// object reference retention.
-private struct ConnectionHandleProxy<T: SomeCentralManager>: ConnectionHandle {
+@MainActor private struct ConnectionHandleProxy<T: SomeCentralManager>: ConnectionHandle {
   private unowned let connectionManager: ConnectionManager<T>
 
   init(connectionManager: ConnectionManager<T>) {
@@ -1622,11 +1622,15 @@ private class CoreBluetoothCentralManagerWrapper: NSObject {
 // conformance for ConnectionManager to CBCentralManagerDelegate.
 extension CoreBluetoothCentralManagerWrapper: CBCentralManagerDelegate {
   public func centralManagerDidUpdateState(_ central: CBCentralManager) {
-    connectionManager?.centralManagerDidUpdateState(central)
+    Task {
+      await connectionManager?.centralManagerDidUpdateState(central)
+    }
   }
 
   public func centralManager(_ central: CBCentralManager, willRestoreState dict: [String: Any]) {
-    connectionManager?.centralManager(central, willRestoreState: dict)
+    Task {
+      await connectionManager?.centralManager(central, willRestoreState: dict)
+    }
   }
 
   public func centralManager(
@@ -1635,11 +1639,13 @@ extension CoreBluetoothCentralManagerWrapper: CBCentralManagerDelegate {
     advertisementData: [String: Any],
     rssi RSSI: NSNumber
   ) {
-    connectionManager?.centralManager(
-      central,
-      didDiscover: peripheral,
-      advertisementData: advertisementData,
-      rssi: RSSI)
+    Task {
+      await connectionManager?.centralManager(
+        central,
+        didDiscover: peripheral,
+        advertisementData: advertisementData,
+        rssi: RSSI)
+    }
   }
 
   /// Called when a connection to a peripheral is successful.
@@ -1647,7 +1653,9 @@ extension CoreBluetoothCentralManagerWrapper: CBCentralManagerDelegate {
   /// Attempt to discover the appropriate lock or unlock characteristics on the connected
   /// peripheral depending on if `scanToAssociate` or `scanToUnlock` was called.
   public func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-    connectionManager?.centralManager(central, didConnect: peripheral)
+    Task {
+      await connectionManager?.centralManager(central, didConnect: peripheral)
+    }
   }
 
   public func centralManager(
@@ -1655,13 +1663,18 @@ extension CoreBluetoothCentralManagerWrapper: CBCentralManagerDelegate {
     didDisconnectPeripheral peripheral: CBPeripheral,
     error: Error?
   ) {
-    connectionManager?.centralManager(central, didDisconnectPeripheral: peripheral, error: error)
+    Task {
+      await connectionManager?.centralManager(
+        central, didDisconnectPeripheral: peripheral, error: error)
+    }
   }
 
   public func centralManager(
     _ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?
   ) {
-    connectionManager?.centralManager(central, didFailToConnect: peripheral, error: error)
+    Task {
+      await connectionManager?.centralManager(central, didFailToConnect: peripheral, error: error)
+    }
   }
 }
 

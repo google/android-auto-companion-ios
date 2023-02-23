@@ -25,7 +25,7 @@ private typealias SystemUserRoleResponse = Com_Google_Companionprotos_SystemUser
 typealias SystemUserRole = Com_Google_Companionprotos_SystemUserRole
 
 /// Unit tests for `SystemFeatureManager`.
-class SystemFeatureManagerTest: XCTestCase {
+@MainActor class SystemFeatureManagerTest: XCTestCase {
   private let deviceName = "DeviceName"
   private let appName = "appName"
   private var car: Car!
@@ -34,8 +34,8 @@ class SystemFeatureManagerTest: XCTestCase {
   private var channel: SecuredCarChannelMock!
   private var manager: SystemFeatureManager!
 
-  override func setUp() {
-    super.setUp()
+  override func setUp() async throws {
+    try await super.setUp()
     continueAfterFailure = false
 
     connectedCarManagerMock = ConnectedCarManagerMock()

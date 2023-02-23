@@ -32,7 +32,7 @@ public enum FeatureManagerError: Error {
 /// Each feature manager should have a unique UUID that identifies them. Ensure that the `featureID`
 /// property is overridden, or this class will crash.
 @available(watchOS 6.0, *)
-open class FeatureManager {
+@MainActor open class FeatureManager {
   private let connectedCarManager: ConnectedCarManager
 
   private var secureChannelHandle: ObservationHandle?

@@ -22,7 +22,7 @@ import XCTest
 @testable import AndroidAutoConnectedDeviceManager
 
 /// Unit tests for `AssociationManager`.
-class AssociationManagerTest: XCTestCase {
+@MainActor class AssociationManagerTest: XCTestCase {
   private let associatedCarsManagerMock = AssociatedCarsManagerMock()
   private let secureSessionManagerMock = SecureSessionManagerMock()
   private let secureBLEChannelMock = SecureBLEChannelMock()

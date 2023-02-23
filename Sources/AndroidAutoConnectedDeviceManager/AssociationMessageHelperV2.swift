@@ -25,7 +25,7 @@ import Foundation
 ///   1) Establish encryption.
 ///   2) Send device ID and receive car ID.
 ///   3) Complete association.
-final class AssociationMessageHelperV2 {
+@MainActor final class AssociationMessageHelperV2 {
   static let log = Logger(for: AssociationMessageHelperV2.self)
 
   private let messageStream: MessageStream

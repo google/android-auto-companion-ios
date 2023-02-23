@@ -23,13 +23,13 @@ private typealias QueryProto = Com_Google_Companionprotos_Query
 private typealias QueryResponseProto = Com_Google_Companionprotos_QueryResponse
 
 /// A car that can be used to send encrypted messages.
-class EstablishedCarChannel: NSObject, SecuredCarChannelPeripheral {
+@MainActor class EstablishedCarChannel: NSObject, SecuredCarChannelPeripheral {
   private static let log = Logger(for: EstablishedCarChannel.self)
 
   let messageStream: MessageStream
   private let connectionHandle: ConnectionHandle
 
-  private var writeCompletionHandlers: [(Bool) -> Void] = []
+  private var writeCompletionHandlers: [@MainActor (Bool) -> Void] = []
   private var receivedMessageObservations: [UUID: (EstablishedCarChannel, Data) -> Void] = [:]
 
   /// Keeps track of unique recipient UUIDs that are being observed and the observations that are

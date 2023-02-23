@@ -20,7 +20,7 @@ import CoreBluetooth
 import Foundation
 
 /// A delegate to be notified of the current state of secure communication establishment.
-protocol CommunicationManagerDelegate: AnyObject {
+@MainActor protocol CommunicationManagerDelegate: AnyObject {
   /// Invoked when the process of encryption setup has begun.
   ///
   /// - Parameters:
@@ -112,7 +112,7 @@ enum CommunicationManagerError: Error, Equatable {
 }
 
 /// A manager responsible for handling communication with associated devices.
-class CommunicationManager: NSObject {
+@MainActor class CommunicationManager: NSObject {
   private static let log = Logger(for: CommunicationManager.self)
 
   /// The amount of time a reconnection attempt has before it has been deemed to have timed out.

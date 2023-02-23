@@ -1,0 +1,5 @@
+framework module AndroidAutoUKey2Wrapper {
+  umbrella header "AndroidAutoUKey2Wrapper.h"
+  export *
+  module * { export * }
+}

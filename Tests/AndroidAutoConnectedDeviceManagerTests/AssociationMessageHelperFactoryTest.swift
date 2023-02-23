@@ -23,15 +23,15 @@ import XCTest
 
 /// Unit tests for AssociationMessageHelperV1.
 @available(watchOS 6.0, *)
-class AssociationMessageHelperFactoryTest: XCTestCase {
+@MainActor class AssociationMessageHelperFactoryTest: XCTestCase {
   private var associatorMock: Associator!
   private var messageStreamMock: MessageStream!
 
   /// The factory to test.
   private var helperFactory: AssociationMessageHelperFactoryImpl!
 
-  override func setUp() {
-    super.setUp()
+  override func setUp() async throws {
+    try await super.setUp()
 
     associatorMock = AssociatorMock()
 
@@ -57,7 +57,7 @@ class AssociationMessageHelperFactoryTest: XCTestCase {
     super.tearDown()
   }
 
-  func testFactoryMakesHelperV1ForSecurityVersionV1() {
+  func testFactoryMakesHelperV1ForSecurityVersionV1() async {
     let helper = helperFactory.makeHelper(
       associator: associatorMock,
       securityVersion: .v1,
@@ -67,7 +67,7 @@ class AssociationMessageHelperFactoryTest: XCTestCase {
     XCTAssertTrue(helper is AssociationMessageHelperV1)
   }
 
-  func testFactoryMakesHelperV1ForSecurityVersionV2() {
+  func testFactoryMakesHelperV1ForSecurityVersionV2() async {
     let helper = helperFactory.makeHelper(
       associator: associatorMock,
       securityVersion: .v2,

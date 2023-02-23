@@ -22,7 +22,7 @@ import CoreBluetooth
 /// to prevent device identifiers from being shared in the open.
 ///
 /// See go/aae-batmobile-hide-device-ids for details.
-class ReconnectionHelperV2 {
+@MainActor class ReconnectionHelperV2 {
   /// Tracks the authentication phase of a car.
   /// Phases are:
   ///   1) Car sends a salt plus a truncated HMAC for it.

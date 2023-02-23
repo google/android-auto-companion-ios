@@ -32,7 +32,7 @@ private typealias VerificationCode = Com_Google_Companionprotos_VerificationCode
 ///   4) Establish encryption.
 ///   5) Send device ID and receive car ID.
 ///   6) Complete association.
-final class AssociationMessageHelperV4 {
+@MainActor final class AssociationMessageHelperV4 {
   static let log = Logger(for: AssociationMessageHelperV4.self)
 
   private let messageStream: MessageStream

@@ -24,7 +24,7 @@ import AndroidAutoTrustAgentProtos
 @testable import AndroidAutoConnectedDeviceManager
 
 /// Unit tests for `TrustAgentManager`.
-class TrustAgentManagerTest: XCTestCase {
+@MainActor class TrustAgentManagerTest: XCTestCase {
   // The default name that is used when `setUpValidChannel(withCarId:)` is called.
   private let defaultChannelName = "mock car"
   private let testCarId1 = "testCarId1"
@@ -39,8 +39,8 @@ class TrustAgentManagerTest: XCTestCase {
 
   private var trustAgentManager: TrustAgentManager!
 
-  override func setUp() {
-    super.setUp()
+  override func setUp() async throws {
+    try await super.setUp()
     continueAfterFailure = false
 
     connectedCarManagerMock = ConnectedCarManagerMock()

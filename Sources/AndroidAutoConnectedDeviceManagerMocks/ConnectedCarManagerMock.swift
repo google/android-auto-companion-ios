@@ -19,7 +19,7 @@ import Foundation
 @testable import AndroidAutoConnectedDeviceManager
 
 /// A mock manager that can manually trigger observations.
-public class ConnectedCarManagerMock: NSObject {
+@MainActor public class ConnectedCarManagerMock: NSObject {
   private var observations = (
     state: [UUID: (ConnectedCarManager, RadioState) -> Void](),
     connected: [UUID: (ConnectedCarManager, Car) -> Void](),

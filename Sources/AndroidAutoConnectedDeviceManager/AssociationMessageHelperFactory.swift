@@ -20,7 +20,7 @@ import Foundation
 
 /// Protocol to be adopted by factories which make message exchange helpers.
 protocol AssociationMessageHelperFactory {
-  func makeHelper(
+  @MainActor func makeHelper(
     associator: Associator,
     securityVersion: MessageSecurityVersion,
     messageStream: MessageStream

@@ -28,7 +28,7 @@ public class ReconnectionHandlerFactoryFake: ReconnectionHandlerFactory {
 
   public init() {}
 
-  public func makeHandler(
+  @MainActor public func makeHandler(
     car: Car,
     connectionHandle: ConnectionHandle,
     secureSession: Data,

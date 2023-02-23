@@ -26,7 +26,7 @@ private typealias OutOfBandAssociationData = Com_Google_Companionprotos_OutOfBan
 private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBandAssociationToken
 
 /// Unit tests for `CommunicationManager`. Specifically testing the version 2 flow.
-class ConnectionManagerTest: XCTestCase {
+@MainActor class ConnectionManagerTest: XCTestCase {
   private var connectionManager: ConnectionManagerObservable!
   private var centralManagerMock: CentralManagerMock!
   private var associatedCarsManager: AssociatedCarsManagerMock!
@@ -34,8 +34,8 @@ class ConnectionManagerTest: XCTestCase {
   private var uuidConfig: UUIDConfig!
   private var versionResolverFake: BLEVersionResolverFake!
 
-  override func setUp() {
-    super.setUp()
+  override func setUp() async throws {
+    try await super.setUp()
     continueAfterFailure = false
 
     uuidConfig = UUIDConfig(plistLoader: PListLoaderFake())

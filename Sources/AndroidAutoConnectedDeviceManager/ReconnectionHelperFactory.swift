@@ -27,7 +27,7 @@ protocol ReconnectionHelperFactory {
   ///   - authenticator: Authenticator to use.
   /// - Throws: An error if either the service doesn't match what's expected or none of the
   /// associated cars match against the advertisement.
-  static func makeHelper(
+  @MainActor static func makeHelper(
     peripheral: AnyPeripheral,
     advertisementData: [String: Any],
     associatedCars: Set<Car>,
@@ -48,7 +48,7 @@ struct ReconnectionHelperFactoryImpl: ReconnectionHelperFactory {
   ///   - authenticator: Authenticator to use.
   /// - Throws: An error if either the service doesn't match what's expected or none of the
   /// associated cars match against the advertisement.
-  static func makeHelper(
+  @MainActor static func makeHelper(
     peripheral: AnyPeripheral,
     advertisementData: [String: Any],
     associatedCars: Set<Car>,

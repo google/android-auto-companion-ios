@@ -25,7 +25,7 @@ import XCTest
 
 /// Unit tests for AssociationMessageHelperV4.
 @available(watchOS 6.0, *)
-class AssociationMessageHelperV4Test: XCTestCase {
+@MainActor class AssociationMessageHelperV4Test: XCTestCase {
   private typealias VerificationCodeState = Com_Google_Companionprotos_VerificationCodeState
   private typealias VerificationCode = Com_Google_Companionprotos_VerificationCode
 
@@ -36,8 +36,8 @@ class AssociationMessageHelperV4Test: XCTestCase {
   // The helper under test.
   private var messageHelper: AssociationMessageHelperV4!
 
-  override func setUp() {
-    super.setUp()
+  override func setUp() async throws {
+    try await super.setUp()
 
     associatorMock = AssociatorMock()
     peripheralMock = PeripheralMock(name: "Test")

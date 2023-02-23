@@ -19,7 +19,7 @@ import AndroidAutoLogger
 import Foundation
 
 /// A car that can be used to send encrypted messages.
-class ReconnectionHandlerImpl: NSObject, ReconnectionHandler {
+@MainActor class ReconnectionHandlerImpl: NSObject, ReconnectionHandler {
   private static let log = Logger(for: ReconnectionHandlerImpl.self)
 
   let messageStream: BLEMessageStream
