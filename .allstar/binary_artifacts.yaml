@@ -1,7 +1,7 @@
 ---
 # Ignore reason: These binaries are built from code that cannot be released open source.
 ignorePaths:
-  - Binary/AndroidAutoUKey2Wrapper.xcframework/ios-arm64/AndroidAutoUKey2Wrapper.framework/AndroidAutoUKey2Wrapper
-  - Binary/AndroidAutoUKey2Wrapper.xcframework/ios-arm64/AndroidAutoUKey2Wrapper.framework/Info.plist
-  - Binary/AndroidAutoUKey2Wrapper.xcframework/ios-arm64_x86_64-simulator/AndroidAutoUKey2Wrapper.framework/AndroidAutoUKey2Wrapper
-  - Binary/AndroidAutoUKey2Wrapper.xcframework/ios-arm64_x86_64-simulator/AndroidAutoUKey2Wrapper.framework/Info.plist
+  - Binaries/AndroidAutoUKey2Wrapper.xcframework/ios-arm64/AndroidAutoUKey2Wrapper.framework/AndroidAutoUKey2Wrapper
+  - Binaries/AndroidAutoUKey2Wrapper.xcframework/ios-arm64/AndroidAutoUKey2Wrapper.framework/Info.plist
+  - Binaries/AndroidAutoUKey2Wrapper.xcframework/ios-arm64_x86_64-simulator/AndroidAutoUKey2Wrapper.framework/AndroidAutoUKey2Wrapper
+  - Binaries/AndroidAutoUKey2Wrapper.xcframework/ios-arm64_x86_64-simulator/AndroidAutoUKey2Wrapper.framework/Info.plist
