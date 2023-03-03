@@ -1,7 +1,7 @@
 # CHANGELOG
 
 **NOTE:** Entries are ordered chronologically with the newest entries at the
-top.  
+top.
 
 ## iOS Companion 3.0.0
 
@@ -58,7 +58,7 @@ Flutter. It inherits `MainActor` from `TrustedDeviceModel` so it already
 inherits the `MainActor`. However, you need to make sure callbacks registered
 with Flutter get processed on the MainActor so for example in this case mark
 the callback as nonisolated, wrap the callback in a Task and await the calls on
-Companion. 
+Companion.
 
 ```swift
   private func setUpTrustedDeviceCallHandler() {
@@ -66,7 +66,7 @@ Companion.
   }
 
   nonisolated private func handle(
-    _ call: FlutterMethodCall, 
+    _ call: FlutterMethodCall,
     result: @escaping FlutterResult
     ) {
     Task { [weak self] in
@@ -76,3 +76,8 @@ Companion.
         await self?.openSettings()
 …
 ```
+
+### Binaries Moved
+
+For consistency, prebuilt binaries have been moved from the `Binary`
+directory to the new `Binaries` directory.
