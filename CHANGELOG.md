@@ -3,6 +3,13 @@
 **NOTE:** Entries are ordered chronologically with the newest entries at the
 top.
 
+## iOS Companion 3.0.1
+
+### Binaries Moved
+
+For consistency, prebuilt binaries have been moved from the `Binary`
+directory to the new `Binaries` directory.
+
 ## iOS Companion 3.0.0
 
 ### Concurrency Enforcement
@@ -76,8 +83,3 @@ Companion.
         await self?.openSettings()
 …
 ```
-
-### Binaries Moved
-
-For consistency, prebuilt binaries have been moved from the `Binary`
-directory to the new `Binaries` directory.
