@@ -337,6 +337,23 @@ private enum Constants {
     XCTAssertEqual(channel.writtenQueryResponses[0].queryResponse, expectedQueryResponse)
     XCTAssertEqual(channel.writtenQueryResponses[0].recipient, Constants.senderId)
   }
+
+  // MARK: feature support status provider tests
+
+  func testFeatureSupportStatusProvider_connectedCar_returnsProvider() {
+    let car = Car(id: "id", name: "name")
+    let channel = SecuredCarChannelMock(car: car)
+
+    connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
+
+    XCTAssertNotNil(featureManager.featureSupportStatusProvider(for: car))
+  }
+
+  func testFeatureSupportStatusProvider_unconnectedCar_returnsNilProvider() {
+    let car = Car(id: "id", name: "name")
+
+    XCTAssertNil(featureManager.featureSupportStatusProvider(for: car))
+  }
 }
 
 /// A `FeatureManager` implementation that allows for assertions on its event methods.

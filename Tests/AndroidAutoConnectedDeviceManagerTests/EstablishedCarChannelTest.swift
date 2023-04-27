@@ -312,6 +312,38 @@ import XCTest
     }
   }
 
+  func testSendQueryAsync_throwsErrorIfInvalid() async {
+    // Simulate the car disconnecting.
+    car.state = .disconnected
+
+    let query = Query(request: Data("request".utf8), parameters: nil)
+
+    do {
+      _ = try await channel.sendQuery(query, to: UUID())
+      XCTFail()
+    } catch {
+      XCTAssertEqual(error as! SecuredCarChannelError, .invalidChannel)
+    }
+  }
+
+  func testQueryAsync_queryResponseIsReturned() async {
+    let queryID: Int32 = 4
+    channel.queryID = queryID
+
+    let recipient = UUID()
+    let expectedQueryResponse =
+      QueryResponse(id: queryID, isSuccessful: true, response: Data("response".utf8))
+    messageStream.autoReply = (
+      message: try! expectedQueryResponse.toProtoData(),
+      params: MessageStreamParams(recipient: recipient, operationType: .queryResponse)
+    )
+
+    let query = Query(request: Data("request".utf8), parameters: nil)
+    let queryResponse = try! await channel.sendQuery(query, to: recipient)
+
+    XCTAssertEqual(queryResponse, expectedQueryResponse)
+  }
+
   func testConfiguresUsingFeatureProvider() {
     let featureProvider = ChannelFeatureProviderMock(userRole: .driver)
     var completed = false

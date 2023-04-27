@@ -159,6 +159,14 @@ public enum FeatureManagerError: Error {
     return connectedCarManager.securedChannel(for: car) != nil
   }
 
+  /// Returns a `FeatureSupportStatusProvider` for the given car.
+  ///
+  /// - Parameter car: The car for which to get the feature status provider.
+  /// - Returns: `nil` if the car is not connected.
+  func featureSupportStatusProvider(for car: Car) -> FeatureSupportStatusProvider? {
+    return connectedCarManager.securedChannel(for: car)
+  }
+
   // MARK: - Event methods.
 
   /// Invoked when a car has connected to this phone.

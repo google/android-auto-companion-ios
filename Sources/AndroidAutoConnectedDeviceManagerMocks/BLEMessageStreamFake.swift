@@ -19,6 +19,9 @@ import Foundation
 /// A fake `BLEMessageStream` that stores written messages to internal arrays and exposes methods
 /// to simulate a message received from a remote car.
 public class BLEMessageStreamFake: BLEMessageStream {
+  /// Automatically replies to written messages.
+  public var autoReply: (message: Data, params: MessageStreamParams)? = nil
+
   public let version = MessageStreamVersion.passthrough
 
   public let peripheral: BLEPeripheral
@@ -53,6 +56,13 @@ public class BLEMessageStreamFake: BLEMessageStream {
       throw makeFakeError()
     }
     writtenMessages.append(WrittenMessage(message: message, params: params))
+
+    if let autoReply {
+      Task {
+        delegate?.messageStream(
+          self, didReceiveMessage: autoReply.message, params: autoReply.params)
+      }
+    }
   }
 
   public func writeEncryptedMessage(_ message: Data, params: MessageStreamParams) throws {
@@ -60,6 +70,13 @@ public class BLEMessageStreamFake: BLEMessageStream {
       throw makeFakeError()
     }
     writtenEncryptedMessages.append(WrittenMessage(message: message, params: params))
+
+    if let autoReply {
+      Task {
+        delegate?.messageStream(
+          self, didReceiveMessage: autoReply.message, params: autoReply.params)
+      }
+    }
   }
 
   // MARK: - Simulate message received methods.

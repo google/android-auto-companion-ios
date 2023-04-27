@@ -3,6 +3,12 @@
 **NOTE:** Entries are ordered chronologically with the newest entries at the
 top.
 
+## iOS Companion 3.1.0
+
+The following API changes have been made:
+- Added a `FeatureManager` API to check whether a feature is supported by the Companion platform.
+- Implemented an async variant of the `sendQuery` method in `SecuredCarChannel`.
+
 ## iOS Companion 3.0.1
 
 ### Binaries Moved

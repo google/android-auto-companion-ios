@@ -33,7 +33,7 @@ enum SecuredCarChannelError: Error {
 }
 
 /// A channel for a car that can be used to send encrypted messages.
-@MainActor public protocol SecuredCarChannel: AnyObject {
+@MainActor public protocol SecuredCarChannel: AnyObject, FeatureSupportStatusProvider {
   /// A car that messages are being sent to and from.
   var car: Car { get }
 
@@ -121,6 +121,22 @@ enum SecuredCarChannelError: Error {
     response: @escaping ((QueryResponse) -> Void)
   ) throws
 
+  /// Sends a query request to the recipient on the car associated with this class.
+  ///
+  /// The recipient will respond via the `response` closure that is passed to this method. The
+  /// closure will be passed a boolean indicating if the query was successful and a `Data` object
+  /// representing the response. The format of the `Query` data and response data are decided by
+  /// the feature issuing the query.
+  ///
+  /// - Parameters:
+  ///   - query: The query to send.
+  ///   - recipient: The unique identifier for a recipient that will receive the message.
+  /// - Throws: An error if the query cannot be sent correctly.
+  func sendQuery(
+    _ query: Query,
+    to recipient: UUID
+  ) async throws -> QueryResponse
+
   /// Sends a response to a query.
   ///
   /// The `queryResponse` has an ID field that should match the ID given via the closure passed
@@ -131,4 +147,21 @@ enum SecuredCarChannelError: Error {
   ///   - recipient: The unique identifier for a recipient that will receive the response.
   /// - Throws: An error if the query response could not be sent.
   func sendQueryResponse(_ queryResponse: QueryResponse, to recipient: UUID) throws
+}
+
+extension SecuredCarChannel {
+  public func sendQuery(
+    _ query: Query,
+    to recipient: UUID
+  ) async throws -> QueryResponse {
+    return try await withUnsafeThrowingContinuation { continuation in
+      do {
+        try sendQuery(query, to: recipient) { queryResponse in
+          continuation.resume(returning: queryResponse)
+        }
+      } catch {
+        continuation.resume(throwing: error)
+      }
+    }
+  }
 }

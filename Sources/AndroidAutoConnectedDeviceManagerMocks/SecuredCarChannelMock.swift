@@ -96,6 +96,10 @@ public class SecuredCarChannelMock: SecuredCarChannelPeripheral {
   private func makeMockError() -> Error {
     return NSError(domain: "", code: 0, userInfo: nil)
   }
+
+  public func isFeatureSupported(_ featureID: UUID) -> Bool {
+    return messageRecipientToObservations[featureID] != nil
+  }
 }
 
 extension SecuredCarChannelMock: SecuredConnectedDeviceChannel {

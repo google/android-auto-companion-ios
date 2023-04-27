@@ -16,10 +16,12 @@ import AndroidAutoLogger
 import UIKit
 @_implementationOnly import AndroidAutoCompanionProtos
 
+private typealias FeatureSupportStatus = Com_Google_Companionprotos_FeatureSupportStatus
 private typealias SystemQuery = Com_Google_Companionprotos_SystemQuery
 private typealias SystemQueryType = Com_Google_Companionprotos_SystemQueryType
 private typealias SystemUserRoleResponse = Com_Google_Companionprotos_SystemUserRoleResponse
 typealias SystemUserRole = Com_Google_Companionprotos_SystemUserRole
+typealias FeatureSupportResponse = Com_Google_Companionprotos_FeatureSupportResponse
 
 /// Provides the containing application name.
 protocol AppNameProvider {
@@ -101,6 +103,43 @@ class SystemFeatureManager: FeatureManager {
         )
         try responseHandle.respond(with: Data(), isSuccessful: false)
       }
+
+    case SystemQueryType.isFeatureSupported:
+      Self.log("Received query for feature support status.")
+
+      let provider = featureSupportStatusProvider(for: car)
+      Self.log("Feature support status provider is \(String(describing: provider))")
+
+      let statuses: [FeatureSupportStatus] = systemQuery.payloads.compactMap { payload in
+        guard let queriedFeatureID = UUID(uuidString: String(decoding: payload, as: UTF8.self))
+        else {
+          Self.log.error("Could not parse query \(payload) as feature ID. Ignored.")
+          return nil
+        }
+
+        guard let provider else {
+          return FeatureSupportStatus.with {
+            $0.featureID = queriedFeatureID.uuidString
+            $0.isSupported = false
+          }
+        }
+
+        let isSupported = provider.isFeatureSupported(queriedFeatureID)
+        let status = FeatureSupportStatus.with {
+          $0.featureID = queriedFeatureID.uuidString
+          $0.isSupported = isSupported
+        }
+
+        Self.log("Queried feature status: \(featureID) - \(isSupported).")
+        return status
+      }
+      Self.log("Queried feature support statuses are \(statuses).")
+
+      let response = FeatureSupportResponse.with {
+        $0.statuses = statuses
+      }
+      Self.log("Sending response for support status query: \(response)")
+      try responseHandle.respond(with: response.serializedData(), isSuccessful: true)
 
     default:
       Self.log.error(

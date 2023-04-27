@@ -253,6 +253,10 @@ extension EstablishedCarChannel: SecuredCarChannel {
 
   /// Convenience method that performs no action.
   private func noop(_ value: Bool) {}
+
+  func isFeatureSupported(_ featureID: UUID) -> Bool {
+    return messageRecipientToObservations[featureID] != nil
+  }
 }
 
 // MARK: - SecuredConnectedDeviceChannel

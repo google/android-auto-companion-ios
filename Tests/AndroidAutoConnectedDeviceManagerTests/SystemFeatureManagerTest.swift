@@ -20,6 +20,8 @@ import XCTest
 @testable import AndroidAutoConnectedDeviceManager
 
 private typealias SystemQuery = Com_Google_Companionprotos_SystemQuery
+private typealias FeatureSupportStatus = Com_Google_Companionprotos_FeatureSupportStatus
+private typealias FeatureSupportResponse = Com_Google_Companionprotos_FeatureSupportResponse
 private typealias SystemQueryType = Com_Google_Companionprotos_SystemQueryType
 private typealias SystemUserRoleResponse = Com_Google_Companionprotos_SystemUserRoleResponse
 typealias SystemUserRole = Com_Google_Companionprotos_SystemUserRole
@@ -195,6 +197,123 @@ typealias SystemUserRole = Com_Google_Companionprotos_SystemUserRole
     XCTAssertNil(userRole)
   }
 
+  // MARK: - Feature support status tests
+
+  func testFeatureSupportStatus_supportedFeature_sendsSupportedStatus() {
+    let featureID = UUID(uuidString: "dbca154b-f9c8-49f2-93d3-a1df6a89dd35")!
+    let _ = channel.observeMessageReceived(from: featureID) { _, _ in }
+    connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
+
+    let queriedFeatures = [Data(featureID.uuidString.utf8)]
+    let request = createSystemQuery(
+      type: SystemQueryType.isFeatureSupported, payloads: queriedFeatures)
+    let query = Query(request: request, parameters: nil)
+    let queryID: Int32 = 13
+    channel.triggerQuery(query, queryID: queryID, from: SystemFeatureManager.recipientUUID)
+
+    let expectedStatus = FeatureSupportStatus.with {
+      $0.featureID = featureID.uuidString
+      $0.isSupported = true
+    }
+    let expectedFeatureSupportResponse = FeatureSupportResponse.with {
+      $0.statuses = [expectedStatus]
+    }
+    let expectedQueryResponse = QueryResponse(
+      id: queryID,
+      isSuccessful: true,
+      response: try! expectedFeatureSupportResponse.serializedData()
+    )
+    XCTAssertEqual(channel.writtenQueryResponses.count, 1)
+    XCTAssertEqual(channel.writtenQueryResponses[0].queryResponse, expectedQueryResponse)
+  }
+
+  func testFeatureSupportStatus_unsupportedFeature_sendsUnsupportedStatus() {
+    // This feature ID is not registered in the channel, thus considered unavailable/unsupported.
+    let unsupportedFeatureID = UUID(uuidString: "032cfe53-837d-4ab9-acd6-d9488347f647")!
+    connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
+
+    let queriedFeatures = [Data(unsupportedFeatureID.uuidString.utf8)]
+    let request = createSystemQuery(
+      type: SystemQueryType.isFeatureSupported, payloads: queriedFeatures)
+    let query = Query(request: request, parameters: nil)
+    let queryID: Int32 = 13
+    channel.triggerQuery(query, queryID: queryID, from: SystemFeatureManager.recipientUUID)
+
+    let expectedStatus = FeatureSupportStatus.with {
+      $0.featureID = unsupportedFeatureID.uuidString
+      $0.isSupported = false
+    }
+    let expectedFeatureSupportResponse = FeatureSupportResponse.with {
+      $0.statuses = [expectedStatus]
+    }
+    let expectedQueryResponse = QueryResponse(
+      id: queryID,
+      isSuccessful: true,
+      response: try! expectedFeatureSupportResponse.serializedData()
+    )
+    XCTAssertEqual(channel.writtenQueryResponses.count, 1)
+    XCTAssertEqual(channel.writtenQueryResponses[0].queryResponse, expectedQueryResponse)
+  }
+
+  func testFeatureSupportStatus_invalidFeatureID_ignored() {
+    connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
+
+    let queriedFeatures = [Data("invalid-uuid-value".utf8)]
+    let request = createSystemQuery(
+      type: SystemQueryType.isFeatureSupported, payloads: queriedFeatures)
+    let query = Query(request: request, parameters: nil)
+    let queryID: Int32 = 13
+    channel.triggerQuery(query, queryID: queryID, from: SystemFeatureManager.recipientUUID)
+
+    // Empty list of support status because the invalid feature ID should be ignored.
+    let expectedFeatureSupportResponse = FeatureSupportResponse.with {
+      $0.statuses = []
+    }
+    let expectedQueryResponse = QueryResponse(
+      id: queryID,
+      isSuccessful: true,
+      response: try! expectedFeatureSupportResponse.serializedData()
+    )
+    XCTAssertEqual(channel.writtenQueryResponses.count, 1)
+    XCTAssertEqual(channel.writtenQueryResponses[0].queryResponse, expectedQueryResponse)
+  }
+
+  func testFeatureSupportStatus_mixedSupportedFeatures_sendsStatus() {
+    // This feature ID is not registered in the channel, thus considered unavailable/unsupported.
+    let unsupportedFeatureID = UUID(uuidString: "032cfe53-837d-4ab9-acd6-d9488347f647")!
+    let supportedFeatureID = UUID(uuidString: "dbca154b-f9c8-49f2-93d3-a1df6a89dd35")!
+    let _ = channel.observeMessageReceived(from: supportedFeatureID) { _, _ in }
+    connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
+
+    let queriedFeatures = [
+      Data(unsupportedFeatureID.uuidString.utf8), Data(supportedFeatureID.uuidString.utf8),
+    ]
+    let request = createSystemQuery(
+      type: SystemQueryType.isFeatureSupported, payloads: queriedFeatures)
+    let query = Query(request: request, parameters: nil)
+    let queryID: Int32 = 13
+    channel.triggerQuery(query, queryID: queryID, from: SystemFeatureManager.recipientUUID)
+
+    let expectedUnsupportedStatus = FeatureSupportStatus.with {
+      $0.featureID = unsupportedFeatureID.uuidString
+      $0.isSupported = false
+    }
+    let expectedSupportedStatus = FeatureSupportStatus.with {
+      $0.featureID = supportedFeatureID.uuidString
+      $0.isSupported = true
+    }
+    let expectedFeatureSupportResponse = FeatureSupportResponse.with {
+      $0.statuses = [expectedUnsupportedStatus, expectedSupportedStatus]
+    }
+    let expectedQueryResponse = QueryResponse(
+      id: queryID,
+      isSuccessful: true,
+      response: try! expectedFeatureSupportResponse.serializedData()
+    )
+    XCTAssertEqual(channel.writtenQueryResponses.count, 1)
+    XCTAssertEqual(channel.writtenQueryResponses[0].queryResponse, expectedQueryResponse)
+  }
+
   // MARK: - Error path tests
 
   func testQueryWithInvalidType_sendsUnsuccessfulQueryResponse() {
@@ -238,9 +357,10 @@ typealias SystemUserRole = Com_Google_Companionprotos_SystemUserRole
   // MARK: - Helper methods
 
   /// Returns a serialized `SystemQuery` proto that has its type set to the given value.
-  private func createSystemQuery(type: SystemQueryType) -> Data {
+  private func createSystemQuery(type: SystemQueryType, payloads: [Data] = []) -> Data {
     var systemQuery = SystemQuery()
     systemQuery.type = type
+    systemQuery.payloads = payloads
     return try! systemQuery.serializedData()
   }
 }
