@@ -473,6 +473,8 @@ public class TrustAgentManager: FeatureManager {
       attemptEnrollment(with: car)
     case .stateSync:
       syncFeatureStatus(message.payload, from: car)
+    case .unlockRequest:
+      sendCredentialsIfEnrolled(to: car)
     default:
       Self.log.error("Unhandled message type \(message.type.rawValue)")
     }
@@ -606,6 +608,16 @@ public class TrustAgentManager: FeatureManager {
     )
 
     clearEnrollment(for: car, syncToCar: false, initiatedFromCar: true)
+  }
+
+  private func sendCredentialsIfEnrolled(to car: Car) {
+    guard isEnrolled(with: car) else {
+      Self.log("Car \(car.logName) is not enrolled. Ignore.")
+      return
+    }
+
+    Self.log("Car \(car.logName) is enrolled. Send unlocking credentials.")
+    sendPhoneCredentials(to: car)
   }
 
   /// Creates a trusted device message from the specified type and optional payload.

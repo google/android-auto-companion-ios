@@ -133,7 +133,7 @@ private enum ConnectionManagerSignposts {
 
 extension BuildNumber {
   /// The version of this SDK.
-  fileprivate static let sdkVersion = BuildNumber(major: 3, minor: 1, patch: 0)
+  fileprivate static let sdkVersion = BuildNumber(major: 3, minor: 2, patch: 0)
 }
 
 /// Holds all the necessary information to try a reconnection for a `Peripheral`.
@@ -734,6 +734,7 @@ where CentralManager: SomeCentralManager {
       centralManager.stopScan()
     }
 
+    isAssociating = false
     associationManager.clearCurrentAssociation()
     disconnectAllPeripherals()
 

@@ -467,6 +467,33 @@ import AndroidAutoTrustAgentProtos
     XCTAssertEqual(delegate.error, .deviceLocked)
   }
 
+  func testSendPhoneCredentials_receivedUnlockRequestFromEnrolledCar_sendCrendentials() {
+    let (token, handle) = setUpAsEnrolled(carId: testCarId1)
+    let channel = SecuredCarChannelMock(car: testCar1)
+    let unlockRequestMessageData = makeMessageData(type: .unlockRequest)
+    let phoneCredentials = makePhoneCredentials(token: token, handle: handle)
+    let credentialsMessageData = makeMessageData(
+      type: .unlockCredentials, payload: phoneCredentials)
+
+    connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
+    trustAgentManager.onMessageReceived(unlockRequestMessageData, from: testCar1)
+
+    // The first message is credentials message when onSecureChannelEstablished.
+    // The second message is credentials message when the HU becomes interactive.
+    XCTAssertEqual(channel.writtenMessages.count, 2)
+    XCTAssertEqual(channel.writtenMessages[1], credentialsMessageData)
+  }
+
+  func testSendPhoneCredentials_receivedUnlockRequestFromNotEnrolledCar_doNotSendCrendentials() {
+    let channel = SecuredCarChannelMock(car: testCar1)
+    let unlockRequestMessageData = makeMessageData(type: .unlockRequest)
+
+    connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
+    trustAgentManager.onMessageReceived(unlockRequestMessageData, from: testCar1)
+
+    XCTAssertEqual(channel.writtenMessages.count, 0)
+  }
+
   // MARK: - Delegate notification tests.
 
   func testUnlock_notifiesDelegateOfStart() {
