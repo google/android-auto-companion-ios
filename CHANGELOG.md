@@ -3,12 +3,18 @@
 **NOTE:** Entries are ordered chronologically with the newest entries at the
 top.
 
+## iOS Companion 3.2.1
+
+The following changes have been made:
+- Internal cleanup.
+
 ## iOS Companion 3.2.0
 
 The following changes have been made:
 - The Swift package now requires Swift 5.8 or later for building.
-- The `CarAuthenticator` now uses `CryptoKit` for watchOS 8 or later and currently supported iOS.
-- Adds `TrustedDevice` support for sending the unlock upon request.   
+- The `CarAuthenticator` now uses `CryptoKit` for watchOS 8 or later and
+currently supported iOS.
+- Adds `TrustedDevice` support for sending the unlock credential upon request.
 
 ## iOS Companion 3.1.0
 

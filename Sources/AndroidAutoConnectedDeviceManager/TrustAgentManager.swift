@@ -278,7 +278,7 @@ public class TrustAgentManager: FeatureManager {
     if enrolled {
       sendPhoneCredentials(to: car)
     } else {
-      maybeSyncFeatureStatus(with: car)
+      syncPendingFeatureStatus(with: car)
     }
   }
 
@@ -390,7 +390,7 @@ public class TrustAgentManager: FeatureManager {
 
   /// Checks if the given `car` has a pending enrollment status to be synced and syncs it if such a
   /// message exists.
-  private func maybeSyncFeatureStatus(with car: Car) {
+  private func syncPendingFeatureStatus(with car: Car) {
     guard let featureStatus = trustAgentStorage.featureStatus(for: car) else {
       Self.log.debug("Car \(car.logName) does not have any stored feature status messages to send.")
       return
