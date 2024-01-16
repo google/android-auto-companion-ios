@@ -19,7 +19,9 @@ expected to be installed (symbolic links are fine) at `/usr/local/bin`. These
 tools may be installed using [Homebrew](https://github.com/Homebrew/brew):
 ```
 brew install protobuf
+brew install swift-protobuf
 ````
+Then create symbolic links in `/usr/local/bin` to `protoc` and `protoc-gen-swift`.
 
 ### Reference App
 
