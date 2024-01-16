@@ -16,7 +16,10 @@ files. For each raw `proto` file, a corresponding Swift source file must be
 generated. An included Swift Package Manager plugin is configured to generate
 the required source files. The `protoc` and `protoc-gen-swift` executables are
 expected to be installed (symbolic links are fine) at `/usr/local/bin`. These
-tools may be installed using [Homebrew](https://github.com/Homebrew/brew).
+tools may be installed using [Homebrew](https://github.com/Homebrew/brew):
+```
+brew install protobuf
+````
 
 ### Reference App
 
