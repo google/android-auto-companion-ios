@@ -68,7 +68,7 @@ import Foundation
     _ associationManager: AssociationManager,
     didCompleteAssociationWithCar car: Car,
     securedCarChannel: SecuredConnectedDeviceChannel,
-    peripheral: BLEPeripheral
+    peripheral: any BLEPeripheral
   )
 
   /// Invoked during device id exchange when the car's device id is received.
@@ -129,7 +129,7 @@ import Foundation
   ///
   /// The peripheral needs to have strong reference to it; otherwise, it might be deallocated before
   /// association is complete. This ensures callbacks happen appropriately.
-  private(set) var carToAssociate: BLEPeripheral?
+  private(set) var carToAssociate: (any BLEPeripheral)?
 
   /// The characteristic on the car that can receive the token.
   ///
@@ -231,7 +231,7 @@ import Foundation
   /// - Parameters:
   ///   - peripheral: The peripheral to associate with.
   ///   - config: A configuration object for modifying the current scan.
-  func associate(_ peripheral: BLEPeripheral, config: AssociationConfig) {
+  func associate(_ peripheral: some BLEPeripheral, config: AssociationConfig) {
     resetInternalState()
     outOfBandTokenProvider.prepareForRequests()
 
@@ -245,7 +245,7 @@ import Foundation
     peripheral.discoverServices([associationUUID])
   }
 
-  private func scheduleAssociationTimeout(for peripheral: BLEPeripheral) {
+  private func scheduleAssociationTimeout(for peripheral: some BLEPeripheral) {
     let notifyAssociationError = DispatchWorkItem { [weak self] in
       Self.log.error(
         "Association attempt timed out for car \(peripheral.logName). Notifying delegate.")
@@ -318,7 +318,7 @@ import Foundation
   /// - Parameters:
   ///   - characteristics: The array of characteristics to process.
   ///   - peripheral: The peripheral that hosts the given characteristics
-  private func process(_ characteristics: [BLECharacteristic], for peripheral: BLEPeripheral) {
+  private func process(_ characteristics: [BLECharacteristic], for peripheral: some BLEPeripheral) {
     for characteristic in characteristics {
       Self.log.debug("Processing association characteristic: \(characteristic.uuid.uuidString)")
 
@@ -419,7 +419,7 @@ import Foundation
 
 // MARK: - CBPeripheralDelegate
 extension AssociationManager: BLEPeripheralDelegate {
-  func peripheral(_ peripheral: BLEPeripheral, didDiscoverServices error: Error?) {
+  func peripheral(_ peripheral: any BLEPeripheral, didDiscoverServices error: Error?) {
     if let error = error {
       Self.log.error("Error discovering services: \(error.localizedDescription)")
       notifyDelegateOfError(.cannotDiscoverServices)
@@ -452,7 +452,7 @@ extension AssociationManager: BLEPeripheralDelegate {
   }
 
   func peripheral(
-    _ peripheral: BLEPeripheral,
+    _ peripheral: any BLEPeripheral,
     didDiscoverCharacteristicsFor service: BLEService,
     error: Error?
   ) {
@@ -502,14 +502,14 @@ extension AssociationManager: BLEPeripheralDelegate {
   }
 
   func peripheral(
-    _ peripheral: BLEPeripheral,
+    _ peripheral: any BLEPeripheral,
     didUpdateValueFor characteristic: BLECharacteristic,
     error: Error?
   ) {
     // No-op
   }
 
-  func peripheralIsReadyToWrite(_ peripheral: BLEPeripheral) {
+  func peripheralIsReadyToWrite(_ peripheral: any BLEPeripheral) {
     // No-op.
   }
 }
@@ -584,7 +584,7 @@ extension AssociationManager: BLEVersionResolverDelegate {
     _ bleVersionResolver: BLEVersionResolver,
     didResolveStreamVersionTo streamVersion: MessageStreamVersion,
     securityVersionTo securityVersion: MessageSecurityVersion,
-    for peripheral: BLEPeripheral
+    for peripheral: any BLEPeripheral
   ) {
     // This shouldn't happen because the version exchange happens after characteristics are
     // discovered.
@@ -615,7 +615,7 @@ extension AssociationManager: BLEVersionResolverDelegate {
   func bleVersionResolver(
     _ bleVersionResolver: BLEVersionResolver,
     didEncounterError error: BLEVersionResolverError,
-    for peripheral: BLEPeripheral
+    for peripheral: any BLEPeripheral
   ) {
     notifyDelegateOfError(.cannotSendMessages)
   }

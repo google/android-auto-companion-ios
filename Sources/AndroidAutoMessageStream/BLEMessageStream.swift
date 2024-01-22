@@ -18,12 +18,12 @@ import AndroidAutoCoreBluetoothProtocols
 /// Message stream which is specific for BLE transport.
 public protocol BLEMessageStream: MessageStream {
   /// The peripheral as a `BLEPeripheral`.
-  var peripheral: BLEPeripheral { get }
+  var peripheral: any BLEPeripheral { get }
 }
 
 extension BLEMessageStream {
-  public var peripheral: AnyTransportPeripheral {
-    let blePeripheral: BLEPeripheral = self.peripheral
-    return blePeripheral as AnyTransportPeripheral
+  public var peripheral: any TransportPeripheral {
+    let blePeripheral: any BLEPeripheral = self.peripheral
+    return blePeripheral as any TransportPeripheral
   }
 }

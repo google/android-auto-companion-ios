@@ -1,4 +1,4 @@
-// Copyright 2021 Google LLC
+// Copyright 2023 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,18 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import "AAEParseResult.h"
-
-@implementation AAEParseResult
-
-- (instancetype)initWithSuccess:(BOOL)success alertToSend:(NSData *)alertToSend {
-  self = [super init];
-  if (self) {
-    _success = success;
-    _alertToSend = alertToSend;
-  }
-
-  return self;
-}
-
-@end
+/// Placeholder for ConnectionHowitzerV2 Protos.
+///
+/// This file needs to be here to trigger the build for the `AndroidAutoConnectionHowitzerV2Protos` module
+/// from the corresponding Swift Package Manager target. A plugin will generate the source files for
+/// each proto file in this directory, but there has to be at least one Swift file (this
+/// placeholder) in this directory to trigger the build rules.

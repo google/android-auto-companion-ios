@@ -38,24 +38,7 @@ public enum PeripheralStatus: Equatable {
 // MARK: - TransportPeripheral
 
 /// Homogeneous protocol for a peripheral using a specific communication transport.
-public protocol TransportPeripheral: AnyTransportPeripheral, Hashable {
-  /// Conform to Identifiable, but since that requires iOS 13+, just implement.
-  associatedtype ID: Hashable, CustomStringConvertible
-
-  /// Type for the context that may be provided during discovery of a peripheral.
-  associatedtype DiscoveryContext
-
-  /// Identifier for the peripheral.
-  var id: ID { get }
-
-  /// Handler of state change events for this peripheral.
-  var onStatusChange: ((PeripheralStatus) -> Void)? { get set }
-}
-
-// MARK: - AnyTransportPeripheral
-
-/// Peripheral conformance independent of transport.
-public protocol AnyTransportPeripheral: AnyObject {
+public protocol TransportPeripheral: AnyObject, Hashable, Identifiable {
   var identifierString: String { get }
   var displayName: String { get }
   var logName: String { get }
@@ -65,10 +48,10 @@ public protocol AnyTransportPeripheral: AnyObject {
   var status: PeripheralStatus { get }
 }
 
-// MARK: - AnyTransportPeripheral Extensions
+// MARK: - TransportPeripheral Extensions
 
-/// Default `AnyTransportPeripheral` conformance.
-extension AnyTransportPeripheral {
+/// Default `TransportPeripheral` implementations.
+extension TransportPeripheral {
   /// By default, the logName is just the displayName.
   public var logName: String { displayName }
 
@@ -77,20 +60,19 @@ extension AnyTransportPeripheral {
   }
 }
 
-// MARK: - TransportPeripheral Extensions
-
-/// Default `TransportPeripheral` implementations.
-extension TransportPeripheral {
-  /// By default, the value is just `id.description`.
-  public var identifierString: String { id.description }
-}
-
 /// Default `Hashable` conformance implementation for a peripheral.
 extension TransportPeripheral {
   public static func == (lhs: Self, rhs: Self) -> Bool {
     lhs.id == rhs.id
   }
+}
 
+extension TransportPeripheral where ID: CustomStringConvertible {
+  /// By default, the value is just `id.description`.
+  public var identifierString: String { id.description }
+}
+
+extension TransportPeripheral where ID: Hashable {
   public func hash(into hasher: inout Hasher) {
     hasher.combine(id)
   }

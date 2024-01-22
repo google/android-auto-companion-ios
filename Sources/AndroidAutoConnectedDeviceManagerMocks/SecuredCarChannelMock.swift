@@ -38,10 +38,10 @@ public class SecuredCarChannelMock: SecuredCarChannelPeripheral {
   public var car: Car
   public var userRole: UserRole?
   public var isValid = true
-  public var blePeripheral: BLEPeripheral
+  public var blePeripheral: any BLEPeripheral
 
-  public var peripheral: AnyTransportPeripheral {
-    blePeripheral as AnyTransportPeripheral
+  public var peripheral: any TransportPeripheral {
+    blePeripheral as any TransportPeripheral
   }
 
   public var id: String {

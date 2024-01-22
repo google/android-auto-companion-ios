@@ -74,7 +74,7 @@ private typealias QueryResponseProto = Com_Google_Companionprotos_QueryResponse
   public let car: Car
   public private(set) var userRole: UserRole?
 
-  var peripheral: AnyTransportPeripheral {
+  var peripheral: any TransportPeripheral {
     return messageStream.peripheral
   }
 
@@ -117,6 +117,7 @@ extension EstablishedCarChannel: SecuredCarChannel {
     }
 
     let id = UUID()
+    Self.log("Registering feature \(recipient.uuidString) with \(id.uuidString)")
     receivedMessageObservations[id] = observation
     messageRecipientToObservations[recipient] = id
 
@@ -255,7 +256,14 @@ extension EstablishedCarChannel: SecuredCarChannel {
   private func noop(_ value: Bool) {}
 
   func isFeatureSupported(_ featureID: UUID) -> Bool {
-    return messageRecipientToObservations[featureID] != nil
+    let isSupported = messageRecipientToObservations[featureID] != nil
+    Self.log("\(featureID.uuidString) isFeatureSupported: \(isSupported)")
+
+    for (recipient, _) in messageRecipientToObservations {
+      Self.log("Current registered feature \(recipient.uuidString)")
+    }
+
+    return isSupported
   }
 }
 

@@ -126,11 +126,11 @@ public class ConnectionManagerObservable: ConnectionManager<CentralManagerMock> 
 
   public override func peripheral(from channel: SecuredCarChannel) -> Peripheral? {
     guard let bleChannel = channel as? SecuredCarChannelPeripheral else { return nil }
-    guard let blePeripheral = bleChannel.peripheral as? BLEPeripheral else { return nil }
+    guard let blePeripheral = bleChannel.peripheral as? any BLEPeripheral else { return nil }
     return peripheral(from: blePeripheral)
   }
 
-  public override func peripheral(from blePeripheral: BLEPeripheral) -> Peripheral? {
+  public override func peripheral(from blePeripheral: any BLEPeripheral) -> Peripheral? {
     return blePeripheral as? PeripheralMock
   }
 }

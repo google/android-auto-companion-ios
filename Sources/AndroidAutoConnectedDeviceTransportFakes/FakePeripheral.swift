@@ -18,18 +18,10 @@ import XCTest
 
 /// Fake peripheral for testing generic transport.
 public final class FakePeripheral: TransportPeripheral {
-  public typealias DiscoveryContext = Any
-
   public let id = UUID()
-  public var onStatusChange: ((PeripheralStatus) -> Void)? = nil
   public var displayName = "abc"
   public var isConnected = false
-
-  public var status = PeripheralStatus.discovered {
-    didSet {
-      onStatusChange?(status)
-    }
-  }
+  public var status: PeripheralStatus = .discovered
 
   public init() {}
 }

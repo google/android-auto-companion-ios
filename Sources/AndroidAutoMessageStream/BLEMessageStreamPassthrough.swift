@@ -28,7 +28,7 @@ class BLEMessageStreamPassthrough: NSObject, BLEMessageStream {
 
   public let version = MessageStreamVersion.passthrough
 
-  public let peripheral: BLEPeripheral
+  public let peripheral: any BLEPeripheral
   public let readCharacteristic: BLECharacteristic
   public let writeCharacteristic: BLECharacteristic
 
@@ -60,7 +60,7 @@ class BLEMessageStreamPassthrough: NSObject, BLEMessageStream {
   ///   - readCharacteristic: The characteristic to listen for new messages on.
   ///   - writeCharacteristic: The characteristic to write messages to.
   public init(
-    peripheral: BLEPeripheral,
+    peripheral: any BLEPeripheral,
     readCharacteristic: BLECharacteristic,
     writeCharacteristic: BLECharacteristic
   ) {
@@ -71,8 +71,9 @@ class BLEMessageStreamPassthrough: NSObject, BLEMessageStream {
     // "self" can only be used for something other than referencing fields after init() has been
     // called.
     super.init()
-    peripheral.delegate = self
-    peripheral.setNotifyValue(true, for: readCharacteristic)
+
+    self.peripheral.delegate = self
+    self.peripheral.setNotifyValue(true, for: readCharacteristic)
   }
 
   /// Writes the given message to the peripheral associated with this stream.
@@ -122,7 +123,7 @@ class BLEMessageStreamPassthrough: NSObject, BLEMessageStream {
 
 extension BLEMessageStreamPassthrough: BLEPeripheralDelegate {
   public func peripheral(
-    _ peripheral: BLEPeripheral,
+    _ peripheral: any BLEPeripheral,
     didUpdateValueFor characteristic: BLECharacteristic,
     error: Error?
   ) {
@@ -148,19 +149,19 @@ extension BLEMessageStreamPassthrough: BLEPeripheralDelegate {
     )
   }
 
-  public func peripheralIsReadyToWrite(_ peripheral: BLEPeripheral) {
+  public func peripheralIsReadyToWrite(_ peripheral: any BLEPeripheral) {
     delegate?.messageStreamDidWriteMessage(
       self,
       to: BLEMessageStreamPassthrough.defaultRecipient
     )
   }
 
-  public func peripheral(_ peripheral: BLEPeripheral, didDiscoverServices error: Error?) {
+  public func peripheral(_ peripheral: any BLEPeripheral, didDiscoverServices error: Error?) {
     // No-op.
   }
 
   public func peripheral(
-    _ peripheral: BLEPeripheral,
+    _ peripheral: any BLEPeripheral,
     didDiscoverCharacteristicsFor service: BLEService,
     error: Error?
   ) {

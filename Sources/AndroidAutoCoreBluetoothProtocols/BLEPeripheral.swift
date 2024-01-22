@@ -23,7 +23,7 @@ public protocol BLEPeripheralDelegate: AnyObject {
   /// - Parameters:
   ///   - peripheral: The peripheral that the services were discovered for.
   ///   - error: The cause of the failure if an error occurred or `nil` if no error.
-  func peripheral(_ peripheral: BLEPeripheral, didDiscoverServices error: Error?)
+  func peripheral(_ peripheral: any BLEPeripheral, didDiscoverServices error: Error?)
 
   /// Invoked when characteristics are discovered a peripheral.
   ///
@@ -32,7 +32,7 @@ public protocol BLEPeripheralDelegate: AnyObject {
   ///   - service: The service the characteristics belong to.
   ///   - error: The cause of the failure if an error occurred or `nil` if no error.
   func peripheral(
-    _ peripheral: BLEPeripheral,
+    _ peripheral: any BLEPeripheral,
     didDiscoverCharacteristicsFor service: BLEService,
     error: Error?
   )
@@ -46,7 +46,7 @@ public protocol BLEPeripheralDelegate: AnyObject {
   ///   - characteristic: The characteristic that was updated.
   ///   - error: The cause of the failure if an error occurred or `nil` if no error.
   func peripheral(
-    _ peripheral: BLEPeripheral,
+    _ peripheral: any BLEPeripheral,
     didUpdateValueFor characteristic: BLECharacteristic,
     error: Error?
   )
@@ -57,11 +57,11 @@ public protocol BLEPeripheralDelegate: AnyObject {
   /// is safe to be made.
   ///
   /// - Parameter peripheral: The peripheral that is ready to send messages.
-  func peripheralIsReadyToWrite(_ peripheral: BLEPeripheral)
+  func peripheralIsReadyToWrite(_ peripheral: any BLEPeripheral)
 }
 
 /// A remote peripheral that supports BLE.
-public protocol BLEPeripheral: AnyTransportPeripheral {
+public protocol BLEPeripheral: TransportPeripheral {
   /// A unique identifier for this peripheral.
   var identifier: UUID { get }
 
@@ -94,7 +94,7 @@ public protocol BLEPeripheral: AnyTransportPeripheral {
   /// The observation is passed the peripheral itself and a list of services that have now been
   /// invalidated and are no longer on the peripheral.
   func observeServiceModifications(
-    using observation: @escaping (BLEPeripheral, [BLEService]) -> Void
+    using observation: @escaping (any BLEPeripheral, [BLEService]) -> Void
   )
 
   /// Discover the services of this peripheral.
@@ -138,6 +138,9 @@ public protocol BLEPeripheral: AnyTransportPeripheral {
 
 /// Default implementations.
 extension BLEPeripheral {
+  /// ID for conformance to `TransportPeripheral`.
+  public var id: UUID { identifier }
+
   /// Returns a log-friendly name for the given `BLEPeripheral`.
   public var displayName: String { name ?? "no name" }
 

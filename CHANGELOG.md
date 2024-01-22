@@ -3,6 +3,13 @@
 **NOTE:** Entries are ordered chronologically with the newest entries at the
 top.
 
+## iOS Companion 3.3.0
+
+The following changes have been made:
+- Added the Heartbeat feature to handle periodic pings from the connected IHU.
+- Added the Howitzer feature for evaluating bandwidth.
+- Removed unused generic transport components.
+
 ## iOS Companion 3.2.1
 
 The following changes have been made:

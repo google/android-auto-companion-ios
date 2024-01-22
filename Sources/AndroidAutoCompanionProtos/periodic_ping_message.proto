@@ -1,4 +1,4 @@
-// Copyright 2021 Google LLC
+// Copyright 2023 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,11 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// Monitor conformance for certain peripheral activities (e.g. association, connection).
-///
-/// If we were targeting iOS 13+, we would instead use Combine. For now, we need a common way to
-/// handle event monitors. See https://developer.apple.com/documentation/combine for details.
-public protocol PeripheralActivityMonitor {
-  /// Cancel the monitor.
-  func cancel()
+syntax = "proto3";
+
+package com.google.companionprotos;
+
+option java_package = "com.google.android.companionprotos";
+option java_outer_classname = "PeriodicPingProto";
+
+// A message specific to the heartbeat feature.
+message PeriodicPingMessage {
+  // The different message types that indicate the content of the payload.
+  enum MessageType {
+    UNKNOWN = 0;
+    PING = 1;
+    ACK = 2;
+  }
+
+  // The type of this message.
+  MessageType message_type = 1;
 }

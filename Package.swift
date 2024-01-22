@@ -31,6 +31,9 @@ let package = Package(
     .library(
       name: "AndroidAutoLogger",
       targets: ["AndroidAutoLogger"]),
+    .library(
+      name: "AndroidAutoConnectionHowitzerManagerV2",
+      targets: ["AndroidAutoConnectionHowitzerManagerV2"]),
     .plugin(
       name: "ProtoSourceGenerator",
       targets: ["ProtoSourceGenerator"]),
@@ -44,10 +47,12 @@ let package = Package(
       path: "Binaries/AndroidAutoUKey2Wrapper.xcframework"),
     .target(
       name: "AndroidAutoLogger",
-      dependencies: []),
+      dependencies: []
+    ),
     .target(
       name: "AndroidAutoCoreBluetoothProtocols",
-      dependencies: ["AndroidAutoConnectedDeviceTransport"]),
+      dependencies: ["AndroidAutoConnectedDeviceTransport"]
+    ),
     .target(
       name: "AndroidAutoCompanionProtos",
       dependencies: [.product(name: "SwiftProtobuf", package: "swift-protobuf")],
@@ -75,7 +80,8 @@ let package = Package(
         "AndroidAutoCoreBluetoothProtocols",
         "AndroidAutoMessageStream",
         "AndroidAutoUKey2Wrapper",
-      ]),
+      ]
+    ),
     .target(
       name: "AndroidAutoConnectedDeviceManager",
       dependencies: [
@@ -93,26 +99,45 @@ let package = Package(
         "AndroidAutoCoreBluetoothProtocols",
         "AndroidAutoCoreBluetoothProtocolsMocks",
         "AndroidAutoSecureChannel",
-      ]),
+      ]
+    ),
     .target(
       name: "AndroidAutoConnectedDeviceTransport",
-      dependencies: ["AndroidAutoLogger"]),
+      dependencies: ["AndroidAutoLogger"]
+    ),
     .target(
       name: "AndroidAutoConnectedDeviceTransportFakes",
-      dependencies: ["AndroidAutoConnectedDeviceTransport"]),
+      dependencies: ["AndroidAutoConnectedDeviceTransport"]
+    ),
     .target(
       name: "AndroidAutoCoreBluetoothProtocolsMocks",
-      dependencies: ["AndroidAutoCoreBluetoothProtocols"]),
+      dependencies: ["AndroidAutoCoreBluetoothProtocols"]
+    ),
     .testTarget(
       name: "AndroidAutoLoggerTests",
-      dependencies: ["AndroidAutoLogger"]),
+      dependencies: ["AndroidAutoLogger"]
+    ),
     .testTarget(
       name: "AndroidAutoMessageStreamTests",
       dependencies: [
         "AndroidAutoCoreBluetoothProtocols",
         "AndroidAutoCoreBluetoothProtocolsMocks",
         "AndroidAutoMessageStream",
-      ]),
+      ]
+    ),
+    .target(
+      name: "AndroidAutoConnectionHowitzerV2Protos",
+      dependencies: [.product(name: "SwiftProtobuf", package: "swift-protobuf")],
+      plugins: [.plugin(name: "ProtoSourceGenerator")]
+    ),
+    .target(
+      name: "AndroidAutoConnectionHowitzerManagerV2",
+      dependencies: [
+        "AndroidAutoConnectedDeviceManager",
+        "AndroidAutoLogger",
+        "AndroidAutoConnectionHowitzerV2Protos",
+      ]
+    ),
     .testTarget(
       name: "AndroidAutoSecureChannelTests",
       dependencies: [
@@ -121,7 +146,8 @@ let package = Package(
         "AndroidAutoMessageStream",
         "AndroidAutoSecureChannel",
         "AndroidAutoUKey2Wrapper",
-      ]),
+      ]
+    ),
     .testTarget(
       name: "AndroidAutoConnectedDeviceManagerTests",
       dependencies: [
@@ -130,12 +156,16 @@ let package = Package(
         "AndroidAutoCoreBluetoothProtocols",
         "AndroidAutoCoreBluetoothProtocolsMocks",
         "AndroidAutoSecureChannel",
-      ]),
+      ]
+    ),
     .testTarget(
-      name: "AndroidAutoConnectedDeviceTransportTests",
+      name: "AndroidAutoConnectionHowitzerManagerV2Tests",
       dependencies: [
-        "AndroidAutoConnectedDeviceTransport",
-        "AndroidAutoConnectedDeviceTransportFakes",
-      ]),
+        "AndroidAutoConnectionHowitzerV2Protos",
+        "AndroidAutoConnectionHowitzerManagerV2",
+        "AndroidAutoConnectedDeviceManager",
+        "AndroidAutoConnectedDeviceManagerMocks",
+      ]
+    ),
   ]
 )

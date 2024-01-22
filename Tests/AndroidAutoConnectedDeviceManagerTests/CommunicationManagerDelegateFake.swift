@@ -24,7 +24,7 @@ import XCTest
 class CommunicationManagerDelegateFake: CommunicationManagerDelegate {
   var establishingSecureChannelCalled = false
   var establishingCar: Car?
-  var establishingPeripheral: BLEPeripheral?
+  var establishingPeripheral: (any BLEPeripheral)?
 
   var didEstablishSecureChannelCalled = false
   var securedCarChannel: SecuredCarChannel?
@@ -32,12 +32,12 @@ class CommunicationManagerDelegateFake: CommunicationManagerDelegate {
   var errorExpectation: XCTestExpectation?
   var didEncounterErrorCalled = false
   var error: CommunicationManagerError?
-  var peripheralWithError: BLEPeripheral?
+  var peripheralWithError: (any BLEPeripheral)?
 
   func communicationManager(
     _ communicationManager: CommunicationManager,
     establishingEncryptionWith car: Car,
-    peripheral: BLEPeripheral
+    peripheral: any BLEPeripheral
   ) {
     establishingSecureChannelCalled = true
     establishingCar = car
@@ -55,7 +55,7 @@ class CommunicationManagerDelegateFake: CommunicationManagerDelegate {
   func communicationManager(
     _ communicationManager: CommunicationManager,
     didEncounterError error: CommunicationManagerError,
-    whenReconnecting peripheral: BLEPeripheral
+    whenReconnecting peripheral: any BLEPeripheral
   ) {
     self.error = error
 

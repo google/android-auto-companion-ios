@@ -56,7 +56,7 @@ private protocol MessageExchangeDelegate: AnyObject {
 public class BLEVersionResolverImpl: NSObject, BLEVersionResolver {
   private static let log = Logger(for: BLEVersionResolverImpl.self)
 
-  private var peripheral: BLEPeripheral?
+  private var peripheral: (any BLEPeripheral)?
   private var readCharacteristic: BLECharacteristic?
   private var writeCharacteristic: BLECharacteristic?
   private var exchangeHandler: ResolutionExchangeHandler?
@@ -74,7 +74,7 @@ public class BLEVersionResolverImpl: NSObject, BLEVersionResolver {
   ///   - writeCharacteristic: The characteristic on the peripheral to write to.
   ///   - allowsCapabilitiesExchange: Whether capabilities exchange is allowed (e.g. associating).
   public func resolveVersion(
-    with peripheral: BLEPeripheral,
+    with peripheral: any BLEPeripheral,
     readCharacteristic: BLECharacteristic,
     writeCharacteristic: BLECharacteristic,
     allowsCapabilitiesExchange: Bool
@@ -90,8 +90,8 @@ public class BLEVersionResolverImpl: NSObject, BLEVersionResolver {
     )
     self.exchangeHandler = versionExchangeHandler
 
-    peripheral.delegate = self
-    peripheral.setNotifyValue(true, for: readCharacteristic)
+    self.peripheral?.delegate = self
+    self.peripheral?.setNotifyValue(true, for: readCharacteristic)
 
     versionExchangeHandler.sendVersionExchangeProto()
   }
@@ -120,7 +120,7 @@ extension BLEVersionResolverImpl: MessageExchangeDelegate {
       return
     }
 
-    peripheral.delegate = nil
+    self.peripheral?.delegate = nil
 
     // This shouldn't be nil, but double-check because it's optional.
     if self.readCharacteristic != nil {
@@ -159,7 +159,7 @@ extension BLEVersionResolverImpl: MessageExchangeDelegate {
 
 extension BLEVersionResolverImpl: BLEPeripheralDelegate {
   public func peripheral(
-    _ peripheral: BLEPeripheral,
+    _ peripheral: any BLEPeripheral,
     didUpdateValueFor characteristic: BLECharacteristic,
     error: Error?
   ) {
@@ -178,16 +178,16 @@ extension BLEVersionResolverImpl: BLEPeripheralDelegate {
     exchangeHandler?.resolveMessage(message)
   }
 
-  public func peripheralIsReadyToWrite(_ peripheral: BLEPeripheral) {
+  public func peripheralIsReadyToWrite(_ peripheral: any BLEPeripheral) {
     // No-op. Only one message needs to be written.
   }
 
-  public func peripheral(_ peripheral: BLEPeripheral, didDiscoverServices error: Error?) {
+  public func peripheral(_ peripheral: any BLEPeripheral, didDiscoverServices error: Error?) {
     // No-op. Not discovering services.
   }
 
   public func peripheral(
-    _ peripheral: BLEPeripheral,
+    _ peripheral: any BLEPeripheral,
     didDiscoverCharacteristicsFor service: BLEService,
     error: Error?
   ) {
@@ -210,10 +210,10 @@ private struct VersionExchangeHandler: ResolutionExchangeHandler {
   /// Only security version that supports capabilities exchange.
   private static let capabilitiesExchangeSecurityVersion: Int32 = 3
 
-  private let peripheral: BLEPeripheral
+  private let peripheral: any BLEPeripheral
   private weak var delegate: MessageExchangeDelegate?
 
-  init(peripheral: BLEPeripheral, delegate: MessageExchangeDelegate) {
+  init(peripheral: any BLEPeripheral, delegate: MessageExchangeDelegate) {
     self.peripheral = peripheral
     self.delegate = delegate
   }
@@ -396,12 +396,12 @@ private struct EmptyCapabilitiesExchangeHandler: ResolutionExchangeHandler {
   private static let log = Logger(for: EmptyCapabilitiesExchangeHandler.self)
 
   private let resolution: ExchangeResolution
-  private let peripheral: BLEPeripheral
+  private let peripheral: any BLEPeripheral
   private weak var delegate: MessageExchangeDelegate?
 
   init(
     resolution: ExchangeResolution,
-    peripheral: BLEPeripheral,
+    peripheral: any BLEPeripheral,
     delegate: MessageExchangeDelegate
   ) {
     self.resolution = resolution

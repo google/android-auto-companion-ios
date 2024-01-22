@@ -30,7 +30,7 @@ import Foundation
   func communicationManager(
     _ communicationManager: CommunicationManager,
     establishingEncryptionWith car: Car,
-    peripheral: BLEPeripheral
+    peripheral: any BLEPeripheral
   )
 
   /// Invoked a given car has been set up for secure communication.
@@ -53,7 +53,7 @@ import Foundation
   func communicationManager(
     _ communicationManager: CommunicationManager,
     didEncounterError error: CommunicationManagerError,
-    whenReconnecting peripheral: BLEPeripheral
+    whenReconnecting peripheral: any BLEPeripheral
   )
 }
 
@@ -209,7 +209,7 @@ enum CommunicationManagerError: Error, Equatable {
     reconnectionHelpers[helper.peripheral.identifier] = helper
   }
 
-  private func reconnectionHelper(for peripheral: BLEPeripheral) throws -> ReconnectionHelper {
+  private func reconnectionHelper(for peripheral: any BLEPeripheral) throws -> ReconnectionHelper {
     guard let helper = reconnectionHelpers[peripheral.identifier] else {
       throw CommunicationManagerError.missingReconnectionHelper(peripheral.identifier)
     }
@@ -223,7 +223,7 @@ enum CommunicationManagerError: Error, Equatable {
   ///   - peripheral: The peripheral to set up secure communication with.
   ///   - id: A unique id that identifies the peripheral. This value can be `nil` if the id is not
   ///     known at the time of secure channel setup.
-  func setUpSecureChannel(with peripheral: BLEPeripheral, id: String?) throws {
+  func setUpSecureChannel(with peripheral: any BLEPeripheral, id: String?) throws {
     let pendingCar: PendingCar
     let serviceUUIDToDiscover: CBUUID
 
@@ -244,7 +244,7 @@ enum CommunicationManagerError: Error, Equatable {
     peripheral.discoverServices([serviceUUIDToDiscover])
   }
 
-  private func scheduleReconnectionTimeout(for peripheral: BLEPeripheral) {
+  private func scheduleReconnectionTimeout(for peripheral: any BLEPeripheral) {
     let notifyReconnectionError = DispatchWorkItem { [weak self] in
       Self.log.error(
         "Reconnection attempt timed out for car \(peripheral.logName). Notifying delegate.")
@@ -261,7 +261,7 @@ enum CommunicationManagerError: Error, Equatable {
 
   /// Returns a saved secure session for the given car or throws an error if the car is
   /// unassociated.
-  private func fetchSecureSession(for car: BLEPeripheral, id: String) throws -> Data {
+  private func fetchSecureSession(for car: any BLEPeripheral, id: String) throws -> Data {
     // Check if the peripheral matches the identifier of a previous association.
     guard associatedCarsManager.identifiers.contains(id) else {
       Self.log(
@@ -290,7 +290,7 @@ enum CommunicationManagerError: Error, Equatable {
   ///   - peripheral: The peripheral to communicate with.
   ///   - characteristics: The characteristics of the given peripheral.
   private func resolveBLEVersion(
-    with peripheral: BLEPeripheral,
+    with peripheral: any BLEPeripheral,
     characteristics: [BLECharacteristic]
   ) {
     let ioCharacteristicsUUIDs = CommunicationManager.versionCharacteristics
@@ -355,29 +355,29 @@ enum CommunicationManagerError: Error, Equatable {
     return (readCharacteristic, writeCharacteristic)
   }
 
-  private func firstPendingCar(with peripheral: BLEPeripheral) -> PendingCar? {
+  private func firstPendingCar(with peripheral: any BLEPeripheral) -> PendingCar? {
     return pendingCars.first(where: { $0.car === peripheral })
   }
 
   /// Removes all any cars in the `pendingCars` array that hold the given peripheral.
-  private func removePendingCars(with peripheral: BLEPeripheral) {
+  private func removePendingCars(with peripheral: any BLEPeripheral) {
     pendingCars.removeAll(where: { $0.car === peripheral })
   }
 
   private func notifyDelegateOfError(
     _ error: CommunicationManagerError,
-    connecting peripheral: BLEPeripheral
+    connecting peripheral: any BLEPeripheral
   ) {
     cleanTimeouts(for: peripheral)
     delegate?.communicationManager(self, didEncounterError: error, whenReconnecting: peripheral)
   }
 
-  private func cleanTimeouts(for peripheral: BLEPeripheral) {
+  private func cleanTimeouts(for peripheral: any BLEPeripheral) {
     reconnectionTimeouts.removeValue(forKey: peripheral.identifier)?.cancel()
   }
 
   /// Returns a log-friendly name for the given `BLEPeripehral`.
-  private func logName(for peripheral: BLEPeripheral) -> String {
+  private func logName(for peripheral: any BLEPeripheral) -> String {
     return peripheral.name ?? "no name"
   }
 }
@@ -385,7 +385,7 @@ enum CommunicationManagerError: Error, Equatable {
 // MARK: - BLEPeripheralDelegate
 
 extension CommunicationManager: BLEPeripheralDelegate {
-  func peripheral(_ peripheral: BLEPeripheral, didDiscoverServices error: Error?) {
+  func peripheral(_ peripheral: any BLEPeripheral, didDiscoverServices error: Error?) {
     guard error == nil else {
       Self.log.error(
         "Error discovering services for car (\(peripheral.logName)): \(error!.localizedDescription)"
@@ -424,7 +424,7 @@ extension CommunicationManager: BLEPeripheralDelegate {
 
   /// Prepare for transition to version resolution phase.
   private func prepareVersionResolution(
-    for peripheral: BLEPeripheral,
+    for peripheral: any BLEPeripheral,
     from service: BLEService,
     onReadyForHandshake: @escaping () -> Void
   ) {
@@ -460,7 +460,7 @@ extension CommunicationManager: BLEPeripheralDelegate {
   }
 
   func peripheral(
-    _ peripheral: BLEPeripheral,
+    _ peripheral: any BLEPeripheral,
     didDiscoverCharacteristicsFor service: BLEService,
     error: Error?
   ) {
@@ -494,7 +494,7 @@ extension CommunicationManager: BLEPeripheralDelegate {
   }
 
   func peripheral(
-    _ peripheral: BLEPeripheral,
+    _ peripheral: any BLEPeripheral,
     didUpdateValueFor characteristic: BLECharacteristic,
     error: Error?
   ) {
@@ -529,7 +529,7 @@ extension CommunicationManager: BLEPeripheralDelegate {
     }
   }
 
-  func peripheralIsReadyToWrite(_ peripheral: BLEPeripheral) {}
+  func peripheralIsReadyToWrite(_ peripheral: any BLEPeripheral) {}
 }
 
 // MARK: - BLEVersionResolverDelegate
@@ -539,7 +539,7 @@ extension CommunicationManager: BLEVersionResolverDelegate {
     _ bleVersionResolver: BLEVersionResolver,
     didResolveStreamVersionTo streamVersion: MessageStreamVersion,
     securityVersionTo securityVersion: MessageSecurityVersion,
-    for peripheral: BLEPeripheral
+    for peripheral: any BLEPeripheral
   ) {
     // This shouldn't happen because this case should have been vetted for when characteristics are
     // discovered.
@@ -591,7 +591,7 @@ extension CommunicationManager: BLEVersionResolverDelegate {
   func bleVersionResolver(
     _ bleVersionResolver: BLEVersionResolver,
     didEncounterError error: BLEVersionResolverError,
-    for peripheral: BLEPeripheral
+    for peripheral: any BLEPeripheral
   ) {
     switch error {
     case BLEVersionResolverError.versionNotSupported:

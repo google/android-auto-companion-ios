@@ -27,7 +27,7 @@ class FakeMessageStream: NSObject, MessageStream {
   // This force-unwrap is safe as the UUID string is valid and cannot change.
   private static let defaultRecipient = UUID(uuidString: "ba4bdcfb-b5dd-4560-9e03-1444bcb0fcb6")!
 
-  public let peripheral: AnyTransportPeripheral
+  public let peripheral: any TransportPeripheral
   public let version: MessageStreamVersion
 
   public var isValid: Bool { true }
@@ -49,7 +49,7 @@ class FakeMessageStream: NSObject, MessageStream {
 
   public weak var delegate: MessageStreamDelegate?
 
-  public init(peripheral: AnyTransportPeripheral, version: MessageStreamVersion = .passthrough) {
+  public init(peripheral: any TransportPeripheral, version: MessageStreamVersion = .passthrough) {
     self.peripheral = peripheral
     self.version = version
   }

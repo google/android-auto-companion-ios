@@ -75,7 +75,7 @@ public protocol MessageStream: AnyObject {
   var version: MessageStreamVersion { get }
 
   /// The peripheral to send messages to.
-  var peripheral: AnyTransportPeripheral { get }
+  var peripheral: any TransportPeripheral { get }
 
   /// Indicates whether this stream is valid for reading and writing.
   var isValid: Bool { get }

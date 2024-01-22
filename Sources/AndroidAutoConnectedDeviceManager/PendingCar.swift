@@ -18,7 +18,7 @@ import Foundation
 
 /// A car that is pending establishment of a secure channel.
 class PendingCar {
-  let car: BLEPeripheral
+  let car: any BLEPeripheral
 
   let id: String?
   let secureSession: Data?
@@ -33,7 +33,7 @@ class PendingCar {
   /// Initialize this struct with just the car that is waiting for a secure channel.
   ///
   /// - Parameter car: the peripheral that backs this `PendingCar`.
-  init(car: BLEPeripheral) {
+  init(car: any BLEPeripheral) {
     self.car = car
     self.id = nil
     self.secureSession = nil
@@ -49,7 +49,7 @@ class PendingCar {
   ///   - car: The car to establish a secure channel with.
   ///   - id: The unique identifier for the car.
   ///   - secureSession: Serialized data for reestablishing a secure session with the given car.
-  init(car: BLEPeripheral, id: String, secureSession: Data) {
+  init(car: some BLEPeripheral, id: String, secureSession: Data) {
     self.id = id
     self.car = car
     self.secureSession = secureSession

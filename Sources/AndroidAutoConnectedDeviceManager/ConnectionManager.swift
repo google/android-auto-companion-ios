@@ -92,7 +92,7 @@ enum StartAssociationError: Error {
 
   func peripheral(from channel: SecuredCarChannel) -> Peripheral?
   func peripheral(from messageStream: MessageStream) -> Peripheral?
-  func peripheral(from blePeripheral: BLEPeripheral) -> Peripheral?
+  func peripheral(from blePeripheral: any BLEPeripheral) -> Peripheral?
 }
 
 // MARK: - ConnectionHandle
@@ -133,7 +133,7 @@ private enum ConnectionManagerSignposts {
 
 extension BuildNumber {
   /// The version of this SDK.
-  fileprivate static let sdkVersion = BuildNumber(major: 3, minor: 2, patch: 1)
+  fileprivate static let sdkVersion = BuildNumber(major: 3, minor: 3, patch: 0)
 }
 
 /// Holds all the necessary information to try a reconnection for a `Peripheral`.
@@ -321,7 +321,7 @@ private struct ConnectionRetryState {
 
   override func peripheral(from channel: SecuredCarChannel) -> Peripheral? {
     guard let bleChannel = channel as? SecuredCarChannelPeripheral else { return nil }
-    guard let blePeripheral = bleChannel.peripheral as? BLEPeripheral else { return nil }
+    guard let blePeripheral = bleChannel.peripheral as? any BLEPeripheral else { return nil }
     return peripheral(from: blePeripheral)
   }
 
@@ -330,7 +330,7 @@ private struct ConnectionRetryState {
     return peripheral(from: messageStream.peripheral)
   }
 
-  override func peripheral(from blePeripheral: BLEPeripheral) -> Peripheral? {
+  override func peripheral(from blePeripheral: any BLEPeripheral) -> Peripheral? {
     guard let wrapper = blePeripheral as? CBPeripheralWrapper else { return nil }
     return wrapper.peripheral
   }
@@ -947,7 +947,7 @@ where CentralManager: SomeCentralManager {
   }
 
   /// Subclasses should override this method to retrieve the peripheral from a `BLEPeripheral`.
-  func peripheral(from blePeripheral: BLEPeripheral) -> Peripheral? {
+  func peripheral(from blePeripheral: any BLEPeripheral) -> Peripheral? {
     return nil
   }
 
@@ -1071,7 +1071,7 @@ extension ConnectionManager: CommunicationManagerDelegate {
   func communicationManager(
     _ communicationManager: CommunicationManager,
     establishingEncryptionWith car: Car,
-    peripheral: BLEPeripheral
+    peripheral: any BLEPeripheral
   ) {
     // Ensure that the list of peripherals to device ids is up to date.
     peripheralDeviceIds[peripheral.identifier] = car.id
@@ -1096,7 +1096,7 @@ extension ConnectionManager: CommunicationManagerDelegate {
   func communicationManager(
     _ communicationManager: CommunicationManager,
     didEncounterError error: CommunicationManagerError,
-    whenReconnecting peripheral: BLEPeripheral
+    whenReconnecting peripheral: any BLEPeripheral
   ) {
     signpostMetrics.postIfAvailable(ConnectionManagerSignposts.reconnectionFailure)
     signpostMetrics.postIfAvailable(ConnectionManagerSignposts.reconnectionDuration.end)
@@ -1123,7 +1123,7 @@ extension ConnectionManager: AssociationManagerDelegate {
     _ associationManager: AssociationManager,
     didCompleteAssociationWithCar car: Car,
     securedCarChannel: SecuredConnectedDeviceChannel,
-    peripheral: BLEPeripheral
+    peripheral: any BLEPeripheral
   ) {
     signpostMetrics.postIfAvailable(ConnectionManagerSignposts.associationDuration.end)
     signpostMetrics.postIfAvailable(ConnectionManagerSignposts.associationCompletion)

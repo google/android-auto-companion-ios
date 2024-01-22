@@ -404,7 +404,7 @@ class BLEVersionResolverImplTest: XCTestCase {
     return NSError(domain: "", code: 0, userInfo: nil)
   }
 
-  private func notify(from peripheral: BLEPeripheral, withValue value: Data) {
+  private func notify(from peripheral: any BLEPeripheral, withValue value: Data) {
     readCharacteristic.value = value
     bleVersionResolver.peripheral(peripheral, didUpdateValueFor: readCharacteristic, error: nil)
   }
@@ -441,7 +441,7 @@ class BLEVersionResolverImplTest: XCTestCase {
 private class BLEVersionResolverDelegateMock: BLEVersionResolverDelegate {
   var resolvedStreamVersion: MessageStreamVersion?
   var resolvedSecurityVersion: MessageSecurityVersion?
-  var resolvedPeripheral: BLEPeripheral?
+  var resolvedPeripheral: (any BLEPeripheral)?
 
   var encounteredError: BLEVersionResolverError?
 
@@ -449,7 +449,7 @@ private class BLEVersionResolverDelegateMock: BLEVersionResolverDelegate {
     _ bleVersionResolver: BLEVersionResolver,
     didResolveStreamVersionTo streamVersion: MessageStreamVersion,
     securityVersionTo securityVersion: MessageSecurityVersion,
-    for peripheral: BLEPeripheral
+    for peripheral: any BLEPeripheral
   ) {
     resolvedStreamVersion = streamVersion
     resolvedSecurityVersion = securityVersion
@@ -459,7 +459,7 @@ private class BLEVersionResolverDelegateMock: BLEVersionResolverDelegate {
   func bleVersionResolver(
     _ bleVersionResolver: BLEVersionResolver,
     didEncounterError error: BLEVersionResolverError,
-    for peripheral: BLEPeripheral
+    for peripheral: any BLEPeripheral
   ) {
     encounteredError = error
   }

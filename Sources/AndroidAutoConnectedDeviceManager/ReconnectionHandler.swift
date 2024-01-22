@@ -61,7 +61,7 @@ enum ReconnectionHandlerError: Error {
   var car: Car { get }
 
   /// The underlying peripheral that represents the car being connected to.
-  var peripheral: BLEPeripheral { get }
+  var peripheral: any BLEPeripheral { get }
 
   /// The delegate to be notified of the status of encryption setup.
   var delegate: ReconnectionHandlerDelegate? { get set }
@@ -76,5 +76,5 @@ enum ReconnectionHandlerError: Error {
 /// A channel that also exposes its backing peripheral.
 @MainActor protocol SecuredCarChannelPeripheral {
   /// The underlying peripheral that this channel provides secure communication with.
-  var peripheral: AnyTransportPeripheral { get }
+  var peripheral: any TransportPeripheral { get }
 }

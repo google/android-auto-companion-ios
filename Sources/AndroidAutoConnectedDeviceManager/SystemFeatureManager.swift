@@ -107,31 +107,38 @@ class SystemFeatureManager: FeatureManager {
     case SystemQueryType.isFeatureSupported:
       Self.log("Received query for feature support status.")
 
-      let provider = featureSupportStatusProvider(for: car)
-      Self.log("Feature support status provider is \(String(describing: provider))")
-
-      let statuses: [FeatureSupportStatus] = systemQuery.payloads.compactMap { payload in
+      let queriedFeatureIDs: [UUID] = systemQuery.payloads.compactMap { payload in
         guard let queriedFeatureID = UUID(uuidString: String(decoding: payload, as: UTF8.self))
         else {
           Self.log.error("Could not parse query \(payload) as feature ID. Ignored.")
           return nil
         }
+        return queriedFeatureID
+      }
 
-        guard let provider else {
-          return FeatureSupportStatus.with {
-            $0.featureID = queriedFeatureID.uuidString
+      guard let provider = featureSupportStatusProvider(for: car) else {
+        Self.log.error("No feature support status provider. Returning not supported for all.")
+        let statuses = queriedFeatureIDs.map { featureID in
+          FeatureSupportStatus.with {
+            $0.featureID = featureID.uuidString
             $0.isSupported = false
           }
         }
+        let response = FeatureSupportResponse.with {
+          $0.statuses = statuses
+        }
+        try responseHandle.respond(with: response.serializedData(), isSuccessful: true)
+        return
+      }
+      Self.log("Feature support status provider is \(String(describing: provider))")
 
+      let statuses: [FeatureSupportStatus] = queriedFeatureIDs.map { queriedFeatureID in
         let isSupported = provider.isFeatureSupported(queriedFeatureID)
-        let status = FeatureSupportStatus.with {
+        Self.log("Queried feature status: \(featureID) - \(isSupported).")
+        return FeatureSupportStatus.with {
           $0.featureID = queriedFeatureID.uuidString
           $0.isSupported = isSupported
         }
-
-        Self.log("Queried feature status: \(featureID) - \(isSupported).")
-        return status
       }
       Self.log("Queried feature support statuses are \(statuses).")
 

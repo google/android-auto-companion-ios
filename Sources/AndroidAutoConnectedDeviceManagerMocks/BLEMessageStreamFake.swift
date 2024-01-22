@@ -24,7 +24,7 @@ public class BLEMessageStreamFake: BLEMessageStream {
 
   public let version = MessageStreamVersion.passthrough
 
-  public let peripheral: BLEPeripheral
+  public let peripheral: any BLEPeripheral
   public var messageEncryptor: MessageEncryptor? = nil
 
   /// Debug description for reading.
@@ -45,7 +45,7 @@ public class BLEMessageStreamFake: BLEMessageStream {
     return peripheral.state == .connected
   }
 
-  public init(peripheral: BLEPeripheral) {
+  public init(peripheral: any BLEPeripheral) {
     self.peripheral = peripheral
   }
 

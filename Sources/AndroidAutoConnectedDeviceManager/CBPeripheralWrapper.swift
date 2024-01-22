@@ -18,7 +18,7 @@ import Foundation
 
 /// A wrapper around a `CBPeripheral` that will make it conform to `BLEPeripheral`.
 class CBPeripheralWrapper: NSObject, BLEPeripheral {
-  private var serviceObserver: ((BLEPeripheral, [BLEService]) -> Void)? = nil
+  private var serviceObserver: ((any BLEPeripheral, [BLEService]) -> Void)? = nil
 
   let peripheral: CBPeripheral
 
@@ -26,9 +26,9 @@ class CBPeripheralWrapper: NSObject, BLEPeripheral {
 
   weak var delegate: BLEPeripheralDelegate?
 
-  var identifier: UUID {
-    return peripheral.identifier
-  }
+  var id: UUID { peripheral.identifier }
+
+  var identifier: UUID { id }
 
   var identifierString: String { identifier.uuidString }
 
@@ -59,7 +59,7 @@ class CBPeripheralWrapper: NSObject, BLEPeripheral {
   }
 
   func observeServiceModifications(
-    using observation: @escaping (BLEPeripheral, [BLEService]) -> Void
+    using observation: @escaping (any BLEPeripheral, [BLEService]) -> Void
   ) {
     serviceObserver = observation
   }

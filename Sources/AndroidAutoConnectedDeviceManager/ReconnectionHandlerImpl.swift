@@ -50,7 +50,7 @@ import Foundation
 
   let car: Car
 
-  var peripheral: BLEPeripheral {
+  var peripheral: any BLEPeripheral {
     return messageStream.peripheral
   }
 

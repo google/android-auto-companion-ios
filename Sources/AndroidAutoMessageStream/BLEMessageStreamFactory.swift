@@ -28,7 +28,7 @@ public enum BLEMessageStreamFactory {
   /// - Returns: An appropriate `BLEMessageStream`.
   public static func makeStream(
     version: MessageStreamVersion,
-    peripheral: BLEPeripheral,
+    peripheral: any BLEPeripheral,
     readCharacteristic: BLECharacteristic,
     writeCharacteristic: BLECharacteristic,
     allowsCompression: Bool

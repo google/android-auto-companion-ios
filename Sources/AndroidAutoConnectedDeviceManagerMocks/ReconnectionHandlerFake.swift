@@ -21,14 +21,14 @@ import Foundation
 /// encryption.
 public class ReconnectionHandlerFake: ReconnectionHandler {
   public let car: Car
-  public let peripheral: BLEPeripheral
+  public let peripheral: any BLEPeripheral
 
   public var establishEncryptionShouldFail = false
   public var establishEncryptionCalled = false
 
   public weak var delegate: ReconnectionHandlerDelegate?
 
-  public init(car: Car, peripheral: BLEPeripheral) {
+  public init(car: Car, peripheral: any BLEPeripheral) {
     self.car = car
     self.peripheral = peripheral
   }

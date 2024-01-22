@@ -27,7 +27,7 @@ public class BLEVersionResolverFake: NSObject, BLEVersionResolver {
   public weak var delegate: BLEVersionResolverDelegate?
 
   public func resolveVersion(
-    with peripheral: BLEPeripheral,
+    with peripheral: any BLEPeripheral,
     readCharacteristic: BLECharacteristic,
     writeCharacteristic: BLECharacteristic,
     allowsCapabilitiesExchange: Bool

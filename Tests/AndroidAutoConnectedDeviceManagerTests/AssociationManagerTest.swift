@@ -895,7 +895,7 @@ import XCTest
   ///
   /// Valid characteristics means that it contains the correct UUIDs for a server write
   /// and a client read characteristics.
-  private func notifyValidCharacteristicsDiscovered(for peripheral: BLEPeripheral) {
+  private func notifyValidCharacteristicsDiscovered(for peripheral: any BLEPeripheral) {
     associationManager.peripheral(
       peripheral,
       didDiscoverCharacteristicsFor: validService,
@@ -948,7 +948,7 @@ import XCTest
 class AssociationDelegateMock: AssociationManagerDelegate {
   var didCompleteAssociationCalled = false
   var associatedCar: Car? = nil
-  var associatedPeripheral: BLEPeripheral? = nil
+  var associatedPeripheral: (any BLEPeripheral)? = nil
 
   var receivedCarIdCalled = false
   var requiresDisplayOfPairingCodeCalled = false
@@ -962,7 +962,7 @@ class AssociationDelegateMock: AssociationManagerDelegate {
     _ associationManager: AssociationManager,
     didCompleteAssociationWithCar car: Car,
     securedCarChannel: SecuredConnectedDeviceChannel,
-    peripheral: BLEPeripheral
+    peripheral: any BLEPeripheral
   ) {
     didCompleteAssociationCalled = true
     associatedCar = car

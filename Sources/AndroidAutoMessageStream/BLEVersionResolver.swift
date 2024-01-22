@@ -26,7 +26,7 @@ public protocol BLEVersionResolverDelegate: AnyObject {
     _ bleVersionResolver: BLEVersionResolver,
     didResolveStreamVersionTo streamVersion: MessageStreamVersion,
     securityVersionTo securityVersion: MessageSecurityVersion,
-    for peripheral: BLEPeripheral
+    for peripheral: any BLEPeripheral
   )
 
   /// Called if there was an error during the version exchange.
@@ -38,7 +38,7 @@ public protocol BLEVersionResolverDelegate: AnyObject {
   func bleVersionResolver(
     _ bleVersionResolver: BLEVersionResolver,
     didEncounterError error: BLEVersionResolverError,
-    for peripheral: BLEPeripheral
+    for peripheral: any BLEPeripheral
   )
 }
 
@@ -65,7 +65,7 @@ public protocol BLEVersionResolver: AnyObject {
   ///   - readCharacteristic: The characteristic on the peripheral it will write to.
   ///   - writeCharacteristic: The characteristic on the peripheral to write to.
   func resolveVersion(
-    with peripheral: BLEPeripheral,
+    with peripheral: any BLEPeripheral,
     readCharacteristic: BLECharacteristic,
     writeCharacteristic: BLECharacteristic,
     allowsCapabilitiesExchange: Bool

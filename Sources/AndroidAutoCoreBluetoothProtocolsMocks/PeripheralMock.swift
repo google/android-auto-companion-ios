@@ -19,7 +19,7 @@ import Foundation
 /// A mock of a `CBPeripheral` that allows its name and services to be set. It also contains
 /// fields that allow a user to assert if its methods have been called and with what value.
 public class PeripheralMock: NSObject, BLEPeripheral {
-  private var serviceObserver: ((BLEPeripheral, [BLEService]) -> Void)? = nil
+  private var serviceObserver: ((any BLEPeripheral, [BLEService]) -> Void)? = nil
 
   public weak var delegate: BLEPeripheralDelegate?
 
@@ -79,7 +79,7 @@ public class PeripheralMock: NSObject, BLEPeripheral {
   }
 
   public func observeServiceModifications(
-    using observation: @escaping (BLEPeripheral, [BLEService]) -> Void
+    using observation: @escaping (any BLEPeripheral, [BLEService]) -> Void
   ) {
     serviceObserver = observation
   }

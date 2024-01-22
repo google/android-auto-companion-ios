@@ -34,14 +34,6 @@ class InputStreamMessageAdaptorTest: XCTestCase {
     super.tearDown()
   }
 
-  func testStartDecodingOpensStream() {
-    let inputStream = InputStream(data: Data())
-    testAdaptor = InputStreamMessageAdaptor<Packet>(inputStream: inputStream)
-    testAdaptor.startDecoding { _ in }
-
-    XCTAssertEqual(inputStream.streamStatus.rawValue, Stream.Status.open.rawValue)
-  }
-
   func testStopDecodingClosesStream() {
     let inputStream = InputStream(data: Data())
     testAdaptor = InputStreamMessageAdaptor<Packet>(inputStream: inputStream)

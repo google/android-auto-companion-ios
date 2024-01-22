@@ -123,7 +123,7 @@ class BLEMessageStreamV2: NSObject {
     MessageStreamVersion.v2(true)
   }
 
-  public let peripheral: BLEPeripheral
+  public let peripheral: any BLEPeripheral
   public let readCharacteristic: BLECharacteristic
   public let writeCharacteristic: BLECharacteristic
 
@@ -159,7 +159,7 @@ class BLEMessageStreamV2: NSObject {
   ///   - messageCompressor: Compresses/decompresses message data.
   ///   - isCompressionEnabled: Whether outgoing messages should be compressed.
   public init(
-    peripheral: BLEPeripheral,
+    peripheral: any BLEPeripheral,
     readCharacteristic: BLECharacteristic,
     writeCharacteristic: BLECharacteristic,
     messageCompressor: DataCompressor,
@@ -174,8 +174,9 @@ class BLEMessageStreamV2: NSObject {
     // "self" can only be used for something other than referencing fields after init() has been
     // called.
     super.init()
-    peripheral.delegate = self
-    peripheral.setNotifyValue(true, for: readCharacteristic)
+
+    self.peripheral.delegate = self
+    self.peripheral.setNotifyValue(true, for: readCharacteristic)
   }
 
   /// Write the message encrypting it if indicated.
@@ -495,7 +496,7 @@ extension BLEMessageStreamV2: BLEMessageStream {
 
 extension BLEMessageStreamV2: BLEPeripheralDelegate {
   public func peripheral(
-    _ peripheral: BLEPeripheral,
+    _ peripheral: any BLEPeripheral,
     didUpdateValueFor characteristic: BLECharacteristic,
     error: Error?
   ) {
@@ -543,7 +544,7 @@ extension BLEMessageStreamV2: BLEPeripheralDelegate {
     processReceivedPacket(blePacket)
   }
 
-  func peripheralIsReadyToWrite(_ peripheral: BLEPeripheral) {
+  func peripheralIsReadyToWrite(_ peripheral: any BLEPeripheral) {
     isWriteInProgress = false
 
     // This error shouldn't happen because we do not remove messages from the stack until there
@@ -577,12 +578,12 @@ extension BLEMessageStreamV2: BLEPeripheralDelegate {
     }
   }
 
-  public func peripheral(_ peripheral: BLEPeripheral, didDiscoverServices error: Error?) {
+  public func peripheral(_ peripheral: any BLEPeripheral, didDiscoverServices error: Error?) {
     // No-op. Not discovering services in this class.
   }
 
   public func peripheral(
-    _ peripheral: BLEPeripheral,
+    _ peripheral: any BLEPeripheral,
     didDiscoverCharacteristicsFor service: BLEService,
     error: Error?
   ) {
