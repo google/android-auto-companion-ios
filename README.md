@@ -23,6 +23,9 @@ brew install swift-protobuf
 ````
 Then create symbolic links in `/usr/local/bin` to `protoc` and `protoc-gen-swift`.
 
+When executing the build with `xcodebuild`, pass the option, `-skipPackagePluginValidation` 
+to automatically trust the plugin.
+
 ### Reference App
 
 Please see the [reference app](https://github.com/google/android-auto-companion-app)
