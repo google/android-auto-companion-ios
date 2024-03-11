@@ -23,7 +23,7 @@ brew install swift-protobuf
 ````
 Then create symbolic links in `/usr/local/bin` to `protoc` and `protoc-gen-swift`.
 
-When executing the build with `xcodebuild`, pass the option, `-skipPackagePluginValidation` 
+When executing the build with `xcodebuild`, pass the option, `-skipPackagePluginValidation`
 to automatically trust the plugin.
 
 ### Reference App

@@ -3,12 +3,25 @@
 **NOTE:** Entries are ordered chronologically with the newest entries at the
 top.
 
+## iOS Companion 4.0.0
+
+The following changes have been made:
+- The Swift package now requires Swift 5.9 or later and targets iOS 15 or later.
+- Introduced an experimental `AccountTransfer` framework.
+
+## iOS Companion 3.4.0
+
+The following changes have been made:
+- Added missing `info.plist` entries to the UKey2Wrapper framework for Xcode 15 distribution compatibility.
+
 ## iOS Companion 3.3.0
 
 The following changes have been made:
 - Added the Heartbeat feature to handle periodic pings from the connected IHU.
 - Added the Howitzer feature for evaluating bandwidth.
 - Removed unused generic transport components.
+- Removed UKey2Wrapper source code for the pre-built framework.
+
 
 ## iOS Companion 3.2.1
 

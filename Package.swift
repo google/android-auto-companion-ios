@@ -1,4 +1,4 @@
-// swift-tools-version:5.8
+// swift-tools-version:5.9
 
 // Copyright 2021 Google LLC
 //
@@ -19,7 +19,7 @@ import PackageDescription
 let package = Package(
   name: "AndroidAutoCompanion",
   platforms: [
-    .iOS(.v13)
+    .iOS(.v15)
   ],
   products: [
     .library(
@@ -32,6 +32,9 @@ let package = Package(
       name: "AndroidAutoLogger",
       targets: ["AndroidAutoLogger"]),
     .library(
+      name: "AndroidAutoAccountTransfer",
+      targets: ["AndroidAutoAccountTransfer"]),
+    .library(
       name: "AndroidAutoConnectionHowitzerManagerV2",
       targets: ["AndroidAutoConnectionHowitzerManagerV2"]),
     .plugin(
@@ -39,7 +42,7 @@ let package = Package(
       targets: ["ProtoSourceGenerator"]),
   ],
   dependencies: [
-    .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.20.0")
+    .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.25.0")
   ],
   targets: [
     .binaryTarget(
@@ -125,6 +128,17 @@ let package = Package(
         "AndroidAutoMessageStream",
       ]
     ),
+    .target(
+      name: "AndroidAutoAccountTransfer",
+      dependencies: [
+        "AndroidAutoAccountTransferCore",
+        "AndroidAutoConnectedDeviceManager",
+        "AndroidAutoLogger",
+      ]
+    ),
+    .binaryTarget(
+      name: "AndroidAutoAccountTransferCore",
+      path: "Binaries/AndroidAutoAccountTransferCore.xcframework"),
     .target(
       name: "AndroidAutoConnectionHowitzerV2Protos",
       dependencies: [.product(name: "SwiftProtobuf", package: "swift-protobuf")],
