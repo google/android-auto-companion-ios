@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoLogger
-import Foundation
+internal import AndroidAutoCoreBluetoothProtocols
+private import AndroidAutoLogger
+internal import Foundation
 
 /// A message stream that will not actually chunk any messages.
 ///

@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoConnectedDeviceManagerMocks
-import AndroidAutoSecureChannel
-import XCTest
+private import AndroidAutoConnectedDeviceManagerMocks
+internal import AndroidAutoSecureChannel
+internal import XCTest
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable private import AndroidAutoConnectedDeviceManager
 
 /// An `enum` to hold constants specific to this test.
 private enum Constants {
@@ -27,12 +27,11 @@ private enum Constants {
 }
 
 /// Unit tests for `FeatureManager`.
-@available(watchOS 6.0, *)
-@MainActor class FeatureManagerTest: XCTestCase {
+class FeatureManagerTest: XCTestCase {
   private var connectedCarManagerMock: ConnectedCarManagerMock!
   private var featureManager: ObservableFeatureManager!
 
-  override func setUp() async throws {
+  @MainActor override func setUp() async throws {
     try await super.setUp()
 
     continueAfterFailure = false
@@ -43,7 +42,7 @@ private enum Constants {
 
   // MARK: - Event method assertions.
 
-  func testCarConnected_invokesOnCarConnected() {
+  @MainActor func testCarConnected_invokesOnCarConnected() {
     let car = Car(id: "id", name: "name")
     connectedCarManagerMock.triggerConnection(for: car)
 
@@ -51,7 +50,7 @@ private enum Constants {
     XCTAssertEqual(featureManager.connectedCars[0], car)
   }
 
-  func testCarDisconnected_invokesOnCarDisconnected() {
+  @MainActor func testCarDisconnected_invokesOnCarDisconnected() {
     let car = Car(id: "id", name: "name")
     connectedCarManagerMock.triggerDisconnection(for: car)
 
@@ -59,7 +58,7 @@ private enum Constants {
     XCTAssertEqual(featureManager.disconnectedCars[0], car)
   }
 
-  func testSecureChannelEstablished_invokesOnSecureChannelEstablished() {
+  @MainActor func testSecureChannelEstablished_invokesOnSecureChannelEstablished() {
     let car = Car(id: "id", name: "name")
     let channel = SecuredCarChannelMock(car: car)
 
@@ -69,7 +68,7 @@ private enum Constants {
     XCTAssertEqual(featureManager.carsWithSecuredChannels[0], car)
   }
 
-  func testCarDisassociated_invokesOnCarDisassociated() {
+  @MainActor func testCarDisassociated_invokesOnCarDisassociated() {
     let car = Car(id: "id", name: "name")
     connectedCarManagerMock.triggerDissociation(for: car)
 
@@ -77,9 +76,17 @@ private enum Constants {
     XCTAssertEqual(featureManager.disassociatedCars[0], car)
   }
 
+  @MainActor func testCarAssociated_invokesOnCarAassociated() {
+    let car = Car(id: "id", name: "name")
+    connectedCarManagerMock.triggerAssociation(for: car)
+
+    XCTAssertEqual(featureManager.onCarAssociatedCalledCount, 1)
+    XCTAssertEqual(featureManager.associatedCars[0], car)
+  }
+
   // MARK: - Message received tests.
 
-  func testOnMessageReceived_invokesCallback() {
+  @MainActor func testOnMessageReceived_invokesCallback() {
     let car = Car(id: "id", name: "name")
     let channel = SecuredCarChannelMock(car: car)
 
@@ -93,7 +100,7 @@ private enum Constants {
     XCTAssertEqual(featureManager.carsWithReceivedMessages[0], car)
   }
 
-  func testOnMessageReceived_fromDifferentRecipient_doesNotInvokeCallback() {
+  @MainActor func testOnMessageReceived_fromDifferentRecipient_doesNotInvokeCallback() {
     let car = Car(id: "id", name: "name")
     let channel = SecuredCarChannelMock(car: car)
 
@@ -106,7 +113,7 @@ private enum Constants {
     XCTAssertTrue(featureManager.receivedMessages.isEmpty)
   }
 
-  func testOnMessageReceived_afterDisconnection_doesNotInvokeCallback() {
+  @MainActor func testOnMessageReceived_afterDisconnection_doesNotInvokeCallback() {
     let car = Car(id: "id", name: "name")
     let channel = SecuredCarChannelMock(car: car)
 
@@ -119,7 +126,7 @@ private enum Constants {
     XCTAssertTrue(featureManager.receivedMessages.isEmpty)
   }
 
-  func testOnMessageReceived_afterDisassociation_doesNotInvokeCallback() {
+  @MainActor func testOnMessageReceived_afterDisassociation_doesNotInvokeCallback() {
     let car = Car(id: "id", name: "name")
     let channel = SecuredCarChannelMock(car: car)
 
@@ -134,7 +141,7 @@ private enum Constants {
 
   // MARK: - Send message tests.
 
-  func testSendMessage_writesToSecureChannel() {
+  @MainActor func testSendMessage_writesToSecureChannel() {
     let car = Car(id: "id", name: "name")
     let channel = SecuredCarChannelMock(car: car)
 
@@ -147,7 +154,7 @@ private enum Constants {
     XCTAssertEqual(channel.writtenMessages[0], message)
   }
 
-  func testSendMessage_toNotSecuredCar_throwsError() {
+  @MainActor func testSendMessage_toNotSecuredCar_throwsError() {
     let car = Car(id: "id", name: "name")
     let message = Data("message".utf8)
 
@@ -159,7 +166,7 @@ private enum Constants {
     }
   }
 
-  func testSendMessage_channelWriteError_throwsError() {
+  @MainActor func testSendMessage_channelWriteError_throwsError() {
     let car = Car(id: "id", name: "name")
 
     // An invalid channel will fail when `writeEncryptedMessage` is called.
@@ -174,7 +181,7 @@ private enum Constants {
 
   // MARK: - isCarSecurelyConnected tests.
 
-  func testIsCarSecurelyConnected_returnsTrueIfChannelExists() {
+  @MainActor func testIsCarSecurelyConnected_returnsTrueIfChannelExists() {
     let car = Car(id: "id", name: "name")
     let channel = SecuredCarChannelMock(car: car)
 
@@ -183,14 +190,14 @@ private enum Constants {
     XCTAssertTrue(featureManager.isCarSecurelyConnected(car))
   }
 
-  func testIsCarSecurelyConnected_returnsFalseIfNoChannel() {
+  @MainActor func testIsCarSecurelyConnected_returnsFalseIfNoChannel() {
     let car = Car(id: "id", name: "name")
     XCTAssertFalse(featureManager.isCarSecurelyConnected(car))
   }
 
   // MARK: - Send query tests.
 
-  func testSendQuery_writesToSecureChannel() {
+  @MainActor func testSendQuery_writesToSecureChannel() {
     let car = Car(id: "id", name: "name")
     let channel = SecuredCarChannelMock(car: car)
 
@@ -203,7 +210,7 @@ private enum Constants {
     XCTAssertEqual(channel.writtenQueries[0], query)
   }
 
-  func testSendQuery_toNotSecuredCar_throwsError() {
+  @MainActor func testSendQuery_toNotSecuredCar_throwsError() {
     let car = Car(id: "id", name: "name")
     let query = Query(request: Data("request".utf8), parameters: nil)
 
@@ -215,7 +222,7 @@ private enum Constants {
     }
   }
 
-  func testSendQuery_channelWriteError_throwsError() {
+  @MainActor func testSendQuery_channelWriteError_throwsError() {
     let car = Car(id: "id", name: "name")
 
     // An invalid channel will fail when `writeEncryptedMessage` is called.
@@ -230,7 +237,7 @@ private enum Constants {
 
   // MARK: - Query response received tests
 
-  func testQueryResponseReceived_notifiesIfQuerySent() {
+  @MainActor func testQueryResponseReceived_notifiesIfQuerySent() {
     let car = Car(id: "id", name: "name")
     let channel = SecuredCarChannelMock(car: car)
 
@@ -261,7 +268,7 @@ private enum Constants {
     }
   }
 
-  func testQueryResponseReceived_doesNotNotify_ifNoCorrespondingQuery() {
+  @MainActor func testQueryResponseReceived_doesNotNotify_ifNoCorrespondingQuery() {
     let car = Car(id: "id", name: "name")
     let channel = SecuredCarChannelMock(car: car)
 
@@ -296,7 +303,7 @@ private enum Constants {
 
   // MARK: - On query received tests
 
-  func testOnQueryReceived_notifiesForIncomingQuery() {
+  @MainActor func testOnQueryReceived_notifiesForIncomingQuery() {
     let car = Car(id: "id", name: "name")
     let channel = SecuredCarChannelMock(car: car)
 
@@ -313,7 +320,7 @@ private enum Constants {
     XCTAssertEqual(featureManager.carsWithReceivedQueries[0], car)
   }
 
-  func testOnQueryReceived_responseHandle_writesToSecureChannel() {
+  @MainActor func testOnQueryReceived_responseHandle_writesToSecureChannel() {
     let car = Car(id: "id", name: "name")
     let channel = SecuredCarChannelMock(car: car)
 
@@ -337,27 +344,9 @@ private enum Constants {
     XCTAssertEqual(channel.writtenQueryResponses[0].queryResponse, expectedQueryResponse)
     XCTAssertEqual(channel.writtenQueryResponses[0].recipient, Constants.senderId)
   }
-
-  // MARK: feature support status provider tests
-
-  func testFeatureSupportStatusProvider_connectedCar_returnsProvider() {
-    let car = Car(id: "id", name: "name")
-    let channel = SecuredCarChannelMock(car: car)
-
-    connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
-
-    XCTAssertNotNil(featureManager.featureSupportStatusProvider(for: car))
-  }
-
-  func testFeatureSupportStatusProvider_unconnectedCar_returnsNilProvider() {
-    let car = Car(id: "id", name: "name")
-
-    XCTAssertNil(featureManager.featureSupportStatusProvider(for: car))
-  }
 }
 
 /// A `FeatureManager` implementation that allows for assertions on its event methods.
-@available(watchOS 6.0, *)
 private class ObservableFeatureManager: FeatureManager {
   override var featureID: UUID {
     return Constants.featureID
@@ -374,6 +363,9 @@ private class ObservableFeatureManager: FeatureManager {
 
   var onCarDisassociatedCalledCount = 0
   var disassociatedCars = [Car]()
+
+  var onCarAssociatedCalledCount = 0
+  var associatedCars = [Car]()
 
   var receivedMessages = [Data]()
   var carsWithReceivedMessages = [Car]()
@@ -400,6 +392,11 @@ private class ObservableFeatureManager: FeatureManager {
   override func onCarDisassociated(_ car: Car) {
     onCarDisassociatedCalledCount += 1
     disassociatedCars.append(car)
+  }
+
+  override func onCarAssociated(_ car: Car) {
+    onCarAssociatedCalledCount += 1
+    associatedCars.append(car)
   }
 
   override func onMessageReceived(_ message: Data, from car: Car) {

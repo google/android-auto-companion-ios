@@ -5,3 +5,12 @@ ignorePaths:
   - Binaries/AndroidAutoUKey2Wrapper.xcframework/ios-arm64/AndroidAutoUKey2Wrapper.framework/Info.plist
   - Binaries/AndroidAutoUKey2Wrapper.xcframework/ios-arm64_x86_64-simulator/AndroidAutoUKey2Wrapper.framework/AndroidAutoUKey2Wrapper
   - Binaries/AndroidAutoUKey2Wrapper.xcframework/ios-arm64_x86_64-simulator/AndroidAutoUKey2Wrapper.framework/Info.plist
+  - Binaries/AndroidAutoAccountTransferCore.xcframework/ios-arm64/AndroidAutoAccountTransferCore.framework/AndroidAutoAccountTransferCore
+  - Binaries/AndroidAutoAccountTransferCore.xcframework/ios-arm64/AndroidAutoAccountTransferCore.framework/Info.plist
+  - Binaries/AndroidAutoAccountTransferCore.xcframework/ios-arm64/AndroidAutoAccountTransferCore.framework/Modules/AndroidAutoAccountTransferCore.swiftmodule/arm64.swiftdoc
+  - Binaries/AndroidAutoAccountTransferCore.xcframework/ios-arm64/AndroidAutoAccountTransferCore.framework/Modules/AndroidAutoAccountTransferCore.swiftmodule/arm64.swiftinterface
+  - Binaries/AndroidAutoAccountTransferCore.xcframework/ios-arm64_x86_64-simulator/AndroidAutoAccountTransferCore.framework/Modules/AndroidAutoAccountTransferCore.swiftmodule/arm64.swiftdoc
+  - Binaries/AndroidAutoAccountTransferCore.xcframework/ios-arm64_x86_64-simulator/AndroidAutoAccountTransferCore.framework/Modules/AndroidAutoAccountTransferCore.swiftmodule/arm64.swiftinterface
+  - Binaries/AndroidAutoAccountTransferCore.xcframework/ios-arm64_x86_64-simulator/AndroidAutoAccountTransferCore.framework/Modules/AndroidAutoAccountTransferCore.swiftmodule/x86_64.swiftdoc
+  - Binaries/AndroidAutoAccountTransferCore.xcframework/ios-arm64_x86_64-simulator/AndroidAutoAccountTransferCore.framework/Modules/AndroidAutoAccountTransferCore.swiftmodule/x86_64.swiftinterface
+  - Binaries/AndroidAutoAccountTransferCore.xcframework/ios-arm64_x86_64-simulator/AndroidAutoAccountTransferCore.framework/Info.plist

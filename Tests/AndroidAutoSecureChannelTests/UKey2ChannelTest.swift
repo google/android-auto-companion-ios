@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoConnectedDeviceTransportFakes
-import AndroidAutoMessageStream
-import AndroidAutoUKey2Wrapper
-import CoreBluetooth
-import XCTest
+private import AndroidAutoConnectedDeviceTransportFakes
+private import AndroidAutoMessageStream
+private import AndroidAutoUKey2Wrapper
+private import CoreBluetooth
+internal import XCTest
 
-@testable import AndroidAutoSecureChannel
+@testable internal import AndroidAutoSecureChannel
 
 /// Unit tests for `UKey2Channel`.
 class UKey2ChannelTest: XCTestCase {
@@ -443,7 +443,7 @@ class UKey2ChannelTest: XCTestCase {
 
 /// A mock of `SecureBLEChannelDelegate` that allows for verification that its callback methods
 /// have been called.
-class SecureBLEChannelDelegateMock: SecureBLEChannelDelegate {
+private class SecureBLEChannelDelegateMock: SecureBLEChannelDelegate {
   var requiresVerificationCalled = false
   var requiredVerificationData: Data?
   var requiredPairingCode: String?

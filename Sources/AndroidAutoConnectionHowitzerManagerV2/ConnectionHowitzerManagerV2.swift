@@ -1,10 +1,10 @@
-import AndroidAutoConnectedDeviceManager
-import AndroidAutoLogger
-import Foundation
-import SwiftProtobuf
-@_implementationOnly import AndroidAutoConnectionHowitzerV2Protos
+public import AndroidAutoConnectedDeviceManager
+private import AndroidAutoLogger
+public import Foundation
+internal import SwiftProtobuf
+internal import AndroidAutoConnectionHowitzerV2Protos
 
-typealias HowitzerMessage =
+internal typealias HowitzerMessage =
   Com_Google_Android_Connecteddevice_Connectionhowitzer_Proto_HowitzerMessage
 
 /// Input argument config for bandwidth test.

@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import XCTest
+internal import XCTest
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable private import AndroidAutoConnectedDeviceManager
 
 /// Unit tests for PassiveOutOfBandTokenProvider.
-@available(watchOS 6.0, *)
 class PassiveOutOfBandTokenProviderTest: XCTestCase {
   // The token provider to test.
   private var testTokenProvider: PassiveOutOfBandTokenProvider!

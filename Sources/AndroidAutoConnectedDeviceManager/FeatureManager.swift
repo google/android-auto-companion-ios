@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-@_implementationOnly import AndroidAutoSecureChannel
-import Foundation
+internal import AndroidAutoSecureChannel
+public import Foundation
 
 /// Possible errors thrown by this feature manager.
 public enum FeatureManagerError: Error {
@@ -31,7 +31,6 @@ public enum FeatureManagerError: Error {
 ///
 /// Each feature manager should have a unique UUID that identifies them. Ensure that the `featureID`
 /// property is overridden, or this class will crash.
-@available(watchOS 6.0, *)
 @MainActor open class FeatureManager {
   private let connectedCarManager: ConnectedCarManager
 
@@ -39,6 +38,7 @@ public enum FeatureManagerError: Error {
   private var connectHandle: ObservationHandle?
   private var disconnectHandle: ObservationHandle?
   private var dissociationHandle: ObservationHandle?
+  private var associationHandle: ObservationHandle?
 
   private var messageReceivedHandles: [String: ObservationHandle] = [:]
   private var queryReceivedHandles: [String: ObservationHandle] = [:]
@@ -82,12 +82,21 @@ public enum FeatureManagerError: Error {
     secureChannelHandle = connectedCarManager.observeSecureChannelSetUp { [weak self] _, channel in
       self?.handleSecureChannelEstablished(channel)
     }
+
+    associationHandle = connectedCarManager.observeAssociation { [weak self] _, car in
+      self?.onCarAssociated(car)
+    }
+
+    guard connectedCarManager.register(self) else {
+      fatalError("Feature ID \(featureID) already registered.")
+    }
   }
 
   deinit {
     secureChannelHandle?.cancel()
     connectHandle?.cancel()
     disconnectHandle?.cancel()
+    associationHandle?.cancel()
     dissociationHandle?.cancel()
     messageReceivedHandles.values.forEach { $0.cancel() }
     queryReceivedHandles.values.forEach { $0.cancel() }
@@ -159,12 +168,9 @@ public enum FeatureManagerError: Error {
     return connectedCarManager.securedChannel(for: car) != nil
   }
 
-  /// Returns a `FeatureSupportStatusProvider` for the given car.
-  ///
-  /// - Parameter car: The car for which to get the feature status provider.
-  /// - Returns: `nil` if the car is not connected.
-  func featureSupportStatusProvider(for car: Car) -> FeatureSupportStatusProvider? {
-    return connectedCarManager.securedChannel(for: car)
+  /// Returns a `FeatureSupportStatusProvider`.
+  func featureSupportStatusProvider() -> FeatureSupportStatusProvider {
+    return connectedCarManager
   }
 
   // MARK: - Event methods.
@@ -189,6 +195,13 @@ public enum FeatureManagerError: Error {
   /// secure messages can be sent. This event is a valid signal to clear any data that is linked to
   /// the given car.
   open func onCarDisassociated(_ car: Car) {}
+
+  /// Invoked when a car has been associated.
+  ///
+  /// When a car is associated, `onSecureChannelEstablished(for:)` will also be invoked. Features
+  /// only need to override this method if they need to differentiate between a secure channel being
+  /// established for the first time and following connections.
+  open func onCarAssociated(_ car: Car) {}
 
   /// Invoked a message has been received from the indicated car.
   open func onMessageReceived(_ message: Data, from car: Car) {}

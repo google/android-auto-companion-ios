@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-@_implementationOnly import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoLogger
-@_implementationOnly import AndroidAutoMessageStream
-@_implementationOnly import AndroidAutoSecureChannel
-import CoreBluetooth
+internal import AndroidAutoCoreBluetoothProtocols
+private import AndroidAutoLogger
+internal import AndroidAutoMessageStream
+internal import AndroidAutoSecureChannel
+internal import CoreBluetooth
 
 /// Reconnection Helper for security version 2 which implements an authentication mechanism
 /// to prevent device identifiers from being shared in the open.
@@ -114,7 +114,7 @@ import CoreBluetooth
 
     phase = .unresolved(cars)
 
-    guard let _ = try? prepareForHandshake(withAdvertisementData: advertisementData) else {
+    guard (try? prepareForHandshake(withAdvertisementData: advertisementData)) != nil else {
       return nil
     }
   }
@@ -289,7 +289,7 @@ extension ReconnectionHelperV2: ReconnectionHelper {
       completion(true)
     case .v4:
       connectionHandle.requestConfiguration(for: channel) { [weak self] in
-        guard let _ = self else {
+        guard self != nil else {
           completion(false)
           return
         }

@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoLogger
-import CoreBluetooth
-import Foundation
+private import AndroidAutoLogger
+internal import CoreBluetooth
+internal import Foundation
 
 /// Manager for a id that will uniquely identify the current device.
 enum DeviceIdManager {

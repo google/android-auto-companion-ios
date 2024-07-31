@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCoreBluetoothProtocolsMocks
-import CoreBluetooth
-import XCTest
+private import AndroidAutoCoreBluetoothProtocolsMocks
+private import CoreBluetooth
+internal import XCTest
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable private import AndroidAutoConnectedDeviceManager
 
 /// Unit tests for `ReconnectionHelperFactory`.
-@MainActor class ReconnectionHelperFactoryTest: XCTestCase {
+class ReconnectionHelperFactoryTest: XCTestCase {
   private static let identifier = UUID(uuidString: "f01caae0-1eb8-4753-8357-be83523828d5")!
   private let associatedCar = Car(
     id: ReconnectionHelperFactoryTest.identifier.uuidString, name: "name")
@@ -33,7 +33,7 @@ import XCTest
     FakeCarAuthenticator.matchingData = nil
   }
 
-  func testMakeHelper_throwsIfNoServiceID() {
+  @MainActor func testMakeHelper_throwsIfNoServiceID() {
     let uuidConfig = UUIDConfig(plistLoader: PListLoaderFake())
     let peripheral = FakePeripheral(identifier: Self.identifier, name: "name")
 
@@ -50,7 +50,7 @@ import XCTest
     }
   }
 
-  func testMakeHelper_returnsReconnectionHelperV1() {
+  @MainActor func testMakeHelper_returnsReconnectionHelperV1() {
     let uuidConfig = UUIDConfig(plistLoader: PListLoaderFake())
     let peripheral = FakePeripheral(identifier: Self.identifier, name: "name")
 
@@ -67,7 +67,7 @@ import XCTest
     XCTAssert(reconnectionHelper is ReconnectionHelperV1)
   }
 
-  func testMakeHelper_noAdvertisement_notReadyForHandshake() {
+  @MainActor func testMakeHelper_noAdvertisement_notReadyForHandshake() {
     let uuidConfig = UUIDConfig(plistLoader: PListLoaderFake())
     let peripheral = FakePeripheral(identifier: Self.identifier, name: "name")
 
@@ -93,7 +93,7 @@ import XCTest
     XCTAssertFalse(helper!.isReadyForHandshake)
   }
 
-  func testMakeHelper_throwsIfNotAssociated() {
+  @MainActor func testMakeHelper_throwsIfNotAssociated() {
     let uuidConfig = UUIDConfig(plistLoader: PListLoaderFake())
     let peripheral = FakePeripheral(identifier: Self.identifier, name: "name")
 
@@ -119,7 +119,7 @@ import XCTest
     }
   }
 
-  func testMakeHelper_returnsReconnectionHelperV2() {
+  @MainActor func testMakeHelper_returnsReconnectionHelperV2() {
     let uuidConfig = UUIDConfig(plistLoader: PListLoaderFake())
     let peripheral = FakePeripheral(identifier: Self.identifier, name: "name")
 

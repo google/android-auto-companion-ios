@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
-import XCTest
+private import Foundation
+internal import XCTest
 
-@testable import AndroidAutoConnectionHowitzerManagerV2
+@testable private import AndroidAutoConnectionHowitzerManagerV2
 
-typealias Error = BandwidthCalculator.Error
+private typealias Error = BandwidthCalculator.Error
 
-@MainActor class BandwidthCalculatorTest: XCTestCase {
-  func testAverageBandwidth_invalidResult_throwError() {
+class BandwidthCalculatorTest: XCTestCase {
+  @MainActor func testAverageBandwidth_invalidResult_throwError() {
     let config = HowitzerConfig()
     let result = HowitzerResult(
       isValid: false,
@@ -34,7 +34,7 @@ typealias Error = BandwidthCalculator.Error
     }
   }
 
-  func testAverageBandwidth_invalidPayloadSize_throwError() {
+  @MainActor func testAverageBandwidth_invalidPayloadSize_throwError() {
     let config = HowitzerConfig(payloadSize: 0, payloadCount: 1, sentFromIHU: true)
     let testStartTime = Date().timeIntervalSince1970
     let testEndTime = TimeInterval(testStartTime + 0.5)
@@ -50,7 +50,7 @@ typealias Error = BandwidthCalculator.Error
     }
   }
 
-  func testAverageBandwidth_invalidPayloadCount_throwError() {
+  @MainActor func testAverageBandwidth_invalidPayloadCount_throwError() {
     let config = HowitzerConfig(payloadSize: 100, payloadCount: 0, sentFromIHU: true)
     let testStartTime = Date().timeIntervalSince1970
     let testEndTime = TimeInterval(testStartTime + 0.5)
@@ -66,7 +66,7 @@ typealias Error = BandwidthCalculator.Error
     }
   }
 
-  func testAverageBandwidth_payloadCountAndResultMismatch_throwError() {
+  @MainActor func testAverageBandwidth_payloadCountAndResultMismatch_throwError() {
     let config = HowitzerConfig(payloadSize: 100, payloadCount: 2, sentFromIHU: true)
     let testStartTime = Date().timeIntervalSince1970
     let testEndTime = TimeInterval(testStartTime + 0.5)
@@ -82,7 +82,7 @@ typealias Error = BandwidthCalculator.Error
     }
   }
 
-  func testAverageBandwidth_invalidTestEndTime_throwError() {
+  @MainActor func testAverageBandwidth_invalidTestEndTime_throwError() {
     let config = HowitzerConfig(payloadSize: 100, payloadCount: 1, sentFromIHU: true)
     let testStartTime = Date().timeIntervalSince1970
     let testEndTime = TimeInterval(testStartTime - 0.5)
@@ -98,7 +98,7 @@ typealias Error = BandwidthCalculator.Error
     }
   }
 
-  func testAverageBandwidth_validParameters_singlePayload() {
+  @MainActor func testAverageBandwidth_validParameters_singlePayload() {
     let config = HowitzerConfig(payloadSize: 75, payloadCount: 1, sentFromIHU: true)
     let testStartTime = Date().timeIntervalSince1970
     let result = HowitzerResult(
@@ -115,7 +115,7 @@ typealias Error = BandwidthCalculator.Error
     XCTAssertEqual(bandwidth, expectedBandwidth)
   }
 
-  func testAverageBandwidth_validParameters_multiPayloads() {
+  @MainActor func testAverageBandwidth_validParameters_multiPayloads() {
     let config = HowitzerConfig(payloadSize: 75, payloadCount: 2, sentFromIHU: true)
     let testStartTime = Date().timeIntervalSince1970
     let result = HowitzerResult(

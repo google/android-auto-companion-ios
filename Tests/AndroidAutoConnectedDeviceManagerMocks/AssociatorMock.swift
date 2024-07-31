@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoMessageStream
-import AndroidAutoSecureChannel
-import Foundation
+public import AndroidAutoCoreBluetoothProtocols
+public import AndroidAutoMessageStream
+public import AndroidAutoSecureChannel
+public import Foundation
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable public import AndroidAutoConnectedDeviceManager
 
 /// Mock for the Associator so we can track calls from tests.
 @MainActor final public class AssociatorMock {

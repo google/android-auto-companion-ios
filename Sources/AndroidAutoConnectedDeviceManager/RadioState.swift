@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
+internal import Foundation
 
 /// Abstraction of the state of a transport's radio.
 public protocol RadioState: CustomStringConvertible {

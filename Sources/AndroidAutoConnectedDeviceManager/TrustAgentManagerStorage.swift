@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
+internal import Foundation
 
 /// Protocol for a class that can handle storage for `TrustAgentManager`
 protocol TrustAgentManagerStorage {

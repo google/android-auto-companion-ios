@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import CoreBluetooth
-import Foundation
+internal import CoreBluetooth
+internal import Foundation
 
 /// A manager for discovering and connecting to BLE peripheral devices.
-public protocol ConnectedCarManager: AnyObject {
+public protocol ConnectedCarManager: AnyObject, FeatureSupportStatusProvider {
   /// The currently available channels for car communication.
   var securedChannels: [SecuredCarChannel] { get }
 
@@ -89,6 +89,15 @@ public protocol ConnectedCarManager: AnyObject {
   /// - Returns: A token that can be used to cancel the observation.
   @discardableResult
   func observeDissociation(
+    using observation: @escaping (ConnectedCarManager, Car) -> Void
+  ) -> ObservationHandle
+
+  /// Observe when a car has been associated to this manager.
+  ///
+  /// - Parameter observation: The closure to be executed when a device has associated.
+  /// - Returns: A token that can be used to cancel the observation.
+  @discardableResult
+  func observeAssociation(
     using observation: @escaping (ConnectedCarManager, Car) -> Void
   ) -> ObservationHandle
 }

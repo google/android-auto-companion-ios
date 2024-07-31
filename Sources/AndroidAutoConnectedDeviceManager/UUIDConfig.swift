@@ -12,18 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-@_implementationOnly import AndroidAutoMessageStream
-import CoreBluetooth
-import Foundation
+private import AndroidAutoLogger
+internal import AndroidAutoMessageStream
+internal import CoreBluetooth
+internal import Foundation
 
 /// Holds common methods and properties related to service and characteristic UUIDs that are
 /// scanned for and inspected throughout this library.
-@available(watchOS 6.0, *)
-class UUIDConfig {
+public class UUIDConfig {
+  private static let log = Logger(for: UUIDConfig.self)
+
   static let associationUUIDKey = "AssociationServiceUUID"
   static let associationDataUUIDKey = "AssociationDataUUID"
   static let reconnectionUUIDKey = "ReconnectionServiceUUID"
   static let reconnectionDataUUIDKey = "ReconnectionDataUUID"
+  static let beaconUUIDKey = "BeaconUUID"
 
   /// The default UUID to scan for when associating.
   private static let defaultAssociationServiceUUID = "5e2a68a4-27be-43f9-8d1e-4546976fabd7"
@@ -46,6 +49,9 @@ class UUIDConfig {
   /// See go/google-ble-manufacturer-data-format and the "Google Manufacturer Data Type" for details
   /// on this value.
   private static let defaultDataUUID = "00000020-0000-1000-8000-00805f9b34fb"
+
+  /// The default UUID to use for beacon monitoring.
+  private static let defaultBeaconUUID = "9e5a96f4-7b9d-4aee-baea-f295de3c3581"
 
   /// The characteristic UUID that should be used to listen for messages that the car is
   /// sending.
@@ -72,6 +78,9 @@ class UUIDConfig {
   /// reconnection.
   let reconnectionDataUUID: CBUUID
 
+  /// The UUID for monitoring IHU beacon advertisement to launch the app when killed.
+  let beaconUUID: UUID?
+
   /// The list of supported UUIDs that should be scanned for when attempting to reconnect a car.
   var supportedReconnectionUUIDs: [CBUUID] {
     return [reconnectionUUID(for: .v2), reconnectionUUID(for: .v1)]
@@ -83,6 +92,7 @@ class UUIDConfig {
     let overlayReconnectionUUID = overlayValues[Self.reconnectionUUIDKey] as? String
     let overlayReconnectionDataUUID = overlayValues[Self.reconnectionDataUUIDKey] as? String
     let overlayAssociationDataUUID = overlayValues[Self.associationDataUUIDKey] as? String
+    let overlayBeaconUUID = overlayValues[Self.beaconUUIDKey] as? String
 
     associationUUID =
       CBUUID(string: overlayAssociationUUID ?? Self.defaultAssociationServiceUUID)
@@ -92,6 +102,12 @@ class UUIDConfig {
       CBUUID(string: overlayReconnectionUUID ?? Self.defaultSecurityVersion2ServiceUUID)
     reconnectionDataUUID =
       CBUUID(string: overlayReconnectionDataUUID ?? Self.defaultDataUUID)
+    beaconUUID = UUID(uuidString: overlayBeaconUUID ?? Self.defaultBeaconUUID)
+    // Log an error if the `beaconUUID` is rendered empty.
+    if beaconUUID == nil {
+      Self.log.error(
+        "An invalid Beacon UUID is provided: \(String(describing: overlayBeaconUUID)).")
+    }
   }
 
   /// Returns the service UUID that corresponds to the given security version.

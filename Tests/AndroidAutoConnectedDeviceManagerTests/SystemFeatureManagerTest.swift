@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoConnectedDeviceManagerMocks
-import CoreBluetooth
-import XCTest
-@_implementationOnly import AndroidAutoCompanionProtos
+private import AndroidAutoConnectedDeviceManagerMocks
+private import CoreBluetooth
+internal import XCTest
+import AndroidAutoCompanionProtos
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable private import AndroidAutoConnectedDeviceManager
 
 private typealias SystemQuery = Com_Google_Companionprotos_SystemQuery
 private typealias FeatureSupportStatus = Com_Google_Companionprotos_FeatureSupportStatus
@@ -27,7 +27,7 @@ private typealias SystemUserRoleResponse = Com_Google_Companionprotos_SystemUser
 typealias SystemUserRole = Com_Google_Companionprotos_SystemUserRole
 
 /// Unit tests for `SystemFeatureManager`.
-@MainActor class SystemFeatureManagerTest: XCTestCase {
+class SystemFeatureManagerTest: XCTestCase {
   private let deviceName = "DeviceName"
   private let appName = "appName"
   private var car: Car!
@@ -36,7 +36,7 @@ typealias SystemUserRole = Com_Google_Companionprotos_SystemUserRole
   private var channel: SecuredCarChannelMock!
   private var manager: SystemFeatureManager!
 
-  override func setUp() async throws {
+  @MainActor override func setUp() async throws {
     try await super.setUp()
     continueAfterFailure = false
 
@@ -53,7 +53,7 @@ typealias SystemUserRole = Com_Google_Companionprotos_SystemUserRole
 
   // MARK: - Device name tests
 
-  func testOnValidQuery_sendsDeviceName() {
+  @MainActor func testOnValidQuery_sendsDeviceName() {
     connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
 
     let request = createSystemQuery(type: SystemQueryType.deviceName)
@@ -72,7 +72,7 @@ typealias SystemUserRole = Com_Google_Companionprotos_SystemUserRole
 
   // MARK: - App name tests
 
-  func testOnValidQuery_sendsAppName() {
+  @MainActor func testOnValidQuery_sendsAppName() {
     connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
 
     let request = createSystemQuery(type: SystemQueryType.appName)
@@ -89,7 +89,9 @@ typealias SystemUserRole = Com_Google_Companionprotos_SystemUserRole
     XCTAssertEqual(channel.writtenQueryResponses[0].queryResponse, expectedQueryResponse)
   }
 
-  func testOnAppNameRetrievalFaiL_sendsUnsuccessfulQueryResponse() {
+  @MainActor func testOnAppNameRetrievalFaiL_sendsUnsuccessfulQueryResponse() {
+    // Clear existing feature registration so the manager can be reinstantiated.
+    connectedCarManagerMock.supportedFeatures.removeAll()
     manager = SystemFeatureManager(
       connectedCarManager: connectedCarManagerMock,
       nameProvider: FakeDevice(name: deviceName),
@@ -111,14 +113,14 @@ typealias SystemUserRole = Com_Google_Companionprotos_SystemUserRole
     XCTAssertEqual(channel.writtenQueryResponses[0].queryResponse, expectedQueryResponse)
   }
 
-  func testBundleExtension_looksUpAppName() {
+  @MainActor func testBundleExtension_looksUpAppName() {
     // If the `test_host` ever changes, this value will need to change.
     XCTAssertEqual(Bundle.main.appName, "TrustAgentSample")
   }
 
   // MARK: - User Role Request
 
-  func testRequestUserRole_callsCompletionWithDriverRole() throws {
+  @MainActor func testRequestUserRole_callsCompletionWithDriverRole() throws {
     connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
 
     var completionCalled = false
@@ -145,7 +147,7 @@ typealias SystemUserRole = Com_Google_Companionprotos_SystemUserRole
     XCTAssertFalse(userRole?.isPassenger ?? false)
   }
 
-  func testRequestUserRole_callsCompletionWithPassengerRole() throws {
+  @MainActor func testRequestUserRole_callsCompletionWithPassengerRole() throws {
     connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
 
     var completionCalled = false
@@ -172,7 +174,7 @@ typealias SystemUserRole = Com_Google_Companionprotos_SystemUserRole
     XCTAssertTrue(userRole?.isPassenger ?? false)
   }
 
-  func testRequestUserRole_unsuccessfulResponse() throws {
+  @MainActor func testRequestUserRole_unsuccessfulResponse() throws {
     connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
 
     var completionCalled = false
@@ -199,9 +201,9 @@ typealias SystemUserRole = Com_Google_Companionprotos_SystemUserRole
 
   // MARK: - Feature support status tests
 
-  func testFeatureSupportStatus_supportedFeature_sendsSupportedStatus() {
+  @MainActor func testFeatureSupportStatus_supportedFeature_sendsSupportedStatus() {
     let featureID = UUID(uuidString: "dbca154b-f9c8-49f2-93d3-a1df6a89dd35")!
-    let _ = channel.observeMessageReceived(from: featureID) { _, _ in }
+    connectedCarManagerMock.supportedFeatures.insert(featureID)
     connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
 
     let queriedFeatures = [Data(featureID.uuidString.utf8)]
@@ -227,8 +229,8 @@ typealias SystemUserRole = Com_Google_Companionprotos_SystemUserRole
     XCTAssertEqual(channel.writtenQueryResponses[0].queryResponse, expectedQueryResponse)
   }
 
-  func testFeatureSupportStatus_unsupportedFeature_sendsUnsupportedStatus() {
-    // This feature ID is not registered in the channel, thus considered unavailable/unsupported.
+  @MainActor func testFeatureSupportStatus_unsupportedFeature_sendsUnsupportedStatus() {
+    // This feature ID is not registered, thus considered unavailable/unsupported.
     let unsupportedFeatureID = UUID(uuidString: "032cfe53-837d-4ab9-acd6-d9488347f647")!
     connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
 
@@ -255,7 +257,7 @@ typealias SystemUserRole = Com_Google_Companionprotos_SystemUserRole
     XCTAssertEqual(channel.writtenQueryResponses[0].queryResponse, expectedQueryResponse)
   }
 
-  func testFeatureSupportStatus_invalidFeatureID_ignored() {
+  @MainActor func testFeatureSupportStatus_invalidFeatureID_ignored() {
     connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
 
     let queriedFeatures = [Data("invalid-uuid-value".utf8)]
@@ -278,11 +280,11 @@ typealias SystemUserRole = Com_Google_Companionprotos_SystemUserRole
     XCTAssertEqual(channel.writtenQueryResponses[0].queryResponse, expectedQueryResponse)
   }
 
-  func testFeatureSupportStatus_mixedSupportedFeatures_sendsStatus() {
-    // This feature ID is not registered in the channel, thus considered unavailable/unsupported.
+  @MainActor func testFeatureSupportStatus_mixedSupportedFeatures_sendsStatus() {
+    // This feature ID is not registered, thus considered unavailable/unsupported.
     let unsupportedFeatureID = UUID(uuidString: "032cfe53-837d-4ab9-acd6-d9488347f647")!
     let supportedFeatureID = UUID(uuidString: "dbca154b-f9c8-49f2-93d3-a1df6a89dd35")!
-    let _ = channel.observeMessageReceived(from: supportedFeatureID) { _, _ in }
+    connectedCarManagerMock.supportedFeatures.insert(supportedFeatureID)
     connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
 
     let queriedFeatures = [
@@ -316,7 +318,7 @@ typealias SystemUserRole = Com_Google_Companionprotos_SystemUserRole
 
   // MARK: - Error path tests
 
-  func testQueryWithInvalidType_sendsUnsuccessfulQueryResponse() {
+  @MainActor func testQueryWithInvalidType_sendsUnsuccessfulQueryResponse() {
     connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
 
     // Create a query with the wrong type.
@@ -334,7 +336,7 @@ typealias SystemUserRole = Com_Google_Companionprotos_SystemUserRole
     XCTAssertEqual(channel.writtenQueryResponses[0].queryResponse, expectedQueryResponse)
   }
 
-  func testInvalidQueryProto_doesNotSendQueryResponse() {
+  @MainActor func testInvalidQueryProto_doesNotSendQueryResponse() {
     connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
 
     // Query with an invalid `request` field.
@@ -345,7 +347,7 @@ typealias SystemUserRole = Com_Google_Companionprotos_SystemUserRole
     XCTAssertTrue(channel.writtenMessages.isEmpty)
   }
 
-  func testOnMessageReceived_doesNotSendQueryResponse() {
+  @MainActor func testOnMessageReceived_doesNotSendQueryResponse() {
     connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
 
     channel.triggerMessageReceived(Data("message".utf8), from: SystemFeatureManager.recipientUUID)

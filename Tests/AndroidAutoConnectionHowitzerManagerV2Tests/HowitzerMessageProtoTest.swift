@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
-import SwiftProtobuf
-import XCTest
-@_implementationOnly import AndroidAutoConnectionHowitzerV2Protos
+private import Foundation
+private import SwiftProtobuf
+internal import XCTest
+private import AndroidAutoConnectionHowitzerV2Protos
 
-@testable import AndroidAutoConnectionHowitzerManagerV2
+@testable private import AndroidAutoConnectionHowitzerManagerV2
 
-typealias Timestamp = Google_Protobuf_Timestamp
+private typealias Timestamp = Google_Protobuf_Timestamp
 
 class HowitzerMessageProtoTest: XCTestCase {
   override func setUp() {

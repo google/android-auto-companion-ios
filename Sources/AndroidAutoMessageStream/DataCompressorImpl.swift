@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Compression
-import Foundation
+private import Compression
+internal import Foundation
 
 /// Provide data compression/decompression operations.
 ///

@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoLogger
-import Foundation
-import SwiftProtobuf
-@_implementationOnly import AndroidAutoConnectionHowitzerV2Protos
+private import AndroidAutoLogger
+internal import Foundation
+internal import SwiftProtobuf
+internal import AndroidAutoConnectionHowitzerV2Protos
 
 typealias HowitzerMessageProto =
   Com_Google_Android_Connecteddevice_Connectionhowitzer_Proto_HowitzerMessage

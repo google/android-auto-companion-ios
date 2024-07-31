@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoConnectedDeviceTransport
-import AndroidAutoConnectedDeviceTransportFakes
-import AndroidAutoLogger
-import AndroidAutoMessageStream
-import Foundation
+internal import AndroidAutoConnectedDeviceTransport
+internal import AndroidAutoConnectedDeviceTransportFakes
+private import AndroidAutoLogger
+internal import AndroidAutoMessageStream
+internal import Foundation
 
 /// A message stream that stores any messages to be written in a local list for assertion.
 ///
@@ -27,38 +27,38 @@ class FakeMessageStream: NSObject, MessageStream {
   // This force-unwrap is safe as the UUID string is valid and cannot change.
   private static let defaultRecipient = UUID(uuidString: "ba4bdcfb-b5dd-4560-9e03-1444bcb0fcb6")!
 
-  public let peripheral: any TransportPeripheral
-  public let version: MessageStreamVersion
+  let peripheral: any TransportPeripheral
+  let version: MessageStreamVersion
 
-  public var isValid: Bool { true }
+  var isValid: Bool { true }
 
   var readingDebugDescription = ""
   var writingDebugDescription = ""
 
-  public var messageEncryptor: MessageEncryptor? = nil
+  var messageEncryptor: MessageEncryptor? = nil
 
   /// Messages that have been delivered through a call to `writeMessage(_:params:)` or
   /// `writeEncryptedMessage(_:params:)`.
-  public var writtenData: [Data] = []
+  var writtenData: [Data] = []
 
   /// A closure that will be invoked when there is a call to `writeMessage(_:params:)` or
   /// `writeEncryptedMessage(_:params:)`.
   ///
   /// This closure should return `true` if a `writeMessage` call should succeed.
-  public var writeMessageSucceeds: () -> Bool = { true }
+  var writeMessageSucceeds: () -> Bool = { true }
 
-  public weak var delegate: MessageStreamDelegate?
+  weak var delegate: MessageStreamDelegate?
 
-  public init(peripheral: any TransportPeripheral, version: MessageStreamVersion = .passthrough) {
+  init(peripheral: any TransportPeripheral, version: MessageStreamVersion = .passthrough) {
     self.peripheral = peripheral
     self.version = version
   }
 
-  public func writeMessage(_ message: Data, params: MessageStreamParams) throws {
+  func writeMessage(_ message: Data, params: MessageStreamParams) throws {
     try writeMessageInternal(message, params: params)
   }
 
-  public func writeEncryptedMessage(_ message: Data, params: MessageStreamParams) throws {
+  func writeEncryptedMessage(_ message: Data, params: MessageStreamParams) throws {
     try writeMessageInternal(message, params: params)
   }
 

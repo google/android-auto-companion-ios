@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-@_implementationOnly import AndroidAutoMessageStream
-@_implementationOnly import AndroidAutoSecureChannel
-import Foundation
+internal import AndroidAutoMessageStream
+internal import AndroidAutoSecureChannel
+internal import Foundation
 
 /// A creator of `ReconnectionHandler`.
 protocol ReconnectionHandlerFactory {

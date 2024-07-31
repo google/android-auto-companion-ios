@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-@_implementationOnly import AndroidAutoCoreBluetoothProtocols
-@_implementationOnly import AndroidAutoMessageStream
-import Foundation
+internal import AndroidAutoCoreBluetoothProtocols
+internal import AndroidAutoMessageStream
+internal import Foundation
 
 /// A car that is pending establishment of a secure channel.
 class PendingCar {

@@ -12,13 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import CoreBluetooth
-import XCTest
+private import CoreBluetooth
+internal import XCTest
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable private import AndroidAutoConnectedDeviceManager
 
 /// Unit tests for our `CBUUID` extensions.
-@available(watchOS 6.0, *)
 class CBUUID_AdditionsTest: XCTestCase {
   // MARK: - Tests
 

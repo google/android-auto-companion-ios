@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoLogger
-import UIKit
-@_implementationOnly import AndroidAutoCompanionProtos
+private import AndroidAutoLogger
+internal import Foundation
+internal import AndroidAutoCompanionProtos
 
 private typealias FeatureSupportStatus = Com_Google_Companionprotos_FeatureSupportStatus
 private typealias SystemQuery = Com_Google_Companionprotos_SystemQuery
@@ -116,20 +116,7 @@ class SystemFeatureManager: FeatureManager {
         return queriedFeatureID
       }
 
-      guard let provider = featureSupportStatusProvider(for: car) else {
-        Self.log.error("No feature support status provider. Returning not supported for all.")
-        let statuses = queriedFeatureIDs.map { featureID in
-          FeatureSupportStatus.with {
-            $0.featureID = featureID.uuidString
-            $0.isSupported = false
-          }
-        }
-        let response = FeatureSupportResponse.with {
-          $0.statuses = statuses
-        }
-        try responseHandle.respond(with: response.serializedData(), isSuccessful: true)
-        return
-      }
+      let provider = featureSupportStatusProvider()
       Self.log("Feature support status provider is \(String(describing: provider))")
 
       let statuses: [FeatureSupportStatus] = queriedFeatureIDs.map { queriedFeatureID in

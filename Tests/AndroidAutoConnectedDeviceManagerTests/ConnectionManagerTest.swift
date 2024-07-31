@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCoreBluetoothProtocolsMocks
-import AndroidAutoSecureChannel
-import CoreBluetooth
-import Foundation
-import XCTest
-@_implementationOnly import AndroidAutoCompanionProtos
+private import AndroidAutoCoreBluetoothProtocolsMocks
+internal import AndroidAutoSecureChannel
+private import CoreBluetooth
+internal import Foundation
+internal import XCTest
+import AndroidAutoCompanionProtos
 
-@testable import AndroidAutoConnectedDeviceManager
-@testable import AndroidAutoConnectedDeviceManagerMocks
+@testable private import AndroidAutoConnectedDeviceManager
+@testable private import AndroidAutoConnectedDeviceManagerMocks
 
 private typealias OutOfBandAssociationData = Com_Google_Companionprotos_OutOfBandAssociationData
 private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBandAssociationToken
 
 /// Unit tests for `CommunicationManager`. Specifically testing the version 2 flow.
-@MainActor class ConnectionManagerTest: XCTestCase {
+class ConnectionManagerTest: XCTestCase {
   private var connectionManager: ConnectionManagerObservable!
   private var centralManagerMock: CentralManagerMock!
   private var associatedCarsManager: AssociatedCarsManagerMock!
@@ -34,7 +34,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
   private var uuidConfig: UUIDConfig!
   private var versionResolverFake: BLEVersionResolverFake!
 
-  override func setUp() async throws {
+  @MainActor override func setUp() async throws {
     try await super.setUp()
     continueAfterFailure = false
 
@@ -56,14 +56,14 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
 
   // MARK: ConnectionManager -> CentralManager
 
-  func testConnectionManagerStopScan_CentralManagerStopsScan() {
+  @MainActor func testConnectionManagerStopScan_CentralManagerStopsScan() {
     connectionManager.stopScanning()
     XCTAssertTrue(centralManagerMock.stopScanCalled)
   }
 
   // MARK: - Lifecycle calls
 
-  func testCentralManager_callsConnectOnAssociate() {
+  @MainActor func testCentralManager_callsConnectOnAssociate() {
     let peripheralMock = PeripheralMock(name: "Test")
 
     XCTAssertNoThrow(try connectionManager.associate(peripheralMock))
@@ -72,7 +72,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssert(connectionManager.peripheralToConnect === peripheralMock)
   }
 
-  func testCentralManager_callsOnPeripheralConnected_whenConnectionEstablished() {
+  @MainActor func testCentralManager_callsOnPeripheralConnected_whenConnectionEstablished() {
     let peripheralMock = PeripheralMock(name: "Test")
 
     connectionManager.centralManager(centralManagerMock, didConnect: peripheralMock)
@@ -81,7 +81,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssert(connectionManager.connectedPeripheral === peripheralMock)
   }
 
-  func testCentralManager_callsOnPeripheralDisconnected_whenPeripheralDisconnects() {
+  @MainActor func testCentralManager_callsOnPeripheralDisconnected_whenPeripheralDisconnects() {
     let peripheralMock = PeripheralMock(name: "Test")
 
     connectionManager.centralManager(
@@ -93,7 +93,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssert(connectionManager.disconnectedPeripheral === peripheralMock)
   }
 
-  func testCentralManager_cancelsPeripheralConnection_whenPeripheralDisconnects() {
+  @MainActor func testCentralManager_cancelsPeripheralConnection_whenPeripheralDisconnects() {
     let peripheralMock = PeripheralMock(name: "Test")
 
     connectionManager.centralManager(
@@ -104,7 +104,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssertTrue(centralManagerMock.cancelPeripheralConnectionCalled)
   }
 
-  func testCentralManager_callsOnPeripheralConnectionFailed_whenConnectionFails() {
+  @MainActor func testCentralManager_callsOnPeripheralConnectionFailed_whenConnectionFails() {
     let peripheralMock = PeripheralMock(name: "Test")
     let mockError = makeMockError() as NSError
 
@@ -118,7 +118,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssertEqual(connectionManager.failedConnectionError, mockError)
   }
 
-  func testCentralManager_peripheralConnectionFailsOnAssociation_notifiesDelegate() {
+  @MainActor func testCentralManager_peripheralConnectionFailsOnAssociation_notifiesDelegate() {
     let peripheralMock = PeripheralMock(name: "Test")
     let mockError = makeMockError() as NSError
 
@@ -133,7 +133,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssertEqual(associationDelegateMock.encounteredError as? AssociationError, .unknown)
   }
 
-  func testCentralManager_peripheralDisconnectsOnAssociation_notifiesDelegate() {
+  @MainActor func testCentralManager_peripheralDisconnectsOnAssociation_notifiesDelegate() {
     let peripheralMock = PeripheralMock(name: "Test")
 
     XCTAssertNoThrow(try connectionManager.associate(peripheralMock))
@@ -147,7 +147,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssertEqual(associationDelegateMock.encounteredError as? AssociationError, .disconnected)
   }
 
-  func testCentralManager_peripheralDisconnectsNotAssociating_doesNotNotifyDelegate() {
+  @MainActor func testCentralManager_peripheralDisconnectsNotAssociating_doesNotNotifyDelegate() {
     let peripheralMock = PeripheralMock(name: "Test")
 
     connectionManager.centralManager(
@@ -158,7 +158,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssertFalse(associationDelegateMock.didEncounterErrorCalled)
   }
 
-  func testCentralManager_associates_whenConnectionEstablished() {
+  @MainActor func testCentralManager_associates_whenConnectionEstablished() {
     let peripheralMock = PeripheralMock(name: "Test")
 
     XCTAssertNoThrow(try connectionManager.associate(peripheralMock))
@@ -167,7 +167,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssertTrue(connectionManager.associateCalled)
   }
 
-  func testCentralManager_setUpSecureChannel_whenConnectionEstablished() {
+  @MainActor func testCentralManager_setUpSecureChannel_whenConnectionEstablished() {
     let peripheralMock = PeripheralMock(name: "Test")
 
     connectionManager.centralManager(centralManagerMock, didConnect: peripheralMock)
@@ -175,7 +175,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssertTrue(connectionManager.setupSecureChannelCalled)
   }
 
-  func testCentralManager_registerServiceObservers_onAssociationComplete() {
+  @MainActor func testCentralManager_registerServiceObservers_onAssociationComplete() {
     let peripheralMock = PeripheralMock(name: "Test")
     let car = Car(id: "id", name: "test")
     let secureChannel = SecuredCarChannelMock(id: car.id, name: car.name)
@@ -190,7 +190,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssert(connectionManager.observedChannel === secureChannel)
   }
 
-  func testCentralManager_registerServiceObservers_onSecureChannelEstablished() {
+  @MainActor func testCentralManager_registerServiceObservers_onSecureChannelEstablished() {
     let secureChannel = SecuredCarChannelMock(id: "id", name: "Test")
 
     connectionManager.communicationManager(
@@ -203,7 +203,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
 
   // MARK: CentralManagerDelegate calls
 
-  func testCentralManagerDidUpdateState() {
+  @MainActor func testCentralManagerDidUpdateState() {
     centralManagerMock.state = .poweredOff
     connectionManager.centralManagerDidUpdateState(centralManagerMock)
     XCTAssertTrue(connectionManager.state.isPoweredOff)
@@ -229,7 +229,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssertTrue(connectionManager.state.isUnknown)
   }
 
-  func testRequestRadioStateActionPended_PoweredOn() {
+  @MainActor func testRequestRadioStateActionPended_PoweredOn() {
     centralManagerMock.state = .unknown
     connectionManager.centralManagerDidUpdateState(centralManagerMock)
 
@@ -249,7 +249,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssertTrue(state.isPoweredOn)
   }
 
-  func testRequestRadioStateActionPended_PoweredOff() {
+  @MainActor func testRequestRadioStateActionPended_PoweredOff() {
     centralManagerMock.state = .unknown
     connectionManager.centralManagerDidUpdateState(centralManagerMock)
 
@@ -269,7 +269,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssertTrue(state.isPoweredOff)
   }
 
-  func testRequestRadioStateActionImmediate_PoweredOn() {
+  @MainActor func testRequestRadioStateActionImmediate_PoweredOn() {
     centralManagerMock.state = .poweredOn
     connectionManager.centralManagerDidUpdateState(centralManagerMock)
 
@@ -284,7 +284,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssertTrue(state.isPoweredOn)
   }
 
-  func testRequestRadioStateActionImmediate_PoweredOff() {
+  @MainActor func testRequestRadioStateActionImmediate_PoweredOff() {
     centralManagerMock.state = .poweredOff
     connectionManager.centralManagerDidUpdateState(centralManagerMock)
 
@@ -299,7 +299,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssertTrue(state.isPoweredOff)
   }
 
-  func testCentralManagerPoweredOnAndWillRestoreState_ScansForPeripherals() {
+  @MainActor func testCentralManagerPoweredOnAndWillRestoreState_ScansForPeripherals() {
     centralManagerMock.state = .poweredOn
     let restorationState = [CBCentralManagerRestoredStateScanServicesKey: [CBUUID()]]
     connectionManager.centralManager(centralManagerMock, willRestoreState: restorationState)
@@ -308,7 +308,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
 
   // MARK: -  Association delegate tests
 
-  func testCentralManager_scansForAssociationUUID_fromUUIDConfig() {
+  @MainActor func testCentralManager_scansForAssociationUUID_fromUUIDConfig() {
     connectionManager.scanForCarsToAssociate(namePrefix: "Prefix")
 
     XCTAssertTrue(centralManagerMock.scanForPeripheralsCalled)
@@ -316,7 +316,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssert(centralManagerMock.servicesToScanFor!.contains(uuidConfig.associationUUID))
   }
 
-  func testCentralManager_scansForAssociationUUID_fromAssociationConfig() {
+  @MainActor func testCentralManager_scansForAssociationUUID_fromAssociationConfig() {
     let associationUUID = CBUUID(string: "4ea3eae4-b861-4a09-ad30-ce80e6a7b1ae")
 
     connectionManager.scanForCarsToAssociate(namePrefix: "Prefix") { config in
@@ -328,7 +328,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssert(centralManagerMock.servicesToScanFor!.contains(associationUUID))
   }
 
-  func testCentralManager_scansForAssociationUUID_fromUUIDConfigAndAssociationConfig() {
+  @MainActor func testCentralManager_scansForAssociationUUID_fromUUIDConfigAndAssociationConfig() {
     let associationUUID = CBUUID(string: "4ea3eae4-b861-4a09-ad30-ce80e6a7b1ae")
 
     connectionManager.scanForCarsToAssociate(namePrefix: "Prefix") { config in
@@ -346,7 +346,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssert(centralManagerMock.servicesToScanFor!.contains(uuidConfig.associationUUID))
   }
 
-  func testCentralManagerDidDiscoverPeripheral_doesNotNotifyDelegateIfNoName() {
+  @MainActor func testCentralManagerDidDiscoverPeripheral_doesNotNotifyDelegateIfNoName() {
     let peripheralMock = PeripheralMock(name: "Test")
 
     connectionManager.centralManager(
@@ -355,7 +355,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssertFalse(associationDelegateMock.discoveredCars.contains(peripheralMock))
   }
 
-  func testCentralManagerDidDiscoverPeripheral_doesNotNotifyDelegateIfNotAssociating() {
+  @MainActor func testCentralManagerDidDiscoverPeripheral_doesNotNotifyDelegateIfNotAssociating() {
     let peripheralMock = PeripheralMock(name: "Test")
 
     connectionManager.centralManager(
@@ -367,7 +367,8 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssertFalse(associationDelegateMock.discoveredCars.contains(peripheralMock))
   }
 
-  func testCentralManagerDidDiscoverPeripheral_notifiesAssociationDelegateIfAssociating() {
+  @MainActor func testCentralManagerDidDiscoverPeripheral_notifiesAssociationDelegateIfAssociating()
+  {
     let peripheralMock = PeripheralMock(name: "Test")
     let advertisedName = "advertisedName"
 
@@ -387,7 +388,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
 
   // MARK: - Discovered peripheral name tests.
 
-  func testCentralManagerDidDiscoverPeripheral_notifiesWithUTF8NameAndNoPrefix() {
+  @MainActor func testCentralManagerDidDiscoverPeripheral_notifiesWithUTF8NameAndNoPrefix() {
     let peripheralMock = PeripheralMock(name: "Test")
     let advertisedName = "advertisedName"
 
@@ -416,7 +417,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssertEqual(associationDelegateMock.advertisedName, utf8Name)
   }
 
-  func testCentralManagerDidDiscoverPeripheral_notifiesWithHexName() {
+  @MainActor func testCentralManagerDidDiscoverPeripheral_notifiesWithHexName() {
     let peripheralMock = PeripheralMock(name: "Test")
     let advertisedName = "advertisedName"
     let namePrefix = "namePrefix "
@@ -447,6 +448,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssertEqual(associationDelegateMock.advertisedName, expectedName)
   }
 
+  @MainActor
   func testCentralManagerDidDiscoverPeripheralWithNameFilter_notifiesWithHexNameAndNamePrefix()
     throws
   {
@@ -489,6 +491,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssertEqual(associationDelegateMock.advertisedName, expectedName)
   }
 
+  @MainActor
   func testCentralManagerDidDiscoverPeripheralWithNameFilter_doNotNotifyDelegateWithUTF8Name()
     throws
   {
@@ -533,7 +536,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
 
   // MARK: - Disconnection tests.
 
-  func testCentralManagerDidDisconnectPeripheral() {
+  @MainActor func testCentralManagerDidDisconnectPeripheral() {
     let peripheralMock = PeripheralMock(name: "Test")
     connectionManager.discoveredPeripherals.insert(peripheralMock)
     connectionManager.centralManager(
@@ -541,7 +544,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssertFalse(associationDelegateMock.discoveredCars.contains(peripheralMock))
   }
 
-  func testCentralManager_didConnect_callsAssociationDelegate() {
+  @MainActor func testCentralManager_didConnect_callsAssociationDelegate() {
     let peripheralMock = PeripheralMock(name: "Test")
 
     XCTAssertNoThrow(try connectionManager.associate(peripheralMock))
@@ -550,7 +553,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssert(associationDelegateMock.didConnectCalledForPeripherals.contains(peripheralMock))
   }
 
-  func testDisconnectPeripheral_associating_alreadyDisconnected_notifiesDelegate() {
+  @MainActor func testDisconnectPeripheral_associating_alreadyDisconnected_notifiesDelegate() {
     let peripheralMock = PeripheralMock(name: "Test")
 
     XCTAssertNoThrow(try connectionManager.associate(peripheralMock))
@@ -568,7 +571,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssertTrue(associationDelegateMock.didEncounterErrorCalled)
   }
 
-  func testAssociatingExistingCarId_removesExistingCarAssociation() {
+  @MainActor func testAssociatingExistingCarId_removesExistingCarAssociation() {
     // Add a couple associated cars.
     associatedCarsManager.addAssociatedCar(identifier: "Good", name: "Good")
     associatedCarsManager.addAssociatedCar(identifier: "Test", name: "Test")
@@ -581,7 +584,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssertNotNil(associatedCarsManager.data["Good"] as Any?)
   }
 
-  func testAssociatingUniqueCarId_doesNotRemoveExistingCarAssociation() {
+  @MainActor func testAssociatingUniqueCarId_doesNotRemoveExistingCarAssociation() {
     // Add a couple associated cars.
     associatedCarsManager.addAssociatedCar(identifier: "Good", name: "Good")
 
@@ -592,7 +595,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssertNotNil(associatedCarsManager.data["Good"] as Any?)
   }
 
-  func testAssociating_afterDisconnecting_scanIsNotOveridden() {
+  @MainActor func testAssociating_afterDisconnecting_scanIsNotOverridden() {
     let peripheralMock = PeripheralMock(name: "associated")
     centralManagerMock.connectedPeripherals.insert(peripheralMock)
     setPeripheralAssociated(peripheralMock)
@@ -620,12 +623,12 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
 
   // MARK: - Reconnection flow
 
-  func testCentralManager_withNoAssociatedCars_doesNotScan() {
+  @MainActor func testCentralManager_withNoAssociatedCars_doesNotScan() {
     connectionManager.connectToAssociatedCars()
     XCTAssertFalse(centralManagerMock.scanForPeripheralsCalled)
   }
 
-  func testCentralManager_scansForAllReconnectionUUIDs() {
+  @MainActor func testCentralManager_scansForAllReconnectionUUIDs() {
     // Set up a random peripheral as being associated so that a scan will start.
     setPeripheralAssociated(PeripheralMock(name: "test"))
 
@@ -640,7 +643,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssert(servicesToScanFor.contains(uuidConfig.reconnectionUUID(for: .v2)))
   }
 
-  func testCentralManager_errorDuringReconnection_notifiesObserver() {
+  @MainActor func testCentralManager_errorDuringReconnection_notifiesObserver() {
     let peripheralMock = PeripheralMock(name: "associated")
     centralManagerMock.connectedPeripherals.insert(peripheralMock)
 
@@ -658,7 +661,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssertTrue(centralManagerMock.canceledPeripherals.contains(where: { $0 === peripheralMock }))
   }
 
-  func testCentralManager_reconnectsForDuplicateDevice_ifDisconnected() {
+  @MainActor func testCentralManager_reconnectsForDuplicateDevice_ifDisconnected() {
     let peripheralMock = PeripheralMock(name: "associated")
     centralManagerMock.connectedPeripherals.insert(peripheralMock)
 
@@ -687,7 +690,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssertEqual(connectionManager.connectCalledCount, 2)
   }
 
-  func testCentralManager_reconnectsDuplicateDevice_ifNoSecureChannel() {
+  @MainActor func testCentralManager_reconnectsDuplicateDevice_ifNoSecureChannel() {
     let peripheralMock = PeripheralMock(name: "associated")
     centralManagerMock.connectedPeripherals.insert(peripheralMock)
 
@@ -714,7 +717,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssertEqual(connectionManager.connectCalledCount, 2)
   }
 
-  func testCentralManager_doesReconnectDuplicateDevice_ifSecureChannelExists() {
+  @MainActor func testCentralManager_doesReconnectDuplicateDevice_ifSecureChannelExists() {
     // Existing secure channel
     let secureChannel = SecuredCarChannelMock(id: "id", name: "Test")
     connectionManager.communicationManager(
@@ -747,7 +750,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssertEqual(connectionManager.connectCalledCount, 1)
   }
 
-  func testDisconnectPeripheral_alreadyDisconnected_notifiesObserver() {
+  @MainActor func testDisconnectPeripheral_alreadyDisconnected_notifiesObserver() {
     let peripheralMock = PeripheralMock(name: "associated")
     centralManagerMock.connectedPeripherals.insert(peripheralMock)
     setPeripheralAssociated(peripheralMock)
@@ -775,6 +778,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssertEqual(peripheralMock.identifier.uuidString, disconnectedCarIdentifier)
   }
 
+  @MainActor
   func testDisconnectPeripheral_alreadyDisconnectedButNotDiscovered_doesNotNotifyObserver() {
     let peripheralMock = PeripheralMock(name: "associated")
     centralManagerMock.connectedPeripherals.insert(peripheralMock)
@@ -795,7 +799,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     wait(for: [observerCalledExpectation], timeout: 2.0)
   }
 
-  func testDisconnectPeripheral_callsScanForAssociatedDevices() {
+  @MainActor func testDisconnectPeripheral_callsScanForAssociatedDevices() {
     let peripheralMock = PeripheralMock(name: "associated")
     centralManagerMock.connectedPeripherals.insert(peripheralMock)
     setPeripheralAssociated(peripheralMock)
@@ -824,7 +828,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
 
   // MARK: - Renaming cars
 
-  func testRenameCar() {
+  @MainActor func testRenameCar() {
     let associatedCar = PeripheralMock(name: "associated")
     setPeripheralAssociated(associatedCar)
 
@@ -838,7 +842,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssertEqual(updatedCar?.name, newName)
   }
 
-  func testRenameCar_IgnoresNonAssociatedCar() {
+  @MainActor func testRenameCar_IgnoresNonAssociatedCar() {
     let carId = "carId"
     let newName = "newName"
 
@@ -846,7 +850,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     XCTAssert(connectionManager.associatedCars.isEmpty)
   }
 
-  func testRenameCar_IgnoresEmptyName() {
+  @MainActor func testRenameCar_IgnoresEmptyName() {
     let oldName = "oldName"
     let associatedCar = PeripheralMock(name: oldName)
     setPeripheralAssociated(associatedCar)
@@ -863,7 +867,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
 
   /// Runs through the reconnection flow for the given peripheral so that the connection manager
   /// will believe that it has a secure connection with it.
-  private func setUpValidConnection(for peripheral: PeripheralMock) {
+  @MainActor private func setUpValidConnection(for peripheral: PeripheralMock) {
     let backingCar = Car(id: peripheral.identifier.uuidString, name: peripheral.name)
     let communicationManager = makeCommunicationManager()
 
@@ -882,7 +886,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
   }
 
   /// Mocks the given peripheral as associated when the `ConnectionManager` queries for it.
-  private func setPeripheralAssociated(_ peripheral: PeripheralMock) {
+  @MainActor private func setPeripheralAssociated(_ peripheral: PeripheralMock) {
     associatedCarsManager.addAssociatedCar(
       identifier: peripheral.identifier.uuidString,
       name: peripheral.name)
@@ -892,7 +896,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     return NSError(domain: "", code: 0, userInfo: nil)
   }
 
-  private func makeAssociationManagerMock() -> AssociationManager {
+  @MainActor private func makeAssociationManagerMock() -> AssociationManager {
     return AssociationManager(
       overlay: Overlay(),
       connectionHandle: ConnectionHandleFake(),
@@ -905,7 +909,7 @@ private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBa
     )
   }
 
-  private func makeCommunicationManager() -> CommunicationManager {
+  @MainActor private func makeCommunicationManager() -> CommunicationManager {
     return CommunicationManager(
       overlay: Overlay(),
       connectionHandle: ConnectionHandleFake(),

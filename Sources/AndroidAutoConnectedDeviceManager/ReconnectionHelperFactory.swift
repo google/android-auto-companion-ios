@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import CoreBluetooth
-import Foundation
+internal import CoreBluetooth
+internal import Foundation
 
 /// Factory for making the reconnection helpers.
 protocol ReconnectionHelperFactory {

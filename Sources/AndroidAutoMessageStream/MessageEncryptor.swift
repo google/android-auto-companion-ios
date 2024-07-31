@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
+public import Foundation
 
 /// An encryptor that will be used by a `BLEMessageStream` to encrypt and decrypt messages.
 public protocol MessageEncryptor {

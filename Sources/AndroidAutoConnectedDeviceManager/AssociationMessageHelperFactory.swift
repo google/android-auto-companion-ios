@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-@_implementationOnly import AndroidAutoCoreBluetoothProtocols
-@_implementationOnly import AndroidAutoMessageStream
-@_implementationOnly import AndroidAutoSecureChannel
-import CoreBluetooth
-import Foundation
+internal import AndroidAutoCoreBluetoothProtocols
+internal import AndroidAutoMessageStream
+internal import AndroidAutoSecureChannel
+internal import CoreBluetooth
+internal import Foundation
 
 /// Protocol to be adopted by factories which make message exchange helpers.
 protocol AssociationMessageHelperFactory {

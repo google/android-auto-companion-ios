@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-@_implementationOnly import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoLogger
-@_implementationOnly import AndroidAutoMessageStream
-@_implementationOnly import AndroidAutoSecureChannel
-import CoreBluetooth
-import Foundation
-@_implementationOnly import AndroidAutoTrustAgentProtos
+internal import AndroidAutoCoreBluetoothProtocols
+private import AndroidAutoLogger
+internal import AndroidAutoMessageStream
+internal import AndroidAutoSecureChannel
+public import CoreBluetooth
+internal import Foundation
+private import AndroidAutoTrustAgentProtos
 
 #if canImport(UIKit)
-  import UIKit
+  internal import UIKit
 #endif
 
-typealias TrustedDeviceMessage = Aae_Trustagent_TrustedDeviceMessage
-typealias PhoneCredentials = Aae_Trustagent_PhoneCredentials
-typealias TrustedDeviceState = Aae_Trustagent_TrustedDeviceState
+private typealias TrustedDeviceMessage = Aae_Trustagent_TrustedDeviceMessage
+private typealias PhoneCredentials = Aae_Trustagent_PhoneCredentials
+private typealias TrustedDeviceState = Aae_Trustagent_TrustedDeviceState
 
 /// Manages all functionality related to unlocking a previously associated car.
 ///
@@ -288,6 +288,15 @@ public class TrustAgentManager: FeatureManager {
     trustAgentStorage.clearFeatureStatus(for: car)
   }
 
+  public override func onCarAssociated(_ car: Car) {
+    Self.log("Car \(car.logName) associated.")
+    // Clearing a newly associated car is safe because there shouldn't be existing data.
+    // The escrow token and handle are not kept in app storage, so they aren't automatically cleared
+    // when the app is deleted. Clearing on association ensures a fresh state.
+    wipeTrustedDeviceEnrollment(for: car)
+    trustAgentStorage.clearFeatureStatus(for: car)
+  }
+
   public override func onMessageReceived(_ message: Data, from car: Car) {
     guard let trustedDeviceMessage = try? TrustedDeviceMessage(serializedData: message) else {
       Self.log.error("Failed to decode message from serialized data.")
@@ -314,11 +323,7 @@ public class TrustAgentManager: FeatureManager {
 
     let enrolled = isEnrolled(with: car)
 
-    escrowTokenManager.clearToken(for: car.id)
-    escrowTokenManager.clearHandle(for: car.id)
-
-    config.clearConfig(for: car)
-    trustAgentStorage.clearUnlockHistory(for: car)
+    wipeTrustedDeviceEnrollment(for: car)
 
     guard enrolled else { return }
 
@@ -328,6 +333,14 @@ public class TrustAgentManager: FeatureManager {
     }
 
     delegate?.trustAgentManager(self, didUnenroll: car, initiatedFromCar: initiatedFromCar)
+  }
+
+  private func wipeTrustedDeviceEnrollment(for car: Car) {
+    escrowTokenManager.clearToken(for: car.id)
+    escrowTokenManager.clearHandle(for: car.id)
+
+    config.clearConfig(for: car)
+    trustAgentStorage.clearUnlockHistory(for: car)
   }
 
   /// Attempts to sync whether the trusted device feature is currently enabled with the given car.

@@ -12,17 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
-import XCTest
-@_implementationOnly import AndroidAutoCompanionProtos
+private import Foundation
+internal import XCTest
+import AndroidAutoCompanionProtos
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable private import AndroidAutoConnectedDeviceManager
 
 private typealias OutOfBandAssociationData = Com_Google_Companionprotos_OutOfBandAssociationData
 private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBandAssociationToken
 
 /// Unit tests for OutOfBandAssociationDataSource.
-@available(watchOS 6.0, *)
 class OutOfBandAssociationDataSourceTest: XCTestCase {
   func testURLMissingQueryThrows() {
     let url = URL(string: "http://companion/associate")

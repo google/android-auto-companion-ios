@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
-import AndroidAutoCompanionProtos
+internal import Foundation
+internal import AndroidAutoCompanionProtos
 
 /// Convenience extensions for `Aae_Blemessagestream_OperationType`.
 extension Com_Google_Companionprotos_OperationType {

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCoreBluetoothProtocols
-import Foundation
+public import AndroidAutoCoreBluetoothProtocols
+internal import Foundation
 
 /// Creator of different message streams.
 public enum BLEMessageStreamFactory {

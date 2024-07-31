@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-@_implementationOnly import AndroidAutoCoreBluetoothProtocols
-import CoreBluetooth
-import Foundation
+internal import AndroidAutoCoreBluetoothProtocols
+internal import CoreBluetooth
+internal import Foundation
 
 /// A wrapper around `CBCharacteristic` that will make it conform to `BLECharacteristic`.
 ///

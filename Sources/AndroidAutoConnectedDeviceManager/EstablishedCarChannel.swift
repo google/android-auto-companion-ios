@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-@_implementationOnly import AndroidAutoConnectedDeviceTransport
-@_implementationOnly import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoLogger
-@_implementationOnly import AndroidAutoMessageStream
-import Foundation
-@_implementationOnly import AndroidAutoCompanionProtos
+internal import AndroidAutoConnectedDeviceTransport
+internal import AndroidAutoCoreBluetoothProtocols
+private import AndroidAutoLogger
+internal import AndroidAutoMessageStream
+internal import Foundation
+private import AndroidAutoCompanionProtos
 
 private typealias QueryProto = Com_Google_Companionprotos_Query
 private typealias QueryResponseProto = Com_Google_Companionprotos_QueryResponse
@@ -254,17 +254,6 @@ extension EstablishedCarChannel: SecuredCarChannel {
 
   /// Convenience method that performs no action.
   private func noop(_ value: Bool) {}
-
-  func isFeatureSupported(_ featureID: UUID) -> Bool {
-    let isSupported = messageRecipientToObservations[featureID] != nil
-    Self.log("\(featureID.uuidString) isFeatureSupported: \(isSupported)")
-
-    for (recipient, _) in messageRecipientToObservations {
-      Self.log("Current registered feature \(recipient.uuidString)")
-    }
-
-    return isSupported
-  }
 }
 
 // MARK: - SecuredConnectedDeviceChannel

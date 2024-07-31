@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-@_implementationOnly import AndroidAutoCoreBluetoothProtocols
-@_implementationOnly import AndroidAutoMessageStream
-@_implementationOnly import AndroidAutoSecureChannel
-import Foundation
+internal import AndroidAutoCoreBluetoothProtocols
+internal import AndroidAutoMessageStream
+internal import AndroidAutoSecureChannel
+public import Foundation
 
 /// The possible errors that can result from sending an encrypted message to a car.
 enum SecuredCarChannelError: Error {
@@ -33,7 +33,7 @@ enum SecuredCarChannelError: Error {
 }
 
 /// A channel for a car that can be used to send encrypted messages.
-@MainActor public protocol SecuredCarChannel: AnyObject, FeatureSupportStatusProvider {
+@MainActor public protocol SecuredCarChannel: AnyObject {
   /// A car that messages are being sent to and from.
   var car: Car { get }
 

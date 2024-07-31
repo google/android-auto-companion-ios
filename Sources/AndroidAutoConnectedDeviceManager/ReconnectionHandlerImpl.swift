@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-@_implementationOnly import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoLogger
-@_implementationOnly import AndroidAutoMessageStream
-@_implementationOnly import AndroidAutoSecureChannel
-import Foundation
+internal import AndroidAutoCoreBluetoothProtocols
+private import AndroidAutoLogger
+internal import AndroidAutoMessageStream
+internal import AndroidAutoSecureChannel
+internal import Foundation
 
 /// A car that can be used to send encrypted messages.
 @MainActor class ReconnectionHandlerImpl: NSObject, ReconnectionHandler {

@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import XCTest
-import AndroidAutoCompanionProtos
+internal import XCTest
+private import AndroidAutoCompanionProtos
 
-@testable import AndroidAutoMessageStream
+@testable private import AndroidAutoMessageStream
 
 private typealias Message = Com_Google_Companionprotos_Message
 private typealias OperationType = Com_Google_Companionprotos_OperationType

@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoMessageStream
-import Foundation
+private import AndroidAutoCoreBluetoothProtocols
+internal import AndroidAutoMessageStream
+internal import Foundation
 
 /// The possible errors that can occur during the establishment of a secure channel.
 enum PassthroughSecureBLEChannelError: Error {

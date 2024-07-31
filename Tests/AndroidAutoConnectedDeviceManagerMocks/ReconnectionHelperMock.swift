@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoMessageStream
-import CoreBluetooth
+public import AndroidAutoMessageStream
+public import CoreBluetooth
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable public import AndroidAutoConnectedDeviceManager
 
 /// Mock for the ReconnectionHelper so we can track calls from tests.
 final public class ReconnectionHelperMock {

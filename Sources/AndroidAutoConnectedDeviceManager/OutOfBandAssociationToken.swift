@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
-@_implementationOnly import AndroidAutoCompanionProtos
+internal import Foundation
+private import AndroidAutoCompanionProtos
 
 private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBandAssociationToken
 
 #if canImport(CryptoKit)
-  import CryptoKit
+  private import CryptoKit
 
   /// Extensions for CryptoKit.
   extension OutOfBandAssociationToken {

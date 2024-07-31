@@ -12,32 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import XCTest
-@_implementationOnly import AndroidAutoCompanionProtos
+internal import XCTest
+import AndroidAutoCompanionProtos
 
-@testable import AndroidAutoConnectedDeviceManager
-@testable import AndroidAutoConnectedDeviceManagerMocks
+@testable private import AndroidAutoConnectedDeviceManager
+@testable private import AndroidAutoConnectedDeviceManagerMocks
 
-@MainActor class PeriodicPingManagerTest: XCTestCase {
+class PeriodicPingManagerTest: XCTestCase {
   private var manager: PeriodicPingManager!
   private var connectedCarManagerMock: ConnectedCarManagerMock!
   private let testCarId = "testCarId"
   private let testCar = Car(id: "testCarId", name: "mock car")
 
-  override func setUp() {
+  @MainActor override func setUp() {
     super.setUp()
 
     connectedCarManagerMock = ConnectedCarManagerMock()
     manager = PeriodicPingManager(connectedCarManager: connectedCarManagerMock)
   }
 
-  func testOnSecureChannelEstablished_saveConnectedCar() {
+  @MainActor func testOnSecureChannelEstablished_saveConnectedCar() {
     manager.onSecureChannelEstablished(for: testCar)
 
     XCTAssertTrue(manager.connectedCar == testCar)
   }
 
-  func testOnCarDisconnected_removeCar() {
+  @MainActor func testOnCarDisconnected_removeCar() {
     manager.onSecureChannelEstablished(for: testCar)
 
     manager.onCarDisconnected(testCar)
@@ -45,7 +45,7 @@ import XCTest
     XCTAssertNil(manager.connectedCar)
   }
 
-  func testOnMessageReceived_pingMessage_sendBackAck() {
+  @MainActor func testOnMessageReceived_pingMessage_sendBackAck() {
     let channel = SecuredCarChannelMock(car: testCar)
 
     manager.onSecureChannelEstablished(for: testCar)
@@ -57,7 +57,7 @@ import XCTest
     checkMessageType(channel.writtenMessages[0], expectedType: PeriodicPingMessage.MessageType.ack)
   }
 
-  func testOnMessageReceived_notPingMessage_ignore() {
+  @MainActor func testOnMessageReceived_notPingMessage_ignore() {
     let channel = SecuredCarChannelMock(car: testCar)
 
     manager.onSecureChannelEstablished(for: testCar)

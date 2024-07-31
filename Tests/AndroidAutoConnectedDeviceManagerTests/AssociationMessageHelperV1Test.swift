@@ -12,25 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoConnectedDeviceManagerMocks
-import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoCoreBluetoothProtocolsMocks
-import CoreBluetooth
-import XCTest
+private import AndroidAutoConnectedDeviceManagerMocks
+private import AndroidAutoCoreBluetoothProtocols
+private import AndroidAutoCoreBluetoothProtocolsMocks
+private import CoreBluetooth
+internal import XCTest
 
-@testable import AndroidAutoConnectedDeviceManager
-@testable import AndroidAutoMessageStream
+@testable private import AndroidAutoConnectedDeviceManager
+@testable private import AndroidAutoMessageStream
 
 /// Unit tests for AssociationMessageHelperV1.
-@available(watchOS 6.0, *)
-@MainActor class AssociationMessageHelperV1Test: XCTestCase {
+class AssociationMessageHelperV1Test: XCTestCase {
   private var associatorMock: AssociatorMock!
   private var messageStreamMock: MessageStream!
 
   // The helper under test.
   private var messageHelper: AssociationMessageHelperV1!
 
-  override func setUp() async throws {
+  @MainActor override func setUp() async throws {
     try await super.setUp()
 
     associatorMock = AssociatorMock()
@@ -61,7 +60,7 @@ import XCTest
   /// Test the good path for message handling.
   /// First message should be the carId.
   /// Second message should be the pairing code confirmation.
-  func testHandleMessage_CarId_Encryption() {
+  @MainActor func testHandleMessage_CarId_Encryption() {
     messageHelper.start()
 
     // Calling start should send the device id. Acknowledge that the message has been sent.
@@ -88,7 +87,7 @@ import XCTest
   }
 
   /// Test receiving a bad pairing code confirmation.
-  func testHandleMessage_BadPairing() {
+  @MainActor func testHandleMessage_BadPairing() {
     messageHelper.start()
 
     // Calling start should send the device id. Acknowledge that the message has been sent.
@@ -113,7 +112,7 @@ import XCTest
   }
 
   /// Test receiving a good pairing code confirmation, but the associator rejected it.
-  func testHandleMessage_AssociatorRejectedPairing() {
+  @MainActor func testHandleMessage_AssociatorRejectedPairing() {
     associatorMock.shouldThrowWhenNotifyingPairingCodeAccepted = true
     messageHelper.start()
 
@@ -139,7 +138,7 @@ import XCTest
   }
 
   /// Test handling encryption established, but no carId.
-  func testOnEncryptionEstablished_NoCarId() {
+  @MainActor func testOnEncryptionEstablished_NoCarId() {
     associatorMock.carId = nil
 
     messageHelper.onEncryptionEstablished()
@@ -149,7 +148,7 @@ import XCTest
     XCTAssertFalse(associatorMock.completeAssociationCalled)
   }
 
-  func testOnEncryptionEstablished_establishSecuredCarChannelFails() {
+  @MainActor func testOnEncryptionEstablished_establishSecuredCarChannelFails() {
     associatorMock.establishSecuredCarChannelSucceeds = false
 
     messageHelper.onEncryptionEstablished()

@@ -3,6 +3,22 @@
 **NOTE:** Entries are ordered chronologically with the newest entries at the
 top.
 
+## iOS Companion 4.2.0
+
+The following changes have been made:
+- Introduced `UserDefaultsPropertyListStore` for exporting to and importing from
+`UserDefaults`.
+- `BuildNumber` was moved from `Logger` to `AndroidUtils`.
+- `ConnectionManager` records the build number in `UserDefaults`.
+- Adopted import access level modifiers.
+- Corrected `@MainActor` usage in unit tests.
+
+## iOS Companion 4.1.0
+
+The following changes have been made:
+- Change experimental watchOS support to version 8.0.
+- General version cleanup.
+
 ## iOS Companion 4.0.0
 
 The following changes have been made:
@@ -12,7 +28,8 @@ The following changes have been made:
 ## iOS Companion 3.4.0
 
 The following changes have been made:
-- Added missing `info.plist` entries to the UKey2Wrapper framework for Xcode 15 distribution compatibility.
+- Added missing `info.plist` entries to the UKey2Wrapper framework for Xcode 15
+distribution compatibility.
 
 ## iOS Companion 3.3.0
 

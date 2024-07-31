@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
+internal import Foundation
 
 /// Convenience abstraction over `UserDefaults` that ensures all values set through this class
 /// will have keys namespaced to this library.

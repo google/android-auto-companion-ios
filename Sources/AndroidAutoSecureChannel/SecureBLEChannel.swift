@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoMessageStream
-import Foundation
+private import AndroidAutoCoreBluetoothProtocols
+public import AndroidAutoMessageStream
+public import Foundation
 
 /// The various states that a secure channel can be in.
 public enum SecureBLEChannelState {

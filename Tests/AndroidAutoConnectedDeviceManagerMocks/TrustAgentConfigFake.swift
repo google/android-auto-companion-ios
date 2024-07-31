@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
+public import Foundation
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable public import AndroidAutoConnectedDeviceManager
 
 /// A fake `TrustAgentConfig` that stores values in memory.
 public class TrustAgentConfigFake: TrustAgentConfig {

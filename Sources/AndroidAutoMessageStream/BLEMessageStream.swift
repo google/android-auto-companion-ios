@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoConnectedDeviceTransport
-import AndroidAutoCoreBluetoothProtocols
+public import AndroidAutoConnectedDeviceTransport
+public import AndroidAutoCoreBluetoothProtocols
 
 /// Message stream which is specific for BLE transport.
 public protocol BLEMessageStream: MessageStream {

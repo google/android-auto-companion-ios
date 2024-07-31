@@ -12,19 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoConnectedDeviceManagerMocks
-import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoCoreBluetoothProtocolsMocks
-import AndroidAutoMessageStream
-import AndroidAutoSecureChannel
-import CoreBluetooth
-import XCTest
+private import AndroidAutoConnectedDeviceManagerMocks
+private import AndroidAutoCoreBluetoothProtocols
+private import AndroidAutoCoreBluetoothProtocolsMocks
+private import AndroidAutoMessageStream
+internal import AndroidAutoSecureChannel
+private import CoreBluetooth
+internal import XCTest
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable internal import AndroidAutoConnectedDeviceManager
 
 /// Unit tests for `ReconnectionHandlerImpl`.
 
-@MainActor class ReconnectionHandlerImplTest: XCTestCase {
+class ReconnectionHandlerImplTest: XCTestCase {
   private let carId = "carId"
   private let car = PeripheralMock(name: "carName")
   private let savedSession = SecureBLEChannelMock.mockSavedSession
@@ -36,7 +36,7 @@ import XCTest
   private var reconnectionHandler: ReconnectionHandlerImpl!
   private var connectionHandle: ConnectionHandleFake!
 
-  override func setUp() async throws {
+  @MainActor override func setUp() async throws {
     try await super.setUp()
     continueAfterFailure = false
 
@@ -72,7 +72,7 @@ import XCTest
 
   // MARK: - Establish encryption tests.
 
-  func testEstablishEncryption_invokedSecureChannel() {
+  @MainActor func testEstablishEncryption_invokedSecureChannel() {
     XCTAssertNoThrow(try reconnectionHandler.establishEncryption())
 
     // A secure session should now be attempted to be established.
@@ -82,7 +82,7 @@ import XCTest
 
   // MARK: - Encryption established tests.
 
-  func testEncryptionEstablished_cannotSaveSession_notifiesDelegateOfError() {
+  @MainActor func testEncryptionEstablished_cannotSaveSession_notifiesDelegateOfError() {
     let delegate = ReconnectionHandlerDelegateMock()
     reconnectionHandler.delegate = delegate
 
@@ -103,7 +103,7 @@ import XCTest
     XCTAssertEqual(reconnectionHandler.state, .error)
   }
 
-  func testEncryptionEstablished_notifiesDelegate() {
+  @MainActor func testEncryptionEstablished_notifiesDelegate() {
     let delegate = ReconnectionHandlerDelegateMock()
     reconnectionHandler.delegate = delegate
 
@@ -127,7 +127,7 @@ import XCTest
     XCTAssertEqual(delegate.establishedChannel!.car, expectedCar)
   }
 
-  func testEncryptionEstablished_encounteredError_notifiesDelegate() {
+  @MainActor func testEncryptionEstablished_encounteredError_notifiesDelegate() {
     let delegate = ReconnectionHandlerDelegateMock()
     reconnectionHandler.delegate = delegate
 

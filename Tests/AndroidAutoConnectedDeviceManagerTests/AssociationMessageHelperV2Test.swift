@@ -12,20 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoConnectedDeviceManagerMocks
-import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoCoreBluetoothProtocolsMocks
-import AndroidAutoSecureChannel
-import CoreBluetooth
-import XCTest
-@_implementationOnly import AndroidAutoCompanionProtos
+private import AndroidAutoConnectedDeviceManagerMocks
+private import AndroidAutoCoreBluetoothProtocols
+private import AndroidAutoCoreBluetoothProtocolsMocks
+internal import AndroidAutoSecureChannel
+private import CoreBluetooth
+internal import XCTest
+import AndroidAutoCompanionProtos
 
-@testable import AndroidAutoConnectedDeviceManager
-@testable import AndroidAutoMessageStream
+@testable private import AndroidAutoConnectedDeviceManager
+@testable private import AndroidAutoMessageStream
 
 /// Unit tests for AssociationMessageHelperV2.
-@available(watchOS 6.0, *)
-@MainActor class AssociationMessageHelperV2Test: XCTestCase {
+class AssociationMessageHelperV2Test: XCTestCase {
   private typealias VerificationCodeState = Com_Google_Companionprotos_VerificationCodeState
   private typealias VerificationCode = Com_Google_Companionprotos_VerificationCode
 
@@ -36,7 +35,7 @@ import XCTest
   // The helper under test.
   private var messageHelper: AssociationMessageHelperV2!
 
-  override func setUp() async throws {
+  @MainActor override func setUp() async throws {
     try await super.setUp()
     continueAfterFailure = false
 
@@ -68,14 +67,14 @@ import XCTest
     super.tearDown()
   }
 
-  func testStart() {
+  @MainActor func testStart() {
     messageHelper.start()
 
     XCTAssertTrue(associatorMock.establishEncryptionCalled)
   }
 
   /// Test displaying pairing code and acceptance is assumed without IHU response.
-  func testHandleMessage_DisplaysPairingCode() {
+  @MainActor func testHandleMessage_DisplaysPairingCode() {
     messageHelper.start()
 
     messageHelper.onRequiresPairingVerification(FakeVerificationToken(pairingCode: "123456"))
@@ -95,7 +94,7 @@ import XCTest
   /// After encryption is established the next message is the carId.
   /// We respond by sending the deviceId and authentication key.
   /// Then we complete the association.
-  func testHandleMessage_Encryption_CarId() {
+  @MainActor func testHandleMessage_Encryption_CarId() {
     messageHelper.start()
 
     let params = MessageStreamParams(
@@ -123,7 +122,7 @@ import XCTest
 
   // MARK: - messageDidSendSuccessfully tests
 
-  func testMessageDidSendSuccessfully_noCarId_notifiesDelegate() {
+  @MainActor func testMessageDidSendSuccessfully_noCarId_notifiesDelegate() {
     messageHelper.start()
 
     let params = MessageStreamParams(
@@ -147,7 +146,8 @@ import XCTest
     XCTAssertEqual(associatorMock.associationError, .cannotStoreAssociation)
   }
 
-  func testMessageDidSendSuccessfully_establishSecuredCarChannelFailed_notifiesDelegate() {
+  @MainActor func testMessageDidSendSuccessfully_establishSecuredCarChannelFailed_notifiesDelegate()
+  {
     associatorMock.establishSecuredCarChannelSucceeds = false
 
     messageHelper.start()
@@ -170,7 +170,7 @@ import XCTest
     XCTAssertEqual(associatorMock.associationError, .cannotStoreAssociation)
   }
 
-  func testMessageDidSendSuccessfully_ignoredIfWrongState() {
+  @MainActor func testMessageDidSendSuccessfully_ignoredIfWrongState() {
     messageHelper.start()
     messageHelper.messageDidSendSuccessfully()
 

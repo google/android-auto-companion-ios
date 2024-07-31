@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-@_implementationOnly import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoLogger
-@_implementationOnly import AndroidAutoMessageStream
-@_implementationOnly import AndroidAutoSecureChannel
-import CoreBluetooth
-import Foundation
+internal import AndroidAutoCoreBluetoothProtocols
+internal import AndroidAutoLogger
+internal import AndroidAutoMessageStream
+internal import AndroidAutoSecureChannel
+internal import CoreBluetooth
+internal import Foundation
 
 /// Handles version 2 through 3 of the message exchange.
 ///
@@ -69,7 +69,7 @@ extension AssociationMessageHelperV2: AssociationMessageHelper {
       associator.carId = carId
 
       let authenticator = CarAuthenticatorImpl()
-      guard let _ = try? authenticator.saveKey(forIdentifier: carId) else {
+      guard (try? authenticator.saveKey(forIdentifier: carId)) != nil else {
         associator.notifyDelegateOfError(.authenticationKeyStorageFailed)
         return
       }

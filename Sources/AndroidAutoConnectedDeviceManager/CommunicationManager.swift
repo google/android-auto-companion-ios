@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-@_implementationOnly import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoLogger
-@_implementationOnly import AndroidAutoMessageStream
-@_implementationOnly import AndroidAutoSecureChannel
-import CoreBluetooth
-import Foundation
+internal import AndroidAutoCoreBluetoothProtocols
+private import AndroidAutoLogger
+internal import AndroidAutoMessageStream
+internal import AndroidAutoSecureChannel
+internal import CoreBluetooth
+internal import Foundation
 
 /// A delegate to be notified of the current state of secure communication establishment.
 @MainActor protocol CommunicationManagerDelegate: AnyObject {
@@ -814,7 +814,7 @@ extension CommunicationManager: ReconnectionHandlerDelegate {
 
 extension Overlay {
   /// Indicates whether message compression is allowed.
-  var isMessageCompressionAllowed: Bool {
+  @MainActor var isMessageCompressionAllowed: Bool {
     // Allow for message compression unless the overlay vetoes it.
     self[CommunicationManager.messageCompressionAllowedKey] as? Bool ?? true
   }

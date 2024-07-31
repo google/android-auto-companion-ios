@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-@_implementationOnly import AndroidAutoMessageStream
-import CoreBluetooth
-import Foundation
+internal import AndroidAutoMessageStream
+internal import CoreBluetooth
+internal import Foundation
 
 /// Protocol implemented by helpers which manage the reconnection handshake.
 protocol ReconnectionHelper: AnyObject {

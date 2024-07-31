@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import CoreBluetooth
-import Foundation
+internal import CoreBluetooth
+internal import Foundation
 
 // CBUUID Extensions to prevent data driven crashes.
-@available(watchOS 6.0, *)
 extension CBUUID {
   /// Valid car ID data size of 128 bits.
   static private let validCarIdDataSizeInBytes = 128 / 8

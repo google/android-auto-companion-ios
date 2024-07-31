@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
+private import Foundation
 
 /// Formats integers using the specified radix.
 ///
@@ -60,7 +60,7 @@ public enum RadixFormat {
 }
 
 /// Formats numbers in various decimal notations.
-@available(macOS 10.15, *)
+@available(macOS 12.0, *)
 public enum DecimalFormat {
   /// Applies no format to the number.
   case none
@@ -85,18 +85,11 @@ public enum DecimalFormat {
     switch self {
     case .none: return String(describing: value)
     case .fixed(let fractionDigits):
-      let formatter = NumberFormatter()
-      formatter.numberStyle = .decimal
-      formatter.minimumFractionDigits = fractionDigits
-      formatter.maximumFractionDigits = fractionDigits
-      return formatter.string(from: value as NSNumber) ?? "<unknown>"
+      return value.formatted(.number.precision(.fractionLength(fractionDigits)))
     case .scientific(let significantDigits):
-      let formatter = NumberFormatter()
-      formatter.numberStyle = .scientific
-      formatter.usesSignificantDigits = true
-      formatter.minimumSignificantDigits = significantDigits
-      formatter.maximumSignificantDigits = significantDigits
-      return formatter.string(from: value as NSNumber) ?? "<unknown>"
+      return value.formatted(
+        .number.notation(.scientific).precision(.significantDigits(significantDigits))
+      )
     case .pattern(let pattern):
       let formatter = NumberFormatter()
       // An optional semicolon splits subpatterns for separate positive and negative patterns.

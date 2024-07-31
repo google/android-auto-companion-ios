@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoLogger
-import Foundation
+private import AndroidAutoLogger
+internal import Foundation
 
 /// A class that stores secure session information in the keychain.
 class KeychainSecureSessionManager: NSObject {

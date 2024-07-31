@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
+private import Foundation
 
-@testable import AndroidAutoConnectionHowitzerManagerV2
+@testable internal import AndroidAutoConnectionHowitzerManagerV2
 
 /// A mock `ConnectionHowitzerManagerV2Delegate` that can assert if its methods are called.
-public class ConnectionHowitzerManagerV2DelegateMock: ConnectionHowitzerManagerV2Delegate {
-  public var onTestCompletedSuccessfully = false
-  public var onTestFailed = false
+class ConnectionHowitzerManagerV2DelegateMock: ConnectionHowitzerManagerV2Delegate {
+  var onTestCompletedSuccessfully = false
+  var onTestFailed = false
 
-  public func connectionHowitzerManagerV2(
+  func connectionHowitzerManagerV2(
     _ connectionHowitzerManagerV2: ConnectionHowitzerManagerV2,
     testConfig config: HowitzerConfig,
     testCompletedResult result: HowitzerResult

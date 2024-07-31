@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import CoreBluetooth
+public import CoreBluetooth
 
 /// A `struct` that specifies different options for association.
 public struct AssociationConfig {

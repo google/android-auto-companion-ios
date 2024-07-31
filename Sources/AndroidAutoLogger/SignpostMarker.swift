@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
+private import Foundation
 
 /// A signpost marker with a named signpost and an event role.
 @available(macOS 10.15, *)

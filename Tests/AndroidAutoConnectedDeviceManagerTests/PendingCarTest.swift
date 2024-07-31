@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCoreBluetoothProtocolsMocks
-import XCTest
+private import AndroidAutoCoreBluetoothProtocolsMocks
+internal import XCTest
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable private import AndroidAutoConnectedDeviceManager
 
 /// Unit tests for `PendingCar`.
 class PendingCarTest: XCTestCase {

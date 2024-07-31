@@ -12,13 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import CoreBluetooth
-import XCTest
+private import CoreBluetooth
+internal import XCTest
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable private import AndroidAutoConnectedDeviceManager
 
 /// Unit tests for `UUIDConfig`.
-@available(watchOS 6.0, *)
 class UUIDConfigTest: XCTestCase {
   private let expectedDefaultAssociationUUID =
     CBUUID(string: "5e2a68a4-27be-43f9-8d1e-4546976fabd7")

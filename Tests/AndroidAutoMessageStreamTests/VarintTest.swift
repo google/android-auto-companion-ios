@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
-import SwiftProtobuf
-import XCTest
-import AndroidAutoCompanionProtos
+internal import Foundation
+internal import SwiftProtobuf
+internal import XCTest
+private import AndroidAutoCompanionProtos
 
-@testable import AndroidAutoMessageStream
+@testable internal import AndroidAutoMessageStream
 
 private typealias Packet = Com_Google_Companionprotos_Packet
 

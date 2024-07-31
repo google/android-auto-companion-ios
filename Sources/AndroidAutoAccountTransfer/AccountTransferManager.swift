@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoAccountTransferCore
-import AndroidAutoConnectedDeviceManager
-import AndroidAutoLogger
-import Foundation
+private import AndroidAutoAccountTransferCore
+public import AndroidAutoConnectedDeviceManager
+private import AndroidAutoLogger
+public import Foundation
 
 /// A feature that requests AccountTransfer to use Magic Wand.
 ///

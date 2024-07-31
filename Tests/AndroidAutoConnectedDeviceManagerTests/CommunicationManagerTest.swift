@@ -12,25 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoConnectedDeviceManagerMocks
-import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoCoreBluetoothProtocolsMocks
-import AndroidAutoMessageStream
-import AndroidAutoSecureChannel
-import CoreBluetooth
-import XCTest
-import AndroidAutoTrustAgentProtos
+private import AndroidAutoConnectedDeviceManagerMocks
+private import AndroidAutoCoreBluetoothProtocols
+private import AndroidAutoCoreBluetoothProtocolsMocks
+private import AndroidAutoMessageStream
+internal import AndroidAutoSecureChannel
+private import CoreBluetooth
+internal import XCTest
+private import AndroidAutoTrustAgentProtos
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable private import AndroidAutoConnectedDeviceManager
 
 /// Unit tests for `CommunicationManager`. Specifically testing the version 2 flow.
 
-@MainActor class CommunicationManagerTest: XCTestCase {
+class CommunicationManagerTest: XCTestCase {
   private let associatedCarsManagerMock = AssociatedCarsManagerMock()
   private let secureSessionManagerMock = SecureSessionManagerMock()
   private let reconnectionHandlerFactory = ReconnectionHandlerFactoryFake()
 
-  private let ioCharactersticsUUIDs = CommunicationManager.versionCharacteristics
+  @MainActor private let ioCharactersticsUUIDs = CommunicationManager.versionCharacteristics
 
   // Valid mocks for happy path testing.
   private var writeCharacteristicMock: CharacteristicMock!
@@ -47,7 +47,7 @@ import AndroidAutoTrustAgentProtos
   private var reconnectionHelpers: [UUID: ReconnectionHelperMock]!
   private var uuidConfig: UUIDConfig!
 
-  override func setUp() async throws {
+  @MainActor override func setUp() async throws {
     try await super.setUp()
 
     reconnectionHelpers = [:]
@@ -109,7 +109,7 @@ import AndroidAutoTrustAgentProtos
 
   // MARK: - Version Resolution Tests
 
-  func testVersionResolution_noPendingCar_notifiesDelegate() {
+  @MainActor func testVersionResolution_noPendingCar_notifiesDelegate() {
     let car = PeripheralMock(name: "name")
 
     // Calling version resolution without a call to `setupSecureChannel`.
@@ -124,7 +124,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssert(delegate.peripheralWithError === car)
   }
 
-  func testVersionResolution_noCharacteristics_notifiesDelegate() {
+  @MainActor func testVersionResolution_noCharacteristics_notifiesDelegate() {
     let car = PeripheralMock(name: "name")
 
     let helper = ReconnectionHelperV1(peripheral: car)
@@ -144,7 +144,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssert(delegate.peripheralWithError === car)
   }
 
-  func testVersionResolver_throwsError_notifiesDelegate() {
+  @MainActor func testVersionResolver_throwsError_notifiesDelegate() {
     let car = PeripheralMock(name: "name")
 
     communicationManager.bleVersionResolver(
@@ -158,7 +158,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssert(delegate.error == .versionResolutionFailed)
   }
 
-  func testVersionResolver_versionNotSupported_notifiesDelegate() {
+  @MainActor func testVersionResolver_versionNotSupported_notifiesDelegate() {
     let car = PeripheralMock(name: "name")
 
     communicationManager.bleVersionResolver(
@@ -174,7 +174,7 @@ import AndroidAutoTrustAgentProtos
 
   // MARK: - setUpSecureChannel Tests
 
-  func testSetUpSecureChannel_withNoId_DiscoversServices_forV1() {
+  @MainActor func testSetUpSecureChannel_withNoId_DiscoversServices_forV1() {
     let id = "id"
     let car = PeripheralMock(name: "name")
 
@@ -195,8 +195,8 @@ import AndroidAutoTrustAgentProtos
     XCTAssert(car.serviceUUIDs!.contains(uuidConfig.reconnectionUUID(for: .v1)))
   }
 
-  func testEstablishEncryption_happyPath() {
-    // Car ID messsage should be a valid UUID.
+  @MainActor func testEstablishEncryption_happyPath() {
+    // Car ID message should be a valid UUID.
     let message = Data("0123456789ABCDEF".utf8)
     let carID = CBUUID(data: message).uuidString
     let car = PeripheralMock(name: "name")
@@ -229,7 +229,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertFalse(delegate.didEncounterErrorCalled)
   }
 
-  func testEstablishEncryption_noSavedEncryption_notifiesDelegate() {
+  @MainActor func testEstablishEncryption_noSavedEncryption_notifiesDelegate() {
     let carID = "id"
     let car = PeripheralMock(name: "name")
 
@@ -248,7 +248,7 @@ import AndroidAutoTrustAgentProtos
     let helper = ReconnectionHelperV1(peripheral: car)
     communicationManager.addReconnectionHelper(helper)
 
-    // Messsage should be a valid UUID.
+    // Message should be a valid UUID.
     let message = Data("0123456789ABCDEF".utf8)  // Mismatches carID.
 
     // Process the incoming handshake message.
@@ -266,8 +266,8 @@ import AndroidAutoTrustAgentProtos
     XCTAssert(delegate.error == .noSavedEncryption)
   }
 
-  func testEstablishEncryption_invalidSavedEncryption_notifiesDelegate() {
-    // Car ID messsage should be a valid UUID.
+  @MainActor func testEstablishEncryption_invalidSavedEncryption_notifiesDelegate() {
+    // Car ID message should be a valid UUID.
     let message = Data("0123456789ABCDEF".utf8)
     let carID = CBUUID(data: message).uuidString
     let car = PeripheralMock(name: "name")
@@ -307,7 +307,7 @@ import AndroidAutoTrustAgentProtos
 
   // MARK: - Discover services tests.
 
-  func testDiscoverServices_withErrorDoesNotDiscoverCharacteristics() {
+  @MainActor func testDiscoverServices_withErrorDoesNotDiscoverCharacteristics() {
     let fakeError = makeMockError()
     let car = PeripheralMock(name: "mock", services: nil)
 
@@ -319,7 +319,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssert(delegate.peripheralWithError === car)
   }
 
-  func testDiscoverServices_withNilServicesDoesNotDiscoverCharacteristics() {
+  @MainActor func testDiscoverServices_withNilServicesDoesNotDiscoverCharacteristics() {
     let car = PeripheralMock(name: "mock", services: nil)
 
     communicationManager.peripheral(car, didDiscoverServices: nil)
@@ -330,7 +330,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssert(delegate.peripheralWithError === car)
   }
 
-  func testDiscoverServices_withNoServicesDoesNotDiscoverCharacteristics() {
+  @MainActor func testDiscoverServices_withNoServicesDoesNotDiscoverCharacteristics() {
     let car = PeripheralMock(name: "mock", services: [])
 
     communicationManager.peripheral(car, didDiscoverServices: nil)
@@ -341,7 +341,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssert(delegate.peripheralWithError === car)
   }
 
-  func testDiscoverServices_withUnlockServicesCallsDiscoverCharacteristics() {
+  @MainActor func testDiscoverServices_withUnlockServicesCallsDiscoverCharacteristics() {
     let mockService = ServiceMock(uuid: uuidConfig.reconnectionUUID(for: .v1))
     let car = PeripheralMock(name: "mock", services: [mockService])
 
@@ -357,7 +357,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssert(car.characteristicUUIDs!.contains(advertisementCharacteristicMock.uuid))
   }
 
-  func testDiscoverServices_timedOut_notifiesDelegateOfError() {
+  @MainActor func testDiscoverServices_timedOut_notifiesDelegateOfError() {
     communicationManager.timeoutDuration = DispatchTimeInterval.seconds(2)
 
     let car = PeripheralMock(name: "name", services: [validService])
@@ -374,7 +374,7 @@ import AndroidAutoTrustAgentProtos
 
   // MARK: - Discover characteristics tests.
 
-  func testDiscoverCharacteristics_withErrorDoesNotSendDeviceID() {
+  @MainActor func testDiscoverCharacteristics_withErrorDoesNotSendDeviceID() {
     let id = "id"
     let name = "name"
     let car = PeripheralMock(name: name, services: [validService])
@@ -396,7 +396,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssert(delegate.peripheralWithError === car)
   }
 
-  func testDiscoverCharacteristics_withNoCharacteriticsDoesNotSendDeviceID() {
+  @MainActor func testDiscoverCharacteristics_withNoCharacteriticsDoesNotSendDeviceID() {
     let id = "id"
     let name = "name"
     let serviceMock = ServiceMock(
@@ -420,7 +420,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssert(delegate.peripheralWithError === car)
   }
 
-  func testDiscoverCharacteristics_withWrongUUIDDoesNotSendDeviceID() {
+  @MainActor func testDiscoverCharacteristics_withWrongUUIDDoesNotSendDeviceID() {
     let id = "id"
     let name = "name"
 
@@ -459,7 +459,8 @@ import AndroidAutoTrustAgentProtos
     XCTAssert(delegate.peripheralWithError === car)
   }
 
-  func testDiscoverCharacteristics_missingClientWriteCharacteristicDoesNotSendDeviceID() {
+  @MainActor func testDiscoverCharacteristics_missingClientWriteCharacteristicDoesNotSendDeviceID()
+  {
     let id = "id"
     let name = "name"
 
@@ -487,7 +488,8 @@ import AndroidAutoTrustAgentProtos
     XCTAssert(delegate.peripheralWithError === car)
   }
 
-  func testDiscoverCharacteristics_missingServerWriteCharacteristicDoesNotSendDeviceID() {
+  @MainActor func testDiscoverCharacteristics_missingServerWriteCharacteristicDoesNotSendDeviceID()
+  {
     let id = "id"
     let name = "name"
 
@@ -517,7 +519,7 @@ import AndroidAutoTrustAgentProtos
 
   // MARK: - BLEMessageStream error test.
 
-  func testBLEMessageStream_unrecoverableError_disconnects() {
+  @MainActor func testBLEMessageStream_unrecoverableError_disconnects() {
     let id = makeRandomUUID()
     let name = "name"
     let car = PeripheralMock(name: name, services: [validService])
@@ -541,7 +543,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssert(messageStream === connectionHandle.disconnectedStream)
   }
 
-  func testReconnectionHandshakeFails_NoSecureChannel() {
+  @MainActor func testReconnectionHandshakeFails_NoSecureChannel() {
     let id = makeRandomUUID()
     let name = "name"
     let car = PeripheralMock(name: name, services: [validService])
@@ -576,7 +578,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertEqual(reconnectionHandlerFactory.createdChannels.count, 0)
   }
 
-  func testDiscoverCharacteristics_timedOut_notifiesDelegateOfError() {
+  @MainActor func testDiscoverCharacteristics_timedOut_notifiesDelegateOfError() {
     communicationManager.timeoutDuration = DispatchTimeInterval.seconds(2)
 
     let car = PeripheralMock(name: "name", services: [validService])
@@ -594,7 +596,7 @@ import AndroidAutoTrustAgentProtos
 
   // MARK: - Encryption setup failure tests.
 
-  func testEncryptionSetupTimedOut_notifiesDelegate() {
+  @MainActor func testEncryptionSetupTimedOut_notifiesDelegate() {
     communicationManager.timeoutDuration = DispatchTimeInterval.seconds(2)
 
     let id = makeRandomUUID()
@@ -617,7 +619,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertEqual(delegate.error, .failedEncryptionEstablishment)
   }
 
-  func testEncryptionSetupFails_notifiesDelegate() {
+  @MainActor func testEncryptionSetupFails_notifiesDelegate() {
     let id = makeRandomUUID()
     let name = "name"
     let car = PeripheralMock(name: name, services: [validService])
@@ -663,7 +665,7 @@ import AndroidAutoTrustAgentProtos
 
   // MARK: - Happy path tests.
 
-  func testValidCharacteristics_CallsEstablishEncryption() {
+  @MainActor func testValidCharacteristics_CallsEstablishEncryption() {
     let id = makeRandomUUID()
     let name = "name"
     let car = PeripheralMock(name: name, services: [validService])
@@ -706,7 +708,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssert(reconnectionHandler.delegate === communicationManager)
   }
 
-  func testHandshakeCompletes_CallsEstablishEncryption() {
+  @MainActor func testHandshakeCompletes_CallsEstablishEncryption() {
     let id = makeRandomUUID()
     let name = "name"
     let car = PeripheralMock(name: name, services: [validService])
@@ -768,7 +770,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssert(reconnectionHandler.delegate === communicationManager)
   }
 
-  func testEncryptionSetUp_NotifiesDelegateThatEncryptionBeingEstablished() {
+  @MainActor func testEncryptionSetUp_NotifiesDelegateThatEncryptionBeingEstablished() {
     let id = makeRandomUUID()
     let name = "name"
     let car = PeripheralMock(name: name, services: [validService])
@@ -804,7 +806,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssert(delegate.establishingPeripheral === car)
   }
 
-  func testEncryptionSetUp_NotifiesDelegate() {
+  @MainActor func testEncryptionSetUp_NotifiesDelegate() {
     let id = makeRandomUUID()
     let name = "name"
     let car = PeripheralMock(name: name, services: [validService])
@@ -826,7 +828,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertEqual(delegate.securedCarChannel!.car, expectedCar)
   }
 
-  func testEncryptionSetUp_doesNotTimeout() {
+  @MainActor func testEncryptionSetUp_doesNotTimeout() {
     communicationManager.timeoutDuration = DispatchTimeInterval.seconds(2)
 
     let id = makeRandomUUID()
@@ -848,7 +850,7 @@ import AndroidAutoTrustAgentProtos
     waitForExpectations(timeout: communicationManager.timeoutDuration.toSeconds())
   }
 
-  func testMessageCompressionAllowedFalseInOverlay() {
+  @MainActor func testMessageCompressionAllowedFalseInOverlay() {
     communicationManager = CommunicationManager(
       overlay: Overlay([CommunicationManager.messageCompressionAllowedKey: false]),
       connectionHandle: connectionHandle,
@@ -862,7 +864,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertFalse(communicationManager.isMessageCompressionAllowed)
   }
 
-  func testMessageCompressionAllowedTrueInOverlay() {
+  @MainActor func testMessageCompressionAllowedTrueInOverlay() {
     communicationManager = CommunicationManager(
       overlay: Overlay([CommunicationManager.messageCompressionAllowedKey: true]),
       connectionHandle: connectionHandle,
@@ -876,7 +878,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertTrue(communicationManager.isMessageCompressionAllowed)
   }
 
-  func testMessageCompressionDisabledMissingFromOverlay() {
+  @MainActor func testMessageCompressionDisabledMissingFromOverlay() {
     communicationManager = CommunicationManager(
       overlay: Overlay(["test": true]),
       connectionHandle: connectionHandle,
@@ -890,7 +892,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertTrue(communicationManager.isMessageCompressionAllowed)
   }
 
-  func testDidUpdateAdvertisement_Matches_PreparesForHandshake() {
+  @MainActor func testDidUpdateAdvertisement_Matches_PreparesForHandshake() {
     let car = PeripheralMock(name: "name", services: [validService])
     setUpAssociatedCar(id: "id", car: car)
 
@@ -911,7 +913,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertTrue(mockHelper.isReadyForHandshake)
   }
 
-  func testDidUpdateAdvertisement_NoMatch_PreparesForHandshakeFails() {
+  @MainActor func testDidUpdateAdvertisement_NoMatch_PreparesForHandshakeFails() {
     let car = PeripheralMock(name: "name", services: [validService])
     setUpAssociatedCar(id: "id", car: car)
 
@@ -933,7 +935,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertTrue(delegate.didEncounterErrorCalled)
   }
 
-  func testDidUpdateAdvertisement_MissingAdvertisement_Fails() {
+  @MainActor func testDidUpdateAdvertisement_MissingAdvertisement_Fails() {
     let car = PeripheralMock(name: "name", services: [validService])
     setUpAssociatedCar(id: "id", car: car)
 
@@ -962,7 +964,7 @@ import AndroidAutoTrustAgentProtos
     return NSError(domain: "", code: 0, userInfo: nil)
   }
 
-  private func setUpAssociatedCar(id: String, car: PeripheralMock) {
+  @MainActor private func setUpAssociatedCar(id: String, car: PeripheralMock) {
     // Ensure car is marked as associated.
     associatedCarsManagerMock.addAssociatedCar(identifier: id, name: car.name)
 
@@ -980,7 +982,7 @@ import AndroidAutoTrustAgentProtos
     return CBUUID(string: UUID().uuidString)
   }
 
-  private func establishSecureChannel(for car: PeripheralMock, id: CBUUID) {
+  @MainActor private func establishSecureChannel(for car: PeripheralMock, id: CBUUID) {
     communicationManager.peripheral(car, didDiscoverServices: nil)
     communicationManager.peripheral(
       car,

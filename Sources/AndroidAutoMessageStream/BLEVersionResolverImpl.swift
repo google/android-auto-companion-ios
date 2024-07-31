@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoLogger
-import Foundation
-import AndroidAutoCompanionProtos
+public import AndroidAutoCoreBluetoothProtocols
+private import AndroidAutoLogger
+public import Foundation
+private import AndroidAutoCompanionProtos
 
 private typealias VersionExchange = Com_Google_Companionprotos_VersionExchange
 private typealias CapabilitiesExchange = Com_Google_Companionprotos_CapabilitiesExchange

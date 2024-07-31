@@ -12,25 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoConnectedDeviceManagerMocks
-import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoCoreBluetoothProtocolsMocks
-import CoreBluetooth
-import XCTest
+private import AndroidAutoConnectedDeviceManagerMocks
+private import AndroidAutoCoreBluetoothProtocols
+private import AndroidAutoCoreBluetoothProtocolsMocks
+private import CoreBluetooth
+internal import XCTest
 
-@testable import AndroidAutoConnectedDeviceManager
-@testable import AndroidAutoMessageStream
+@testable private import AndroidAutoConnectedDeviceManager
+@testable private import AndroidAutoMessageStream
 
 /// Unit tests for AssociationMessageHelperV1.
-@available(watchOS 6.0, *)
-@MainActor class AssociationMessageHelperFactoryTest: XCTestCase {
+class AssociationMessageHelperFactoryTest: XCTestCase {
   private var associatorMock: Associator!
   private var messageStreamMock: MessageStream!
 
   /// The factory to test.
   private var helperFactory: AssociationMessageHelperFactoryImpl!
 
-  override func setUp() async throws {
+  @MainActor override func setUp() async throws {
     try await super.setUp()
 
     associatorMock = AssociatorMock()
@@ -57,7 +56,7 @@ import XCTest
     super.tearDown()
   }
 
-  func testFactoryMakesHelperV1ForSecurityVersionV1() async {
+  @MainActor func testFactoryMakesHelperV1ForSecurityVersionV1() async {
     let helper = helperFactory.makeHelper(
       associator: associatorMock,
       securityVersion: .v1,
@@ -67,7 +66,7 @@ import XCTest
     XCTAssertTrue(helper is AssociationMessageHelperV1)
   }
 
-  func testFactoryMakesHelperV1ForSecurityVersionV2() async {
+  @MainActor func testFactoryMakesHelperV1ForSecurityVersionV2() async {
     let helper = helperFactory.makeHelper(
       associator: associatorMock,
       securityVersion: .v2,

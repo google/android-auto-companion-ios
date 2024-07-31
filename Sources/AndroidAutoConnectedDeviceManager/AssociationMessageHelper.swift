@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-@_implementationOnly import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoLogger
-@_implementationOnly import AndroidAutoMessageStream
-@_implementationOnly import AndroidAutoSecureChannel
-import CoreBluetooth
-import Foundation
+internal import AndroidAutoCoreBluetoothProtocols
+internal import AndroidAutoLogger
+internal import AndroidAutoMessageStream
+internal import AndroidAutoSecureChannel
+internal import CoreBluetooth
+internal import Foundation
 
 /// Helper for handling `AssociationManager` message exchange allowing support for different
 /// versions of the association message exchange.
@@ -71,7 +71,7 @@ extension AssociationMessageHelper {
   ///
   /// - Parameter message: The message to check
   /// - Returns: `true` if the pairing code has been confirmed.
-  func isPairingCodeConfirmation(_ message: Data) -> Bool {
+  @MainActor func isPairingCodeConfirmation(_ message: Data) -> Bool {
     let valueStr = String(data: message, encoding: .utf8)
     guard valueStr == AssociationManager.pairingCodeConfirmationValue else {
       Self.log.error(

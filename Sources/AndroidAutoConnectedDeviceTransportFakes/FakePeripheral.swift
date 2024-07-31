@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import XCTest
+public import XCTest
 
-@testable import AndroidAutoConnectedDeviceTransport
+@testable public import AndroidAutoConnectedDeviceTransport
 
 /// Fake peripheral for testing generic transport.
 public final class FakePeripheral: TransportPeripheral {

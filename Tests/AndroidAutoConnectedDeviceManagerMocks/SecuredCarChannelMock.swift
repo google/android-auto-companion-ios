@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoConnectedDeviceTransport
-import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoCoreBluetoothProtocolsMocks
-import Foundation
+public import AndroidAutoConnectedDeviceTransport
+public import AndroidAutoCoreBluetoothProtocols
+public import AndroidAutoCoreBluetoothProtocolsMocks
+public import Foundation
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable public import AndroidAutoConnectedDeviceManager
 
 /// A mock of the `SecuredCarChannel`.
 public class SecuredCarChannelMock: SecuredCarChannelPeripheral {
@@ -95,10 +95,6 @@ public class SecuredCarChannelMock: SecuredCarChannelPeripheral {
 
   private func makeMockError() -> Error {
     return NSError(domain: "", code: 0, userInfo: nil)
-  }
-
-  public func isFeatureSupported(_ featureID: UUID) -> Bool {
-    return messageRecipientToObservations[featureID] != nil
   }
 }
 

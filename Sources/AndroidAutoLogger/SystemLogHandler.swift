@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
-import os.log
+private import Foundation
+internal import os.log
 
 /// Handler which feeds the logs to system log using os_log.
 @available(macOS 10.15, *)

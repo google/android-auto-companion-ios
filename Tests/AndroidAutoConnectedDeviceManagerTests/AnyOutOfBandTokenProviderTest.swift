@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import XCTest
+internal import XCTest
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable private import AndroidAutoConnectedDeviceManager
 
 /// Unit tests for AnyOutOfBandTokenProvider.
-@available(watchOS 6.0, *)
 class AnyOutOfBandTokenProviderTest: XCTestCase {
   // The token provider to test.
   private var testWrapper: AnyOutOfBandTokenProvider!
@@ -71,7 +70,6 @@ class AnyOutOfBandTokenProviderTest: XCTestCase {
 }
 
 /// Fake Out of Band token with minimal implementation.
-@available(watchOS 6.0, *)
 private struct FakeOutOfBandToken: OutOfBandToken {
   /// Encrypt the message by reversing it.
   func encrypt(_ message: Data) throws -> Data {

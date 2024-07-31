@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
+internal import Foundation
 
 /// The possible errors that can result during an unlocking process.
 public enum TrustAgentManagerError: Error {

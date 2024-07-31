@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoMessageStream
-import Foundation
+public import AndroidAutoCoreBluetoothProtocols
+public import AndroidAutoMessageStream
+public import Foundation
 
 /// A fake `BLEMessageStream` that stores written messages to internal arrays and exposes methods
 /// to simulate a message received from a remote car.

@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-@_implementationOnly import AndroidAutoConnectedDeviceTransport
-@_implementationOnly import AndroidAutoCoreBluetoothProtocols
-@_implementationOnly import AndroidAutoMessageStream
-import Foundation
+internal import AndroidAutoConnectedDeviceTransport
+internal import AndroidAutoCoreBluetoothProtocols
+internal import AndroidAutoMessageStream
+internal import Foundation
 
 /// The possible errors that can result from setting up encryption.
 enum ReconnectionHandlerError: Error {

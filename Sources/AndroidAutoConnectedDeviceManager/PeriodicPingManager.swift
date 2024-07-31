@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoLogger
-import Foundation
-@_implementationOnly import AndroidAutoCompanionProtos
+private import AndroidAutoLogger
+public import Foundation
+internal import AndroidAutoCompanionProtos
 
 typealias PeriodicPingMessage = Com_Google_Companionprotos_PeriodicPingMessage
 

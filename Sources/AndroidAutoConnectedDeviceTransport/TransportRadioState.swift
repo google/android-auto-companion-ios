@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
-
 /// Tracks the state of the transport's radio.
 public enum TransportRadioState: CustomStringConvertible, Equatable {
   case poweredOn, poweredOff, unknown, other

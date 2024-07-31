@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoConnectedDeviceManagerMocks
-import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoCoreBluetoothProtocolsMocks
-import AndroidAutoMessageStream
-import CoreBluetooth
-import XCTest
+private import AndroidAutoConnectedDeviceManagerMocks
+internal import AndroidAutoCoreBluetoothProtocols
+private import AndroidAutoCoreBluetoothProtocolsMocks
+private import AndroidAutoMessageStream
+private import CoreBluetooth
+internal import XCTest
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable internal import AndroidAutoConnectedDeviceManager
 
 /// Unit tests for `AssociationManager`.
-@MainActor class AssociationManagerTest: XCTestCase {
+class AssociationManagerTest: XCTestCase {
   private let associatedCarsManagerMock = AssociatedCarsManagerMock()
   private let secureSessionManagerMock = SecureSessionManagerMock()
   private let secureBLEChannelMock = SecureBLEChannelMock()
@@ -47,7 +47,7 @@ import XCTest
   // The manager under test.
   private var associationManager: AssociationManager!
 
-  override func setUp() {
+  @MainActor override func setUp() {
     super.setUp()
     continueAfterFailure = false
 
@@ -84,13 +84,13 @@ import XCTest
   }
 
   /// Verify that a clean AssociationManager will return `false` for if an association has occurred.
-  func testIsAssociated_falseWhenInitialized() {
+  @MainActor func testIsAssociated_falseWhenInitialized() {
     XCTAssertFalse(associationManager.isAssociated)
   }
 
   // MARK: - Association tests
 
-  func testAssociatePeripheral_setsDelegateAndCallsDiscoverServices() {
+  @MainActor func testAssociatePeripheral_setsDelegateAndCallsDiscoverServices() {
     let peripheralMock = PeripheralMock(name: "name")
     associationManager.associate(
       peripheralMock,
@@ -106,7 +106,7 @@ import XCTest
     XCTAssert(peripheralMock.serviceUUIDs!.contains(uuidConfig.associationUUID))
   }
 
-  func testAssociatePeripheral_keepsStrongReferenceToPeripheral() {
+  @MainActor func testAssociatePeripheral_keepsStrongReferenceToPeripheral() {
     let peripheralMock = PeripheralMock(name: "name")
     associationManager.associate(
       peripheralMock,
@@ -118,7 +118,7 @@ import XCTest
     XCTAssert(associationManager.carToAssociate === peripheralMock)
   }
 
-  func testAssociatePeripheral_doesNotAddToSuccessfulAssociation() {
+  @MainActor func testAssociatePeripheral_doesNotAddToSuccessfulAssociation() {
     associationManager.associate(
       PeripheralMock(name: "name"),
       config: AssociationConfig(associationUUID: uuidConfig.associationUUID)
@@ -128,7 +128,7 @@ import XCTest
     XCTAssertEqual(associatedCarsManagerMock.count, 0)
   }
 
-  func testSetAssociationUUID_doesNotUseDefaultUUID() {
+  @MainActor func testSetAssociationUUID_doesNotUseDefaultUUID() {
     let associationUUID = CBUUID(string: "dc14dbb3-7199-4aee-a63e-a76279977e4d")
     let peripheralMock = PeripheralMock(name: "name")
     associationManager.associate(
@@ -147,7 +147,7 @@ import XCTest
 
   // MARK: - clearAssociation tests
 
-  func testClearAllAssociations_clearsReferenceToPeripheral() {
+  @MainActor func testClearAllAssociations_clearsReferenceToPeripheral() {
     let peripheralMock = PeripheralMock(name: "name")
 
     // Associate to set the reference.
@@ -162,7 +162,7 @@ import XCTest
     XCTAssertNil(associationManager.carToAssociate)
   }
 
-  func testClearCurrentAssociation_clearsReferenceToPeripheral() {
+  @MainActor func testClearCurrentAssociation_clearsReferenceToPeripheral() {
     let peripheralMock = PeripheralMock(name: "name")
 
     // Associate to set the reference.
@@ -177,7 +177,7 @@ import XCTest
     XCTAssertNil(associationManager.carToAssociate)
   }
 
-  func testClearAllAssociations_clearsIdentifier() {
+  @MainActor func testClearAllAssociations_clearsIdentifier() {
     // Set an identifier on the ConnectCarManager.
     addAssociatedCar(Car(id: "fake1", name: "fake-name"))
 
@@ -186,7 +186,7 @@ import XCTest
     XCTAssertEqual(associatedCarsManagerMock.identifiers.count, 0)
   }
 
-  func testClearAllAssociations_clearsSecureSessions() {
+  @MainActor func testClearAllAssociations_clearsSecureSessions() {
     addAssociatedCar(Car(id: "fake1", name: "fake-name"))
     addAssociatedCar(Car(id: "fake2", name: "fake-name"))
 
@@ -195,7 +195,7 @@ import XCTest
     XCTAssertEqual(secureSessionManagerMock.secureSessions.count, 0)
   }
 
-  func testClearAllAssociations_clearsMultiple() {
+  @MainActor func testClearAllAssociations_clearsMultiple() {
     addAssociatedCar(Car(id: "fake1", name: "fake-name1"))
     addAssociatedCar(Car(id: "fake2", name: "fake-name2"))
 
@@ -203,7 +203,7 @@ import XCTest
     XCTAssertEqual(associatedCarsManagerMock.identifiers.count, 0)
   }
 
-  func testClearAssociation_clearsExisting() {
+  @MainActor func testClearAssociation_clearsExisting() {
     let car1 = Car(id: "fake1", name: "fake-name1")
     let car2 = Car(id: "fake2", name: "fake-name2")
     addAssociatedCar(car1)
@@ -214,7 +214,7 @@ import XCTest
     XCTAssertTrue(associatedCarsManagerMock.identifiers.contains(car2.id))
   }
 
-  func testClearAssociation_clearsExistingSecureSession() {
+  @MainActor func testClearAssociation_clearsExistingSecureSession() {
     let car1 = Car(id: "fake1", name: "fake-name1")
     let car2 = Car(id: "fake2", name: "fake-name2")
     addAssociatedCar(car1)
@@ -225,7 +225,7 @@ import XCTest
     XCTAssertNotNil(secureSessionManagerMock.secureSessions[car2.id])
   }
 
-  func testClearAssociation_doesNotExist_doesNothing() {
+  @MainActor func testClearAssociation_doesNotExist_doesNothing() {
     let car1 = Car(id: "fake1", name: "fake-name1")
     let car2 = Car(id: "fake2", name: "fake-name2")
     addAssociatedCar(car1)
@@ -234,7 +234,7 @@ import XCTest
     XCTAssertEqual(associatedCarsManagerMock.identifiers.count, 1)
   }
 
-  func testClearAssociation_doesNotExist_doesNotClearSecureSession() {
+  @MainActor func testClearAssociation_doesNotExist_doesNotClearSecureSession() {
     let car1 = Car(id: "fake1", name: "fake-name1")
     let car2 = Car(id: "fake2", name: "fake-name2")
     addAssociatedCar(car1)
@@ -246,7 +246,7 @@ import XCTest
 
   // MARK: - discoverServices tests
 
-  func testDiscoverServices_withErrorCallsDelegateWithError() {
+  @MainActor func testDiscoverServices_withErrorCallsDelegateWithError() {
     let delegate = AssociationDelegateMock()
 
     associationManager.delegate = delegate
@@ -262,7 +262,7 @@ import XCTest
     XCTAssertFalse(associationManager.isAssociated)
   }
 
-  func testDiscoverServices_withNilServicesCallsDelegateWithError() {
+  @MainActor func testDiscoverServices_withNilServicesCallsDelegateWithError() {
     let delegate = AssociationDelegateMock()
 
     associationManager.delegate = delegate
@@ -278,7 +278,7 @@ import XCTest
     XCTAssertFalse(associationManager.isAssociated)
   }
 
-  func testDiscoverServices_withNoServicesCallsDelegateWithError() {
+  @MainActor func testDiscoverServices_withNoServicesCallsDelegateWithError() {
     let delegate = AssociationDelegateMock()
 
     associationManager.delegate = delegate
@@ -294,7 +294,7 @@ import XCTest
     XCTAssertFalse(associationManager.isAssociated)
   }
 
-  func testDiscoverServices_withAssociationServicesCallsDiscoverCharacteristics() {
+  @MainActor func testDiscoverServices_withAssociationServicesCallsDiscoverCharacteristics() {
     let mockServiceWithAssociation = ServiceMock(uuid: uuidConfig.associationUUID)
     let peripheralMock = PeripheralMock(name: "mock", services: [mockServiceWithAssociation])
 
@@ -303,6 +303,7 @@ import XCTest
     XCTAssertTrue(peripheralMock.discoverCharacteristicsCalled)
   }
 
+  @MainActor
   func testDiscoverServices_withNonAssociationServicesDoesNotCallDiscoverCharacteristics() {
     // Create a service with the wrong UUID.
     let mockServiceWithoutAssociation = ServiceMock(uuid: CBUUID(string: "bad1"))
@@ -313,7 +314,7 @@ import XCTest
     XCTAssertFalse(peripheralMock.discoverCharacteristicsCalled)
   }
 
-  func testDiscoverServices_timedOut_notifiesDelegateOfError() {
+  @MainActor func testDiscoverServices_timedOut_notifiesDelegateOfError() {
     let delegate = AssociationDelegateMock()
     associationManager.delegate = delegate
 
@@ -334,7 +335,7 @@ import XCTest
 
   // MARK: - didDiscoverCharacteristics tests
 
-  func testDiscoverCharacteristics_withErrorCallsDelegateWithError() {
+  @MainActor func testDiscoverCharacteristics_withErrorCallsDelegateWithError() {
     let fakeError = makeFakeError()
     let delegate = AssociationDelegateMock()
     let serviceMock = ServiceMock(uuid: CBUUID(string: "bad1"), characteristics: nil)
@@ -353,7 +354,7 @@ import XCTest
     XCTAssertFalse(associationManager.isAssociated)
   }
 
-  func testDiscoverCharacteristics_withNilCharacteristicsCallsDelegateWithError() {
+  @MainActor func testDiscoverCharacteristics_withNilCharacteristicsCallsDelegateWithError() {
     let delegate = AssociationDelegateMock()
 
     let serviceMock = ServiceMock(uuid: CBUUID(string: "bad1"), characteristics: nil)
@@ -373,7 +374,7 @@ import XCTest
     XCTAssertFalse(associationManager.isAssociated)
   }
 
-  func testDiscoverCharacteristics_withNoCharacteristicsCallsDelegateWithError() {
+  @MainActor func testDiscoverCharacteristics_withNoCharacteristicsCallsDelegateWithError() {
     let delegate = AssociationDelegateMock()
 
     let serviceMock = ServiceMock(uuid: CBUUID(string: "bad1"), characteristics: [])
@@ -393,7 +394,7 @@ import XCTest
     XCTAssertFalse(associationManager.isAssociated)
   }
 
-  func testDiscoverCharacteristics_missingReadCharacteristic() {
+  @MainActor func testDiscoverCharacteristics_missingReadCharacteristic() {
     let delegate = AssociationDelegateMock()
     associationManager.delegate = delegate
 
@@ -418,7 +419,7 @@ import XCTest
     XCTAssertFalse(associationManager.isAssociated)
   }
 
-  func testDiscoverCharacteristics_missingWriteCharacteristic() {
+  @MainActor func testDiscoverCharacteristics_missingWriteCharacteristic() {
     let delegate = AssociationDelegateMock()
     associationManager.delegate = delegate
 
@@ -443,7 +444,7 @@ import XCTest
     XCTAssertFalse(associationManager.isAssociated)
   }
 
-  func testDiscoverCharacteristics_timedOut_notifiesDelegateOfError() {
+  @MainActor func testDiscoverCharacteristics_timedOut_notifiesDelegateOfError() {
     let delegate = AssociationDelegateMock()
     associationManager.delegate = delegate
     associationManager.timeoutDuration = DispatchTimeInterval.seconds(2)
@@ -464,7 +465,7 @@ import XCTest
 
   // MARK: - Message helper calls.
 
-  func testMessageHelperCalls_startCalled() {
+  @MainActor func testMessageHelperCalls_startCalled() {
     messageHelperFactoryProxy.shouldUseRealFactory = false
 
     let peripheralMock = PeripheralMock(name: "mock", services: [validService])
@@ -477,7 +478,7 @@ import XCTest
     XCTAssertTrue(messageHelperMock.startCalled)
   }
 
-  func testMessageHelperCalls_handleMessageCalled() {
+  @MainActor func testMessageHelperCalls_handleMessageCalled() {
     messageHelperFactoryProxy.shouldUseRealFactory = false
 
     let peripheralMock = PeripheralMock(name: "mock", services: [validService])
@@ -500,7 +501,7 @@ import XCTest
     XCTAssertTrue(messageHelperMock.handleMessageCalled)
   }
 
-  func testMessageHelperCalls_encryptionAndPairingFlow() {
+  @MainActor func testMessageHelperCalls_encryptionAndPairingFlow() {
     messageHelperFactoryProxy.shouldUseRealFactory = false
 
     let delegate = AssociationDelegateMock()
@@ -521,7 +522,7 @@ import XCTest
     XCTAssertTrue(delegate.requiresDisplayOfPairingCodeCalled)
   }
 
-  func testMessageHelperCalls_messageDidSendSuccessfullyCalled() {
+  @MainActor func testMessageHelperCalls_messageDidSendSuccessfullyCalled() {
     messageHelperFactoryProxy.shouldUseRealFactory = false
 
     let peripheralMock = PeripheralMock(name: "mock", services: [validService])
@@ -537,7 +538,7 @@ import XCTest
 
   // MARK: - Pairing code tests.
 
-  func testPairingCode_pairingCodeRejected_securityV1() {
+  @MainActor func testPairingCode_pairingCodeRejected_securityV1() {
     messageHelperFactoryProxy.shouldUseRealFactory = true
     bleVersionResolverFake.securityVersion = .v1
 
@@ -577,7 +578,7 @@ import XCTest
     XCTAssertEqual(delegate.error, .pairingCodeRejected)
   }
 
-  func testPairingCode_doesNotTimeOut() {
+  @MainActor func testPairingCode_doesNotTimeOut() {
     let delegate = AssociationDelegateMock()
 
     associationManager.delegate = delegate
@@ -618,7 +619,7 @@ import XCTest
 
   // MARK - BLEMessageStream error test
 
-  func testBleMessageStreamError_notifiesDelegate() {
+  @MainActor func testBleMessageStreamError_notifiesDelegate() {
     let delegate = AssociationDelegateMock()
     associationManager.delegate = delegate
 
@@ -636,7 +637,7 @@ import XCTest
 
   // MARK: - Test storage of secure session.
 
-  func testSaveSecureSession_notifiesDelegateIfSaveFailed_securityV1() {
+  @MainActor func testSaveSecureSession_notifiesDelegateIfSaveFailed_securityV1() {
     messageHelperFactoryProxy.shouldUseRealFactory = true
     bleVersionResolverFake.securityVersion = .v1
 
@@ -661,7 +662,7 @@ import XCTest
     XCTAssertEqual(delegate.error, .cannotStoreAssociation)
   }
 
-  func testSaveSecureSession_notifiesDelegateIfSaveFailed_securityV2() {
+  @MainActor func testSaveSecureSession_notifiesDelegateIfSaveFailed_securityV2() {
     messageHelperFactoryProxy.shouldUseRealFactory = true
     bleVersionResolverFake.securityVersion = .v2
 
@@ -686,7 +687,7 @@ import XCTest
     XCTAssertEqual(delegate.error, .cannotStoreAssociation)
   }
 
-  func testSaveSecureSession_savedAfterAssociation_securityV1() {
+  @MainActor func testSaveSecureSession_savedAfterAssociation_securityV1() {
     messageHelperFactoryProxy.shouldUseRealFactory = true
     bleVersionResolverFake.securityVersion = .v1
 
@@ -711,7 +712,7 @@ import XCTest
     )
   }
 
-  func testSaveSecureSession_savedAfterAssociation_securityV2() {
+  @MainActor func testSaveSecureSession_savedAfterAssociation_securityV2() {
     messageHelperFactoryProxy.shouldUseRealFactory = true
     bleVersionResolverFake.securityVersion = .v2
 
@@ -738,7 +739,7 @@ import XCTest
 
   // MARK: - Association complete tests
 
-  func testAssociationComplete_securityV1() {
+  @MainActor func testAssociationComplete_securityV1() {
     messageHelperFactoryProxy.shouldUseRealFactory = true
     bleVersionResolverFake.securityVersion = .v1
 
@@ -747,7 +748,7 @@ import XCTest
     XCTAssertTrue(associatedCarsManagerMock.identifiers.contains(identifier.uuidString))
   }
 
-  func testAssociationComplete_securityV2() {
+  @MainActor func testAssociationComplete_securityV2() {
     messageHelperFactoryProxy.shouldUseRealFactory = true
     bleVersionResolverFake.securityVersion = .v2
 
@@ -756,7 +757,7 @@ import XCTest
     XCTAssertTrue(associatedCarsManagerMock.identifiers.contains(identifier.uuidString))
   }
 
-  func testAssociationComplete_multipleDevices_securityV1() {
+  @MainActor func testAssociationComplete_multipleDevices_securityV1() {
     messageHelperFactoryProxy.shouldUseRealFactory = true
     bleVersionResolverFake.securityVersion = .v1
 
@@ -786,7 +787,7 @@ import XCTest
     XCTAssertEqual(associatedCarsManagerMock.count, 2)
   }
 
-  func testAssociationComplete_multipleDevices_securityV2() {
+  @MainActor func testAssociationComplete_multipleDevices_securityV2() {
     messageHelperFactoryProxy.shouldUseRealFactory = true
     bleVersionResolverFake.securityVersion = .v2
 
@@ -818,7 +819,7 @@ import XCTest
 
   /// Associates a peripheral with the provided `identifier` and tests that association was
   /// successful. Follows the security version 1 flow.
-  private func associatePeripheral_securityV1(withIdentifier identifier: CBUUID) {
+  @MainActor private func associatePeripheral_securityV1(withIdentifier identifier: CBUUID) {
     let delegate = AssociationDelegateMock()
     associationManager.delegate = delegate
 
@@ -849,7 +850,7 @@ import XCTest
 
   /// Associates a peripheral with the provided `identifier` and tests that association was
   /// successful. Follows the sercurity version 2 flow.
-  private func associatePeripheral_securityV2(withIdentifier identifier: CBUUID) {
+  @MainActor private func associatePeripheral_securityV2(withIdentifier identifier: CBUUID) {
     let delegate = AssociationDelegateMock()
     associationManager.delegate = delegate
 
@@ -895,7 +896,7 @@ import XCTest
   ///
   /// Valid characteristics means that it contains the correct UUIDs for a server write
   /// and a client read characteristics.
-  private func notifyValidCharacteristicsDiscovered(for peripheral: any BLEPeripheral) {
+  @MainActor private func notifyValidCharacteristicsDiscovered(for peripheral: any BLEPeripheral) {
     associationManager.peripheral(
       peripheral,
       didDiscoverCharacteristicsFor: validService,
@@ -904,7 +905,7 @@ import XCTest
   }
 
   /// Simulates the car sending its car id to the given association manager.
-  private func sendCarId(_ carId: CBUUID, to associationManager: AssociationManager) {
+  @MainActor private func sendCarId(_ carId: CBUUID, to associationManager: AssociationManager) {
     associationManager.messageStream(
       associationManager.messageStream!,
       didReceiveMessage: carId.data,
@@ -916,7 +917,7 @@ import XCTest
   }
 
   /// Simulates the car sending confirmation that the user has confirmed the pairing code.
-  private func sendPairingCodeConfirmation(to associationManager: AssociationManager) {
+  @MainActor private func sendPairingCodeConfirmation(to associationManager: AssociationManager) {
     associationManager.messageStream(
       associationManager.messageStream!,
       didReceiveMessage: Data(AssociationManager.pairingCodeConfirmationValue.utf8),
@@ -935,7 +936,7 @@ import XCTest
 
   /// Invokes a callback on the `associationManager` acknowledging that a message was just
   /// successfully sent to the recipient with the given `UUID`.
-  private func notifyMessageSentSuccessfully(to recipient: UUID) {
+  @MainActor private func notifyMessageSentSuccessfully(to recipient: UUID) {
     associationManager.messageStreamDidWriteMessage(
       associationManager.messageStream!, to: recipient)
   }

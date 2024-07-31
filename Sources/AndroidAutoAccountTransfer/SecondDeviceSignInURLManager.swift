@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoAccountTransferCore
-import AndroidAutoConnectedDeviceManager
-import AndroidAutoLogger
-import Foundation
-import UIKit
+private import AndroidAutoAccountTransferCore
+public import AndroidAutoConnectedDeviceManager
+private import AndroidAutoLogger
+public import Foundation
+public import UIKit
 
 /// Delegate that will be notified of sign-in URL received from a car.
 @MainActor public protocol SecondDeviceSignInURLManagerDelegate: AnyObject {
@@ -34,6 +34,13 @@ import UIKit
   /// that the user has completed the process, but does not guarantee the success.
   /// The delegate can assume a success in most cases and proceed with the flow.
   func secondDeviceSignInURLManagerDidReceiveCredential(
+    _ secondDeviceSignInURLManager: SecondDeviceSignInURLManager)
+
+  /// Invoked when a car has cancled the sign-in session.
+  ///
+  /// This car is guaranteed to have previously sent a sign-in URL. The delegate should immediate
+  /// cancel any work to sign the user in, namely canceling the existing notification.
+  func secondDeviceSignInURLManagerDidReceiveSignInCanceled(
     _ secondDeviceSignInURLManager: SecondDeviceSignInURLManager)
 }
 
@@ -63,6 +70,8 @@ public class SecondDeviceSignInURLManager: FeatureManager {
         delegate?.secondDeviceSignInURLManagerDidReceiveURL(self)
       case .receivedCredential:
         delegate?.secondDeviceSignInURLManagerDidReceiveCredential(self)
+      case .cancelSignIn:
+        delegate?.secondDeviceSignInURLManagerDidReceiveSignInCanceled(self)
       @unknown default:
         Self.log.error("Unknown event: \(event) was handled. Ignored here.")
       }

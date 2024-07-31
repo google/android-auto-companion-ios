@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoConnectedDeviceManager
-import AndroidAutoConnectedDeviceManagerMocks
-import UIKit
-import XCTest
+private import AndroidAutoConnectedDeviceManager
+private import AndroidAutoConnectedDeviceManagerMocks
+private import UIKit
+internal import XCTest
 
-@testable import AndroidAutoAccountTransfer
+@testable private import AndroidAutoAccountTransfer
 
-@MainActor class SecondDeviceSignInURLManagerTest: XCTestCase {
+class SecondDeviceSignInURLManagerTest: XCTestCase {
   private let validURL = "https://accounts.google.com/signin/continue"
 
   private var connectedCarManagerMock: ConnectedCarManagerMock!
@@ -27,7 +27,7 @@ import XCTest
 
   private var secondDeviceSignInURLManager: SecondDeviceSignInURLManager!
 
-  override func setUp() {
+  @MainActor override func setUp() {
     super.setUp()
     continueAfterFailure = false
     connectedCarManagerMock = ConnectedCarManagerMock()
@@ -37,7 +37,7 @@ import XCTest
       connectedCarManager: connectedCarManagerMock)
   }
 
-  func testOnMessageReceived_ignoreNonSignInTypeMessage() {
+  @MainActor func testOnMessageReceived_ignoreNonSignInTypeMessage() {
     let car = Car(id: "id", name: "mock")
 
     secondDeviceSignInURLManager.onMessageReceived(Data(), from: car)
@@ -45,7 +45,7 @@ import XCTest
     XCTAssertEqual(channelMock.writtenMessages.count, 0)
   }
 
-  func testStartSignIn_noURL_ignored() {
+  @MainActor func testStartSignIn_noURL_ignored() {
     let mockUIViewController = MockUIViewController()
 
     XCTAssertFalse(secondDeviceSignInURLManager.startSignIn(from: mockUIViewController))
@@ -53,7 +53,7 @@ import XCTest
   }
 }
 
-class MockUIViewController: UIViewController {
+private class MockUIViewController: UIViewController {
   var presentedController: UIViewController? = nil
 
   override func present(_ controller: UIViewController, animated: Bool, completion: (() -> Void)?) {

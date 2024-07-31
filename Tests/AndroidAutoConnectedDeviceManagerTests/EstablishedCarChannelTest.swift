@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoConnectedDeviceManagerMocks
-import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoCoreBluetoothProtocolsMocks
-import AndroidAutoMessageStream
-import CoreBluetooth
-import XCTest
+private import AndroidAutoConnectedDeviceManagerMocks
+private import AndroidAutoCoreBluetoothProtocols
+private import AndroidAutoCoreBluetoothProtocolsMocks
+private import AndroidAutoMessageStream
+private import CoreBluetooth
+internal import XCTest
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable private import AndroidAutoConnectedDeviceManager
 
 /// Unit tests for `EstablishedCarChannel`.
-@MainActor class EstablishedCarChannelTest: XCTestCase {
+class EstablishedCarChannelTest: XCTestCase {
   private let carId = "carId"
   private let car = PeripheralMock(name: "carName")
   private let savedSession = SecureBLEChannelMock.mockSavedSession
@@ -31,7 +31,7 @@ import XCTest
   private var channel: EstablishedCarChannel!
   private var connectionHandle: ConnectionHandleFake!
 
-  override func setUp() async throws {
+  @MainActor override func setUp() async throws {
     try await super.setUp()
     continueAfterFailure = false
 
@@ -47,11 +47,11 @@ import XCTest
     )
   }
 
-  func testPeripheral_matchesBLEMessageStreamPeripheral() {
+  @MainActor func testPeripheral_matchesBLEMessageStreamPeripheral() {
     XCTAssert(channel.peripheral === messageStream.peripheral)
   }
 
-  func testBleMessagestream_encountersError_disconnects() {
+  @MainActor func testBleMessagestream_encountersError_disconnects() {
     channel.messageStreamEncounteredUnrecoverableError(messageStream)
     XCTAssertTrue(connectionHandle.disconnectCalled)
     XCTAssert(connectionHandle.disconnectedStream === messageStream)
@@ -59,7 +59,7 @@ import XCTest
 
   // MARK: - Write messages tests.
 
-  func testWriteMessage_writesToStream() {
+  @MainActor func testWriteMessage_writesToStream() {
     let message = Data("message".utf8)
 
     XCTAssertNoThrow(
@@ -69,7 +69,7 @@ import XCTest
     XCTAssertEqual(messageStream.writtenEncryptedMessages[0].message, message)
   }
 
-  func testWriteMessage_throwsErrorIfInvalid() {
+  @MainActor func testWriteMessage_throwsErrorIfInvalid() {
     // Simulate the car disconnecting.
     car.state = .disconnected
 
@@ -84,7 +84,7 @@ import XCTest
     }
   }
 
-  func testWriteMessage_fails_notifiesCompletionHandler() {
+  @MainActor func testWriteMessage_fails_notifiesCompletionHandler() {
     let handlerCalledExpectation = expectation(description: "Completion handler called.")
 
     // Clear any messages that were written to the car to make subsequent assertions easier.
@@ -109,7 +109,7 @@ import XCTest
     }
   }
 
-  func testWriteMessage_succeeds_notifiesCompletionHandler() {
+  @MainActor func testWriteMessage_succeeds_notifiesCompletionHandler() {
     let handlerCalledExpectation = expectation(description: "Completion handler called.")
 
     // Clear any messages that were written to the car to make subsequent assertions easier.
@@ -136,7 +136,7 @@ import XCTest
 
   // MARK: - Received message tests.
 
-  func testReceivedMessage_ignoresUnknownOperationType() {
+  @MainActor func testReceivedMessage_ignoresUnknownOperationType() {
     let receivedMessage = Data("Received message".utf8)
     let handlerNotCalledExpectation = expectation(description: "Completion handler called.")
     handlerNotCalledExpectation.isInverted = true
@@ -164,7 +164,7 @@ import XCTest
     }
   }
 
-  func testReceivedMessage_notifiesObserversWithMessage() {
+  @MainActor func testReceivedMessage_notifiesObserversWithMessage() {
     let receivedMessage = Data("Received message".utf8)
     let handlerCalledExpectation = expectation(description: "Completion handler called.")
 
@@ -191,7 +191,7 @@ import XCTest
     }
   }
 
-  func testObserveReceivedMessage_deliversMissedMessages() {
+  @MainActor func testObserveReceivedMessage_deliversMissedMessages() {
     let receivedMessage = Data("Received message".utf8)
     let handlerCalledExpectation = expectation(description: "Completion handler called.")
     let recipient = UUID()
@@ -219,7 +219,7 @@ import XCTest
     }
   }
 
-  func testObserveReceivedMessage_deliversMissedMessages_onlyOnce() {
+  @MainActor func testObserveReceivedMessage_deliversMissedMessages_onlyOnce() {
     let receivedMessage = Data("Received message".utf8)
     let handlerNotCalledExpectation = expectation(description: "Completion handler called.")
     handlerNotCalledExpectation.isInverted = true
@@ -250,7 +250,7 @@ import XCTest
     }
   }
 
-  func testObserveReceivedMessage_throwsErrorIfMultipleObserversRegistered() {
+  @MainActor func testObserveReceivedMessage_throwsErrorIfMultipleObserversRegistered() {
     let recipient = UUID()
 
     XCTAssertNoThrow(try channel.observeMessageReceived(from: recipient) { _, _ in })
@@ -261,7 +261,7 @@ import XCTest
     }
   }
 
-  func testObserveReceivedMessage_cancelObservation_allowsNewObserverToBeRegistered() {
+  @MainActor func testObserveReceivedMessage_cancelObservation_allowsNewObserverToBeRegistered() {
     let recipient = UUID()
 
     let handle = try! channel.observeMessageReceived(from: recipient) { _, _ in }
@@ -270,7 +270,7 @@ import XCTest
     XCTAssertNoThrow(try channel.observeMessageReceived(from: recipient) { _, _ in })
   }
 
-  func testObserveReceivedMessage_differentRecipient_doesNotThrowError() {
+  @MainActor func testObserveReceivedMessage_differentRecipient_doesNotThrowError() {
     let recipient1 = UUID(uuidString: "8e8245ca-4af1-4b41-9799-48d3b4bc44e1")!
     let recipient2 = UUID(uuidString: "3bb74a19-5978-4756-b35f-491560333932")!
 
@@ -280,7 +280,7 @@ import XCTest
 
   // MARK: - Send query tests.
 
-  func testSendQuery_writesToStream() {
+  @MainActor func testSendQuery_writesToStream() {
     let query = Query(request: Data("request".utf8), parameters: nil)
     let recipient = UUID()
 
@@ -297,7 +297,7 @@ import XCTest
     XCTAssertEqual(messageStream.writtenEncryptedMessages[0].params, expectedParams)
   }
 
-  func testSendQuery_throwsErrorIfInvalid() {
+  @MainActor func testSendQuery_throwsErrorIfInvalid() {
     // Simulate the car disconnecting.
     car.state = .disconnected
 
@@ -312,7 +312,7 @@ import XCTest
     }
   }
 
-  func testSendQueryAsync_throwsErrorIfInvalid() async {
+  @MainActor func testSendQueryAsync_throwsErrorIfInvalid() async {
     // Simulate the car disconnecting.
     car.state = .disconnected
 
@@ -326,7 +326,7 @@ import XCTest
     }
   }
 
-  func testQueryAsync_queryResponseIsReturned() async {
+  @MainActor func testQueryAsync_queryResponseIsReturned() async {
     let queryID: Int32 = 4
     channel.queryID = queryID
 
@@ -344,7 +344,7 @@ import XCTest
     XCTAssertEqual(queryResponse, expectedQueryResponse)
   }
 
-  func testConfiguresUsingFeatureProvider() {
+  @MainActor func testConfiguresUsingFeatureProvider() {
     let featureProvider = ChannelFeatureProviderMock(userRole: .driver)
     var completed = false
 
@@ -360,7 +360,7 @@ import XCTest
 
   // MARK: - Query response tests.
 
-  func testQueryResponse_WithMatchingQueryID_notifiesCompletionHandler() {
+  @MainActor func testQueryResponse_WithMatchingQueryID_notifiesCompletionHandler() {
     let handlerCalledExpectation = expectation(description: "Completion handler called.")
 
     let queryID: Int32 = 4
@@ -389,7 +389,7 @@ import XCTest
     }
   }
 
-  func testQueryResponse_WithNoMatchingQueryID_doesNotNotifyCompletionHandler() {
+  @MainActor func testQueryResponse_WithNoMatchingQueryID_doesNotNotifyCompletionHandler() {
     let handlerCalledExpectation = expectation(description: "Completion handler called.")
     handlerCalledExpectation.isInverted = true
 
@@ -419,7 +419,7 @@ import XCTest
 
   // MARK: - Query observations
 
-  func testQueryObservation_throwsErrorIfMultipleObserversRegistered() {
+  @MainActor func testQueryObservation_throwsErrorIfMultipleObserversRegistered() {
     let recipient = UUID()
 
     XCTAssertNoThrow(try channel.observeQueryReceived(from: recipient) { _, _, _ in })
@@ -431,7 +431,7 @@ import XCTest
     }
   }
 
-  func testQueryObservation_notifiesCorrectObservation() {
+  @MainActor func testQueryObservation_notifiesCorrectObservation() {
     let observerCalled = expectation(description: "Correct observation called")
     let observerNotCalled = expectation(description: "Incorrect observation called")
     observerNotCalled.isInverted = true
@@ -470,7 +470,7 @@ import XCTest
     }
   }
 
-  func testQueryObservation_notifiesCorrectObservation_withMissedQueries() {
+  @MainActor func testQueryObservation_notifiesCorrectObservation_withMissedQueries() {
     let observerCalled = expectation(description: "Correct observation called")
     let observerNotCalled = expectation(description: "Incorrect observation called")
     observerNotCalled.isInverted = true
@@ -511,7 +511,7 @@ import XCTest
     }
   }
 
-  func testQueryObservation_notifiesCorrectObservation_withMissedQueries_onlyOnce() {
+  @MainActor func testQueryObservation_notifiesCorrectObservation_withMissedQueries_onlyOnce() {
     let observerNotCalled = expectation(description: "Incorrect observation called")
     observerNotCalled.isInverted = true
 
@@ -544,7 +544,7 @@ import XCTest
     }
   }
 
-  func testQueryObservation_cancelsCorrectObservation() {
+  @MainActor func testQueryObservation_cancelsCorrectObservation() {
     let observerCalled = expectation(description: "Correct observation called")
     let observerNotCalled = expectation(description: "Incorrect observation called")
     observerNotCalled.isInverted = true
@@ -590,7 +590,7 @@ import XCTest
 
   // MARK: - Send query response test
 
-  func testSendQueryResponse_writesToStream() {
+  @MainActor func testSendQueryResponse_writesToStream() {
     let recipient = UUID()
     let queryResponse = QueryResponse(id: 5, isSuccessful: true, response: Data("response".utf8))
 

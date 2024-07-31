@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCoreBluetoothProtocols
-import Foundation
+public import AndroidAutoCoreBluetoothProtocols
+public import Foundation
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable public import AndroidAutoConnectedDeviceManager
 
 /// A `ReconnectionHandler` that also supports the ability to trigger the establishment of
 /// encryption.

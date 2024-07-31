@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoLogger
-import Foundation
+private import AndroidAutoLogger
+internal import Foundation
 
 /// Protocol configuration for the TrustAgent library.
-@available(watchOS 6.0, *)
 protocol TrustAgentConfig: AnyObject {
 
   /// Whether a passcode is required for enrolling and unlocking.
@@ -51,7 +50,6 @@ protocol TrustAgentConfig: AnyObject {
 /// A configuration for the trust agent whose storage is backed by `UserDefaults`.
 ///
 /// Due to the usage of `UserDefaults`, each instance of this class will utilize the same storage.
-@available(watchOS 6.0, *)
 class TrustAgentConfigUserDefaults: TrustAgentConfig {
   #if os(watchOS)
     // we don't currently have a way to enforce this on watch, so for now no requirement

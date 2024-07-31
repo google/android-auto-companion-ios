@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoLogger
-import AndroidAutoMessageStream
-import AndroidAutoUKey2Wrapper
-import CoreBluetooth
-import Foundation
+private import AndroidAutoCoreBluetoothProtocols
+private import AndroidAutoLogger
+internal import AndroidAutoMessageStream
+private import AndroidAutoUKey2Wrapper
+private import CoreBluetooth
+internal import Foundation
 
 /// A channel that utilizes UKey2 (go/ukey2) to establish secure communication.
 ///

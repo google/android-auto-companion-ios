@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoLogger
-import Foundation
+private import AndroidAutoLogger
+internal import Foundation
 
 /// `OutOfBandTokenProvider` that provides the most recent token that was posted to it.
 class PassiveOutOfBandTokenProvider {

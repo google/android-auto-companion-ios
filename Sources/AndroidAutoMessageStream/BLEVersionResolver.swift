@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCoreBluetoothProtocols
-import Foundation
+public import AndroidAutoCoreBluetoothProtocols
+internal import Foundation
 
 /// A delegate to be notified of the result of a version exchange.
 public protocol BLEVersionResolverDelegate: AnyObject {

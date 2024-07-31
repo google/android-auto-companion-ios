@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoLogger
-import CoreBluetooth
-import Foundation
-import AndroidAutoCompanionProtos
+internal import AndroidAutoCoreBluetoothProtocols
+private import AndroidAutoLogger
+private import CoreBluetooth
+internal import Foundation
+internal import AndroidAutoCompanionProtos
 
 private typealias BleDeviceMessage = Com_Google_Companionprotos_Message
 private typealias MessagePacket = Com_Google_Companionprotos_Packet

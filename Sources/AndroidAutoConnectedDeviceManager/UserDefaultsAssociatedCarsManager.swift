@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
+internal import Foundation
 
 /// Utility that manages information about cars that this device has attempted to associate with.
 class UserDefaultsAssociatedCarsManager: NSObject, AssociatedCarsManager {

@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCoreBluetoothProtocolsMocks
-import CoreBluetooth
-import Foundation
+public import AndroidAutoCoreBluetoothProtocolsMocks
+public import CoreBluetooth
+public import Foundation
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable public import AndroidAutoConnectedDeviceManager
 
 /// A mock manager that can manually trigger observations.
 @MainActor public class ConnectedCarManagerMock: NSObject {
@@ -25,8 +25,11 @@ import Foundation
     connected: [UUID: (ConnectedCarManager, Car) -> Void](),
     securedChannel: [UUID: (ConnectedCarManager, SecuredCarChannel) -> Void](),
     disconnected: [UUID: (ConnectedCarManager, Car) -> Void](),
-    dissociation: [UUID: (ConnectedCarManager, Car) -> Void]()
+    dissociation: [UUID: (ConnectedCarManager, Car) -> Void](),
+    association: [UUID: (ConnectedCarManager, Car) -> Void]()
   )
+
+  public var supportedFeatures: Set<UUID> = []
 
   public var securedChannels: [SecuredCarChannel] = []
 
@@ -56,6 +59,12 @@ import Foundation
     securedChannels.removeAll(where: { $0.car == car })
 
     observations.disconnected.values.forEach { observation in
+      observation(self, car)
+    }
+  }
+
+  public func triggerAssociation(for car: Car) {
+    observations.association.values.forEach { observation in
       observation(self, car)
     }
   }
@@ -129,10 +138,30 @@ extension ConnectedCarManagerMock: ConnectedCarManager {
     }
   }
 
+  @discardableResult
+  public func observeAssociation(
+    using observation: @escaping (ConnectedCarManager, Car) -> Void
+  ) -> ObservationHandle {
+    let id = UUID()
+    observations.association[id] = observation
+
+    return ObservationHandle { [weak self] in
+      self?.observations.association.removeValue(forKey: id)
+    }
+  }
+
   public func reset() {
     observations.state.removeAll()
     observations.connected.removeAll()
     observations.securedChannel.removeAll()
     observations.disconnected.removeAll()
+  }
+
+  public func isFeatureSupported(_ featureID: UUID) -> Bool {
+    return supportedFeatures.contains(featureID)
+  }
+
+  public func register(_ featureManager: FeatureManager) -> Bool {
+    return supportedFeatures.insert(featureManager.featureID).inserted
   }
 }

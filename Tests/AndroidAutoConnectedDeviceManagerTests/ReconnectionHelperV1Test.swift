@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoConnectedDeviceManagerMocks
-import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoCoreBluetoothProtocolsMocks
-import CoreBluetooth
-import XCTest
+private import AndroidAutoConnectedDeviceManagerMocks
+private import AndroidAutoCoreBluetoothProtocols
+private import AndroidAutoCoreBluetoothProtocolsMocks
+private import CoreBluetooth
+internal import XCTest
 
-@testable import AndroidAutoConnectedDeviceManager
-@testable import AndroidAutoMessageStream
+@testable private import AndroidAutoConnectedDeviceManager
+@testable private import AndroidAutoMessageStream
 
 /// Unit tests for AssociationMessageHelperV1.
-@MainActor class ReconnectionHelperV1Test: XCTestCase {
+class ReconnectionHelperV1Test: XCTestCase {
   private var messageStreamMock: MessageStream!
   private var peripheralMock: PeripheralMock!
 
@@ -56,7 +56,7 @@ import XCTest
   }
 
   /// Test still ready for handshake after `prepareForHandshake()` called.
-  func test_prepareForHandshake_stillReady() {
+  @MainActor func test_prepareForHandshake_stillReady() {
     XCTAssertTrue(testHelper.isReadyForHandshake)
 
     // Should already be ready, so the callback should not be called.
@@ -75,7 +75,7 @@ import XCTest
     XCTAssertTrue(onReadyForHandshakeCalled)
   }
 
-  func testStartHandshake_SendsDeviceId() {
+  @MainActor func testStartHandshake_SendsDeviceId() {
     XCTAssertEqual(peripheralMock.writeValueCalledCount, 0)
 
     XCTAssertNoThrow(try testHelper.startHandshake(messageStream: messageStreamMock))
@@ -84,7 +84,7 @@ import XCTest
     XCTAssertEqual(peripheralMock.writtenData[0], DeviceIdManager.deviceId.data)
   }
 
-  func testHandleMessageAuthenticatesMessage_CompletesHandshake() throws {
+  @MainActor func testHandleMessageAuthenticatesMessage_CompletesHandshake() throws {
     try testHelper.startHandshake(messageStream: messageStreamMock)
     // The next message must be a valid 128 bit car Id.
     let completed = try testHelper.handleMessage(
@@ -92,7 +92,7 @@ import XCTest
     XCTAssertTrue(completed)
   }
 
-  func testDoesNotRequestSecuredChannelConfiguration() throws {
+  @MainActor func testDoesNotRequestSecuredChannelConfiguration() throws {
     let connectionHandler = ConnectionHandleFake()
     let channel = SecuredCarChannelMock(id: "test", name: "test")
 

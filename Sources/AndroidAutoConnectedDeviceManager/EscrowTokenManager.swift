@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
+internal import Foundation
 
 /// Generates and stores escrow tokens and handles that should be used for association.
 protocol EscrowTokenManager {

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
-@_implementationOnly import AndroidAutoCompanionProtos
+public import Foundation
+private import AndroidAutoCompanionProtos
 
 /// Represents a query request that can be sent to a remote car.
 public struct Query: Equatable {

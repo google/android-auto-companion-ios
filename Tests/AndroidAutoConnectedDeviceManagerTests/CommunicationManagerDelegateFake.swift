@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoSecureChannel
-import XCTest
+internal import AndroidAutoCoreBluetoothProtocols
+internal import AndroidAutoSecureChannel
+internal import XCTest
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable internal import AndroidAutoConnectedDeviceManager
 
 /// An implementation of `CommunicationManagerDelegate` that allows for verification of its methods
 /// being called.

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable public import AndroidAutoConnectedDeviceManager
 
 /// A mock of `AssociatedCarsManager` that simply sets its identifier internally and allows
 /// assertions of its methods.

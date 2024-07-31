@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import XCTest
+internal import XCTest
 
-@testable import AndroidAutoLogger
+@testable internal import AndroidAutoLogger
 
 /// Unit tests for `LoggingHandlers`.
 
@@ -45,8 +45,8 @@ class CompoundLogHandlerTest: XCTestCase {
 
 /// Mock for testing handler calls.
 
-class LogHandlerMock: LoggerDelegate {
-  var didLogRecord = false
+private class LogHandlerMock: LoggerDelegate {
+  fileprivate var didLogRecord = false
 
   func loggerDidRecordMessage(_ record: LogRecord) {
     didLogRecord = true

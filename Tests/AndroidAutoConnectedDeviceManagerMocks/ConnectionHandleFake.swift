@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoMessageStream
-import AndroidAutoSecureChannel
-import Foundation
+public import AndroidAutoMessageStream
+public import AndroidAutoSecureChannel
+public import Foundation
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable public import AndroidAutoConnectedDeviceManager
 
 /// A fake `ConnectionHandle` that will keep of if its methods have been called.
 public final class ConnectionHandleFake: ConnectionHandle {

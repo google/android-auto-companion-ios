@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
+private import Foundation
 
 /// Delegate for handling logging events.
 @available(macOS 10.15, *)
@@ -122,6 +122,47 @@ public struct Logger {
       message(),
       redacting: redactableMessage(),
       metadata: metadata(),
+      backtraceOffset: backtraceOffset + 1,  // One more to account for the current call.
+      file: file,
+      line: line,
+      function: function
+    )
+  }
+
+  /// Log the message without specifying a function name.
+  ///
+  /// If specified, the `redacting` parameter will be appended after the primary message with a
+  /// space in between.
+  ///
+  /// Note that the persistence of any information logged depends on the delegate. For example,
+  /// metadata will only be persisted if the delegate supports it.
+  ///
+  /// The `file`, `line` and `function` are intended for internal use so they can capture the
+  /// location of the call using the default parameter values. You shouldn't need to assign
+  /// values to them. This works just as it does for standard Swift functions as in:
+  /// https://developer.apple.com/documentation/swift/1539374-preconditionfailure
+  /// Likewise, `backtraceOffset` is used internally to determine how far back to begin the
+  /// back trace. You should not assign any value to it.
+  ///
+  /// - Parameters:
+  ///   - messageGenerator: Closure which generates the message to log.
+  ///   - redacting: Option message to append that will be redacted when persisted.
+  ///   - backtraceOffset: Optional backtrace offset for fault logs.
+  ///   - file: Don't specify as the default parameter is used internally.
+  ///   - line: Don't specify as the default parameter is used internally.
+  ///   - function: Don't specify as the default parameter is used internally.
+  public func log(
+    _ messageGenerator: @autoclosure () -> String,
+    redacting redactableMessage: @autoclosure () -> String? = nil,
+    backtraceOffset: UInt = 0,
+    file: String = #file,
+    line: Int = #line,
+    function: String = #function
+  ) {
+    log(
+      messageGenerator(),
+      redacting: redactableMessage(),
+      metadata: nil,
       backtraceOffset: backtraceOffset + 1,  // One more to account for the current call.
       file: file,
       line: line,

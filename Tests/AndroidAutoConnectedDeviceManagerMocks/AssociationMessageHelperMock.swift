@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoLogger
-import AndroidAutoMessageStream
-import AndroidAutoSecureChannel
-import CoreBluetooth
-import Foundation
+public import AndroidAutoCoreBluetoothProtocols
+public import AndroidAutoLogger
+public import AndroidAutoMessageStream
+public import AndroidAutoSecureChannel
+public import CoreBluetooth
+public import Foundation
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable public import AndroidAutoConnectedDeviceManager
 
 /// Mock `AssociationMessageHelper`.
 @MainActor final public class AssociationMessageHelperMock {

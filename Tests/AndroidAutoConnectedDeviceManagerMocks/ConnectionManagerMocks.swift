@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoCoreBluetoothProtocolsMocks
-import CoreBluetooth
-import XCTest
+public import AndroidAutoCoreBluetoothProtocols
+public import AndroidAutoCoreBluetoothProtocolsMocks
+public import CoreBluetooth
+public import XCTest
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable public import AndroidAutoConnectedDeviceManager
 
 // extend PeripheralMock to conform to SomePeripheral
 extension PeripheralMock: SomePeripheral {

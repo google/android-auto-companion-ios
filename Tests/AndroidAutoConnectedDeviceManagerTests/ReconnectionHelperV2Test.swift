@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoConnectedDeviceManagerMocks
-import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoCoreBluetoothProtocolsMocks
-import CoreBluetooth
-import XCTest
+private import AndroidAutoConnectedDeviceManagerMocks
+private import AndroidAutoCoreBluetoothProtocols
+private import AndroidAutoCoreBluetoothProtocolsMocks
+private import CoreBluetooth
+internal import XCTest
 
-@testable import AndroidAutoConnectedDeviceManager
-@testable import AndroidAutoMessageStream
+@testable private import AndroidAutoConnectedDeviceManager
+@testable private import AndroidAutoMessageStream
 
 /// Fake authenticator we can configure for testing the helper.
 private struct CarAuthenticatorFake: CarAuthenticator {
@@ -50,7 +50,7 @@ private struct CarAuthenticatorFake: CarAuthenticator {
 }
 
 /// Unit tests for AssociationMessageHelperV1.
-@MainActor class ReconnectionHelperV2Test: XCTestCase {
+class ReconnectionHelperV2Test: XCTestCase {
   private var messageStreamMock: MessageStream!
   private var peripheralMock: PeripheralMock!
   private var testCar: Car!
@@ -58,7 +58,7 @@ private struct CarAuthenticatorFake: CarAuthenticator {
   // The helper under test.
   private var reconnectionHelper: ReconnectionHelperV2!
 
-  override func setUp() async throws {
+  @MainActor override func setUp() async throws {
     try await super.setUp()
 
     peripheralMock = PeripheralMock(name: "Test")
@@ -92,7 +92,7 @@ private struct CarAuthenticatorFake: CarAuthenticator {
     super.tearDown()
   }
 
-  func testDiscoveryUUID() {
+  @MainActor func testDiscoveryUUID() {
     let helper = ReconnectionHelperV2(
       peripheral: peripheralMock,
       cars: [],
@@ -103,7 +103,7 @@ private struct CarAuthenticatorFake: CarAuthenticator {
     XCTAssertEqual(helper.discoveryUUID(from: config), config.reconnectionUUID(for: .v2))
   }
 
-  func testAdMatch_Instantiated() {
+  @MainActor func testAdMatch_Instantiated() {
     let car = Car(id: "test", name: "test")
     CarAuthenticatorFake.match = (car: car, hmac: Data("hmac".utf8))
 
@@ -119,7 +119,7 @@ private struct CarAuthenticatorFake: CarAuthenticator {
     XCTAssertEqual(helper?.carId, car.id)
   }
 
-  func testAdMismatch_NilInstance() {
+  @MainActor func testAdMismatch_NilInstance() {
     CarAuthenticatorFake.match = nil
 
     let helper = ReconnectionHelperV2(
@@ -133,7 +133,7 @@ private struct CarAuthenticatorFake: CarAuthenticator {
     XCTAssertNil(helper?.carId)
   }
 
-  func test_prepareForHandshake_readyForHandshake() {
+  @MainActor func test_prepareForHandshake_readyForHandshake() {
     let helper = ReconnectionHelperV2(
       peripheral: peripheralMock,
       cars: [],
@@ -154,7 +154,7 @@ private struct CarAuthenticatorFake: CarAuthenticator {
     XCTAssertTrue(onReadyForHandshakeCalled)
   }
 
-  func testStartHandshakeBeforeReady_ThrowsError() {
+  @MainActor func testStartHandshakeBeforeReady_ThrowsError() {
     // Create helper without advertisement.
     let helper = ReconnectionHelperV2(
       peripheral: peripheralMock,
@@ -168,7 +168,7 @@ private struct CarAuthenticatorFake: CarAuthenticator {
     )
   }
 
-  func testStartHandshake_SendsChallenge() throws {
+  @MainActor func testStartHandshake_SendsChallenge() throws {
     XCTAssertEqual(peripheralMock.writeValueCalledCount, 0)
 
     try reconnectionHelper.startHandshake(messageStream: messageStreamMock)
@@ -176,7 +176,7 @@ private struct CarAuthenticatorFake: CarAuthenticator {
     XCTAssertEqual(peripheralMock.writeValueCalledCount, 1)
   }
 
-  func testHandleMessageAuthenticatesMessage_CompletesHandshake() throws {
+  @MainActor func testHandleMessageAuthenticatesMessage_CompletesHandshake() throws {
     CarAuthenticatorFake.hmacWillMatchForChallenge = true
 
     try reconnectionHelper.startHandshake(messageStream: messageStreamMock)
@@ -185,7 +185,7 @@ private struct CarAuthenticatorFake: CarAuthenticator {
     XCTAssertTrue(completed)
   }
 
-  func testHandleMessageBeforeReady_ThrowsError() {
+  @MainActor func testHandleMessageBeforeReady_ThrowsError() {
     // Create helper without advertisement.
     let helper = ReconnectionHelperV2(
       peripheral: peripheralMock,
@@ -200,7 +200,7 @@ private struct CarAuthenticatorFake: CarAuthenticator {
     )
   }
 
-  func testHandleMessageWithoutCar_ThrowsError() throws {
+  @MainActor func testHandleMessageWithoutCar_ThrowsError() throws {
     CarAuthenticatorFake.hmacWillMatchForChallenge = true
 
     try reconnectionHelper.startHandshake(messageStream: messageStreamMock)
@@ -211,7 +211,7 @@ private struct CarAuthenticatorFake: CarAuthenticator {
     )
   }
 
-  func testHandleMessageAuthenticationFails_Throws() throws {
+  @MainActor func testHandleMessageAuthenticationFails_Throws() throws {
     CarAuthenticatorFake.hmacWillMatchForChallenge = false
 
     try reconnectionHelper.startHandshake(messageStream: messageStreamMock)
@@ -221,7 +221,7 @@ private struct CarAuthenticatorFake: CarAuthenticator {
     )
   }
 
-  func testDoesNotRequestSecuredChannelConfiguration_v2() throws {
+  @MainActor func testDoesNotRequestSecuredChannelConfiguration_v2() throws {
     let connectionHandler = ConnectionHandleFake()
     let channel = SecuredCarChannelMock(id: "test", name: "test")
 
@@ -239,7 +239,7 @@ private struct CarAuthenticatorFake: CarAuthenticator {
     XCTAssertFalse(connectionHandler.requestConfigurationCalled)
   }
 
-  func testDoesNotRequestSecuredChannelConfiguration_v3() throws {
+  @MainActor func testDoesNotRequestSecuredChannelConfiguration_v3() throws {
     let connectionHandler = ConnectionHandleFake()
     let channel = SecuredCarChannelMock(id: "test", name: "test")
 
@@ -257,7 +257,7 @@ private struct CarAuthenticatorFake: CarAuthenticator {
     XCTAssertFalse(connectionHandler.requestConfigurationCalled)
   }
 
-  func testRequestsSecuredChannelConfiguration_v4() throws {
+  @MainActor func testRequestsSecuredChannelConfiguration_v4() throws {
     let connectionHandler = ConnectionHandleFake()
     let channel = SecuredCarChannelMock(id: "test", name: "test")
 

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
+private import Foundation
 
 /// Protocol for simple types which can be encoded as metadata.
 public protocol LogMetaData: Encodable {}

@@ -12,9 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
-
-@testable import AndroidAutoConnectedDeviceManager
+@testable internal import AndroidAutoConnectedDeviceManager
 
 /// A fake `PListLoader` that simply returns the overlay config that is set on it.
 ///

@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import XCTest
+internal import XCTest
 
-@testable import AndroidAutoMessageStream
+@testable private import AndroidAutoMessageStream
 
 /// Unit tests for `DataCompressorImpl`.
 class DataCompressorImplTest: XCTestCase {

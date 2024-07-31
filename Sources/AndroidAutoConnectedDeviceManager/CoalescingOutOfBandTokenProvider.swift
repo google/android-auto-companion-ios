@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoLogger
-import Foundation
+private import AndroidAutoLogger
+internal import Foundation
 
 /// Coalesces multiple out of band token providers into a single provider.
 ///
 /// Forwards token events from its providers to its token handler and maintains the most recently
 /// posted token.
-@available(watchOS 6.0, *)
 struct CoalescingOutOfBandTokenProvider<Provider: OutOfBandTokenProvider> {
   private static var log: Logger { Logger(for: CoalescingOutOfBandTokenProvider<Provider>.self) }
 
@@ -53,7 +52,6 @@ struct CoalescingOutOfBandTokenProvider<Provider: OutOfBandTokenProvider> {
   }
 }
 
-@available(watchOS 6.0, *)
 extension CoalescingOutOfBandTokenProvider: OutOfBandTokenProvider {
   /// Prepare the registered providers for token requests.
   func prepareForRequests() {

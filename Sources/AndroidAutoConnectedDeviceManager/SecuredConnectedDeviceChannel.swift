@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-@_implementationOnly import AndroidAutoSecureChannel
-import Foundation
+internal import AndroidAutoSecureChannel
+internal import Foundation
 
 /// Additional internal requirements for a channel that can be used to send encrypted messages.
 protocol SecuredConnectedDeviceChannel: SecuredCarChannel {

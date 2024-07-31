@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoMessageStream
-import Foundation
+public import AndroidAutoCoreBluetoothProtocols
+public import AndroidAutoMessageStream
+public import Foundation
 
 /// Fake `BLEVersionResolver` that will always resolve to the `.passthrough` stream version
 ///  and the configurable security version.

@@ -12,25 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoLogger
-import XCTest
+internal import AndroidAutoLogger
+internal import XCTest
 
 /// Mock `PersistentLogStoreFactory`
-public class MockLogStoreFactory: PersistentLogStoreFactory {
-  public var makeStoreExpectation: XCTestExpectation?
+class MockLogStoreFactory: PersistentLogStoreFactory {
+  var makeStoreExpectation: XCTestExpectation?
 
-  public var appendDataStore: MockLogStore?
-  public var appendDataExpectation: XCTestExpectation?
+  var appendDataStore: MockLogStore?
+  var appendDataExpectation: XCTestExpectation?
 
   /// Store keyed by the date components.
-  public var stores: [DateComponents: MockLogStore] = [:]
+  var stores: [DateComponents: MockLogStore] = [:]
 
   /// Expectations to use for stores.
-  public var writeRecordExpectations: [DateComponents: XCTestExpectation] = [:]
+  var writeRecordExpectations: [DateComponents: XCTestExpectation] = [:]
 
-  public init() {}
+  init() {}
 
-  public func makeStore(directory: String, date: Date, carName: String?) -> PersistentLogStore {
+  func makeStore(directory: String, date: Date, carName: String?) -> PersistentLogStore {
     let dayComponents = LoggingMockUtils.dayComponentsForDate(date)
 
     let store = MockLogStore(date: date)
@@ -50,12 +50,12 @@ public class MockLogStoreFactory: PersistentLogStoreFactory {
     return store
   }
 
-  public func storeForDate(_ date: Date) -> MockLogStore? {
+  func storeForDate(_ date: Date) -> MockLogStore? {
     let dayComponents = LoggingMockUtils.dayComponentsForDate(date)
     return stores[dayComponents]
   }
 
-  public func setWriteRecordExpectation(_ expectation: XCTestExpectation, for date: Date) {
+  func setWriteRecordExpectation(_ expectation: XCTestExpectation, for date: Date) {
     let dayComponents = LoggingMockUtils.dayComponentsForDate(date)
     writeRecordExpectations[dayComponents] = expectation
   }

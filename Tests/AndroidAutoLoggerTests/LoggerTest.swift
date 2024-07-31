@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import XCTest
+internal import XCTest
 
-@testable import AndroidAutoLogger
+@testable private import AndroidAutoLogger
 
 /// Unit tests for Logger.
 class LoggerTest: XCTestCase {
-  var log = Logger(subsystem: "TestSystem", category: "TestCat")
+  private var log = Logger(subsystem: "TestSystem", category: "TestCat")
   fileprivate let delegateMock = LoggerDelegateMock()
 
   override func setUp() {
@@ -105,7 +105,6 @@ class LoggerTest: XCTestCase {
     // Since the test is run on the main thread, we should be on thread number 1.
     XCTAssertEqual(record.threadId, 1)
   }
-
 
   public func testLoggerRedaction() {
     log("Test", redacting: "abc123")

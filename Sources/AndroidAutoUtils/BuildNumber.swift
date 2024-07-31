@@ -57,3 +57,26 @@ extension BuildNumber: Comparable {
     return left.patch < right.patch
   }
 }
+
+// MARK: PropertyListConvertible
+
+extension BuildNumber: PropertyListConvertible {
+  /// Construct the build number from an array of `major`, `minor`, `patch`.
+  public init(primitive: [Int]) throws {
+    guard primitive.count == 3 else {
+      throw PropertyListStoreError.malformedPrimitive(
+        "Build number expects an array of 3 elements but was attempted with \(primitive.count).")
+    }
+
+    self.init(
+      major: primitive[0],
+      minor: primitive[1],
+      patch: primitive[2]
+    )
+  }
+
+  /// Represent this build number as an array of `major`, `minor`, `patch`.
+  public func makePropertyListPrimitive() -> [Int] {
+    [major, minor, patch]
+  }
+}

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoMessageStream
-import Foundation
+internal import AndroidAutoMessageStream
+internal import Foundation
 
 /// A mock of the `MessageEncryptor`.
 class MessageEncryptorMock: NSObject, MessageEncryptor {

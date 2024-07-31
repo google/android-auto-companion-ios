@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
+internal import Foundation
 
 /// An implementation of `TrustAgentManagerStorage` that delegates to `UserDefaults`.
 class UserDefaultsTrustAgentManagerStorage: NSObject, TrustAgentManagerStorage {

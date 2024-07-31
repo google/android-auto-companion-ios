@@ -39,8 +39,8 @@ private protocol SomeSystem {
 
 #if os(iOS)
 
-  import UIKit
-  import LocalAuthentication
+  internal import UIKit
+  private import LocalAuthentication
 
   extension UIDevice: AnyDevice {}
 
@@ -60,13 +60,11 @@ private protocol SomeSystem {
 
 #elseif os(watchOS)
 
-  import WatchKit
+  internal import WatchKit
 
-  @available(watchOS 6.0, *)
   extension WKInterfaceDevice: AnyDevice {}
 
   /// Provides a common API to access system specific members.
-  @available(watchOS 6.0, *)
   enum System: SomeSystem {
     /// Get the current device.
     static var currentDevice: WKInterfaceDevice { WKInterfaceDevice.current() }

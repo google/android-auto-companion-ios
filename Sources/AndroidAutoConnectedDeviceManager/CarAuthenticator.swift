@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoLogger
-import Foundation
+private import AndroidAutoLogger
+private import CryptoKit
+internal import Foundation
 
 /// Car plus the full HMAC of the advertisement salt.
 typealias CarAdvertisementMatch = (car: Car, hmac: Data)
@@ -75,7 +76,7 @@ struct CarAuthenticatorImpl: CarAuthenticator {
   private static let keySize = 256 / 8
 
   /// Size of the hash in bytes (SHA256)
-  private static let hashSize = cryptoProvider.hashSize
+  private static let hashSize = SHA256.byteCount
 
   /// Processes the advertisement data.
   enum Advertisement {
@@ -243,7 +244,10 @@ struct CarAuthenticatorImpl: CarAuthenticator {
   /// - Parameter data: The data to hash.
   /// - Returns: The 256 bit SHA authentication code.
   func computeHMAC(data: Data) -> Data {
-    Self.cryptoProvider.computeHMAC(key: key, data: data)
+    let keyData = Data(bytes: key, count: key.count)
+    let cryptoKey = SymmetricKey(data: keyData)
+    let mac = HMAC<SHA256>.authenticationCode(for: data, using: cryptoKey)
+    return Data(mac)
   }
 
   /// Save to the keychain, the key for the specified car.
@@ -341,66 +345,5 @@ struct CarAuthenticatorImpl: CarAuthenticator {
     static private func keyTag(forIdentifier identifier: String) -> Data {
       return Data("com.google.ios.aae.trustagentclient.CarAuthenticatorImpl.key.\(identifier)".utf8)
     }
-  }
-}
-
-extension CarAuthenticatorImpl {
-  /// Provider of crypto operations.
-  ///
-  /// Use `CryptoKit` if available.
-  fileprivate static var cryptoProvider: CryptoProvider.Type {
-#if canImport(CryptoKit)
-    if #available(watchOS 8.0, *) {
-      return CryptoKitProvider.self
-    } else {
-      return CommonCryptoProvider.self
-    }
-#else
-    return CommonCryptoProvider.self
-#endif
-  }
-}
-
-/// Provides crypto operations.
-fileprivate protocol CryptoProvider {
-  static var hashSize: Int { get }
-  static func computeHMAC(key: [UInt8], data: Data) -> Data
-}
-
-/// `CryptoProvider` implementation based on `CryptoKit`.
-#if canImport(CryptoKit)
-import CryptoKit
-@available(watchOS 8.0, *)
-fileprivate enum CryptoKitProvider: CryptoProvider {
-  static var hashSize: Int { SHA256.byteCount }
-
-  static func computeHMAC(key: [UInt8], data: Data) -> Data {
-    let keyData = Data(bytes: key, count: key.count)
-    let cryptoKey = SymmetricKey(data: keyData)
-    let mac = HMAC<SHA256>.authenticationCode(for: data, using: cryptoKey)
-    return Data(mac)
-  }
-}
-#endif
-
-/// `CryptoProvider` implementation based on legacy `CommonCrypto`.
-///
-/// Needed to support `watchOS` versions prior to `watchOS 8`.
-import CommonCrypto
-fileprivate enum CommonCryptoProvider: CryptoProvider {
-  static let hashSize = Int(CC_SHA256_DIGEST_LENGTH)
-
-  static func computeHMAC(key: [UInt8], data: Data) -> Data {
-    let dataBytes = [UInt8](data)
-    var mac: [UInt8] = Array.init(repeating: 0, count: Self.hashSize)
-    CCHmac(
-      CCHmacAlgorithm(kCCHmacAlgSHA256),
-      key,
-      key.count,
-      dataBytes,
-      dataBytes.count,
-      &mac
-    )
-    return Data(bytes: mac, count: mac.count)
   }
 }

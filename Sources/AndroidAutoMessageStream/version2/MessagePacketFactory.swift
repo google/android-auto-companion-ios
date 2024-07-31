@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoLogger
-import Foundation
-import AndroidAutoCompanionProtos
+private import AndroidAutoLogger
+internal import Foundation
+internal import AndroidAutoCompanionProtos
 
 /// Possible errors that can result from creating a BLE packet.
 enum MessagePacketFactoryError: Error {

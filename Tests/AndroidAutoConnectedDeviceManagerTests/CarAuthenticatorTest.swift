@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import XCTest
+internal import XCTest
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable private import AndroidAutoConnectedDeviceManager
 
 /// `CarAuthenticatorImpl` unit tests.
 class CarAuthenticatorImplTest: XCTestCase {
@@ -129,14 +129,14 @@ class CarAuthenticatorImplTest: XCTestCase {
     }
   }
 
-  func testAdvertisementPartionThrowsForInvalidLength() {
+  func testAdvertisementPartitionThrowsForInvalidLength() {
     // The valid advertisement length is 11.
     let invalidAd = randomData(count: 8)
 
     XCTAssertThrowsError(try CarAuthenticatorImpl.Advertisement.partition(advertisement: invalidAd))
   }
 
-  func testAdvertisementPartionDoesntThrowForValidLength() {
+  func testAdvertisementPartitionDoesntThrowForValidLength() {
     // The valid advertisement length is 11.
     let validAd = randomData(count: 11)
 

@@ -12,10 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
+public import Foundation
 
 /// Provides whether a feature is supported on this device.
 public protocol FeatureSupportStatusProvider {
+
+  /// Returns whether the feature manager successfully registered itself as supported.
+  func register(_ featureManager: FeatureManager) -> Bool
 
   /// Returns whether the feature with featureID is supported on this device.
   func isFeatureSupported(_ featureID: UUID) -> Bool

@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoLogger
-import Foundation
+private import AndroidAutoLogger
+internal import Foundation
 
 /// A loader that is able to read values from a .plist file.
-@available(watchOS 6.0, *)
 protocol PListLoader {
   /// Returns a dictionary that represents values the OEM wishes to overlay over default values
   /// used within this library.
@@ -28,7 +27,6 @@ protocol PListLoader {
 
 /// The default loader that will look for a `.plist` file with the file name passed to the
 /// constructor and load the values from it.
-@available(watchOS 6.0, *)
 struct PListLoaderImpl: PListLoader {
   private static let log = Logger(for: PListLoaderImpl.self)
 

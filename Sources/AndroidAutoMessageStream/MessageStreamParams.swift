@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
-import AndroidAutoCompanionProtos
+public import Foundation
+internal import AndroidAutoCompanionProtos
 
 /// Possible operation types for a message.
 public enum StreamOperationType {

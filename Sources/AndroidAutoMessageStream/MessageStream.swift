@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoConnectedDeviceTransport
-import Foundation
+public import AndroidAutoConnectedDeviceTransport
+public import Foundation
 
 /// Delegate to be notified of message stream events.
 public protocol MessageStreamDelegate: AnyObject {

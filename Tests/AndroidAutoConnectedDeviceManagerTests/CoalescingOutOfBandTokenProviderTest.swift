@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import XCTest
+internal import XCTest
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable internal import AndroidAutoConnectedDeviceManager
 
 /// Unit tests for CoalescingOutOfBandTokenProvider.
-@available(watchOS 6.0, *)
 class CoalescingOutOfBandTokenProviderTest: XCTestCase {
   // The token provider to test.
   private var testTokenProvider: CoalescingOutOfBandTokenProvider<MockOutOfBandTokenProvider>!
@@ -247,7 +246,6 @@ private struct FakeOutOfBandToken: OutOfBandToken {
 }
 
 /// Mock Out-Of-Band Token Provider.
-@available(watchOS 6.0, *)
 class MockOutOfBandTokenProvider: OutOfBandTokenProvider {
   private var completion: ((OutOfBandToken?) -> Void)?
   private var token: OutOfBandToken? = nil

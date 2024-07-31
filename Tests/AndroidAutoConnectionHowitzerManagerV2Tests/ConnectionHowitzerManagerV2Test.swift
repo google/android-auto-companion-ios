@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoConnectedDeviceManager
-import AndroidAutoConnectedDeviceManagerMocks
-import XCTest
+private import AndroidAutoConnectedDeviceManager
+private import AndroidAutoConnectedDeviceManagerMocks
+internal import XCTest
 
-@testable import AndroidAutoConnectionHowitzerManagerV2
+@testable private import AndroidAutoConnectionHowitzerManagerV2
 
-@MainActor class ConnectionHowitzerManagerV2Test: XCTestCase {
+class ConnectionHowitzerManagerV2Test: XCTestCase {
   private var manager: ConnectionHowitzerManagerV2!
   private var connectedCarManagerMock: ConnectedCarManagerMock!
   private let testCarId1 = "testCarId1"
@@ -26,7 +26,7 @@ import XCTest
   private let testCar1 = Car(id: "testCarId1", name: "mock car 1")
   private let testCar2 = Car(id: "testCarId2", name: "mock car 2")
 
-  override func setUp() {
+  @MainActor override func setUp() {
     super.setUp()
 
     continueAfterFailure = false
@@ -34,13 +34,13 @@ import XCTest
     manager = ConnectionHowitzerManagerV2(connectedCarManager: connectedCarManagerMock)
   }
 
-  func testOnSecureChannelEstablished_noExistingConnectedCar_saveConnectedCar() {
+  @MainActor func testOnSecureChannelEstablished_noExistingConnectedCar_saveConnectedCar() {
     manager.onSecureChannelEstablished(for: testCar1)
 
     XCTAssertTrue(manager.connectedCar == testCar1)
   }
 
-  func testOnSecureChannelEstablished_existsConnectedCar_updateCar() {
+  @MainActor func testOnSecureChannelEstablished_existsConnectedCar_updateCar() {
     manager.onSecureChannelEstablished(for: testCar1)
 
     manager.onSecureChannelEstablished(for: testCar2)
@@ -48,7 +48,7 @@ import XCTest
     XCTAssertTrue(manager.connectedCar == testCar2)
   }
 
-  func testOnCarDisconnected_sameAsConnectedCar_removeCar() {
+  @MainActor func testOnCarDisconnected_sameAsConnectedCar_removeCar() {
     manager.onSecureChannelEstablished(for: testCar1)
 
     manager.onCarDisconnected(testCar1)
@@ -56,7 +56,7 @@ import XCTest
     XCTAssertNil(manager.connectedCar)
   }
 
-  func testOnCarDisconnected_differentFromConnectedCar_doNothing() {
+  @MainActor func testOnCarDisconnected_differentFromConnectedCar_doNothing() {
     manager.onSecureChannelEstablished(for: testCar1)
 
     manager.onCarDisconnected(testCar2)
@@ -64,7 +64,7 @@ import XCTest
     XCTAssertTrue(manager.connectedCar == testCar1)
   }
 
-  func testStart_sendConfigToIHU() {
+  @MainActor func testStart_sendConfigToIHU() {
     manager.onSecureChannelEstablished(for: testCar1)
     let channel = SecuredCarChannelMock(car: testCar1)
     connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
@@ -78,7 +78,7 @@ import XCTest
     XCTAssertEqual(channel.writtenMessages[0], messageData)
   }
 
-  func testStart_startTwice_failOnTheSecondTime() {
+  @MainActor func testStart_startTwice_failOnTheSecondTime() {
     let delegate = ConnectionHowitzerManagerV2DelegateMock()
     let channel = SecuredCarChannelMock(car: testCar1)
     manager.delegate = delegate
@@ -91,7 +91,7 @@ import XCTest
     XCTAssertTrue(delegate.onTestFailed)
   }
 
-  func testStart_testDidNotFinish_canStartNewTestWhenReconnected() {
+  @MainActor func testStart_testDidNotFinish_canStartNewTestWhenReconnected() {
     let delegate = ConnectionHowitzerManagerV2DelegateMock()
     let channel = SecuredCarChannelMock(car: testCar1)
     manager.delegate = delegate
@@ -112,7 +112,7 @@ import XCTest
     XCTAssertFalse(delegate.onTestFailed)
   }
 
-  func testTestID_newTest_newTestID() {
+  @MainActor func testTestID_newTest_newTestID() {
     let channel = SecuredCarChannelMock(car: testCar1)
     manager.onSecureChannelEstablished(for: testCar1)
     connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
@@ -131,7 +131,7 @@ import XCTest
     XCTAssertFalse(testID1 == testID2)
   }
 
-  func testSendPayload_payloadSentMatchesConfig() {
+  @MainActor func testSendPayload_payloadSentMatchesConfig() {
     let config = HowitzerConfig(
       payloadSize: 100, payloadCount: 2, sentFromIHU: false)
     let channel = SecuredCarChannelMock(car: testCar1)
@@ -144,7 +144,7 @@ import XCTest
     XCTAssertEqual(channel.writtenMessages.last!.count, Int(config.payloadSize))
   }
 
-  func testHandleResult_testIDMismatch_callOnTestFailed() {
+  @MainActor func testHandleResult_testIDMismatch_callOnTestFailed() {
     let delegate = ConnectionHowitzerManagerV2DelegateMock()
     manager.delegate = delegate
     let config = HowitzerConfig(
@@ -160,7 +160,7 @@ import XCTest
     XCTAssertTrue(delegate.onTestFailed)
   }
 
-  func testHandleResult_testInvalidResult_callOnTestFailed() {
+  @MainActor func testHandleResult_testInvalidResult_callOnTestFailed() {
     let delegate = ConnectionHowitzerManagerV2DelegateMock()
     manager.delegate = delegate
     let config = HowitzerConfig(
@@ -175,7 +175,7 @@ import XCTest
     XCTAssertTrue(delegate.onTestFailed)
   }
 
-  func testHandleResult_testValidResult_callOnTestCompletedSuccessfully() {
+  @MainActor func testHandleResult_testValidResult_callOnTestCompletedSuccessfully() {
     let delegate = ConnectionHowitzerManagerV2DelegateMock()
     manager.delegate = delegate
     let config = HowitzerConfig(
@@ -190,7 +190,7 @@ import XCTest
     XCTAssertTrue(delegate.onTestFailed)
   }
 
-  func testReceivePayload_didNotReceiveAll_doNotSendResult() {
+  @MainActor func testReceivePayload_didNotReceiveAll_doNotSendResult() {
     let payloadSize = Int32(100)
     let payloadCount = Int32(5)
     let config = HowitzerConfig(
@@ -204,7 +204,7 @@ import XCTest
     XCTAssertEqual(channel.writtenMessages.count, 1)
   }
 
-  func testReceivePayload_receivedAll_sendResult() {
+  @MainActor func testReceivePayload_receivedAll_sendResult() {
     let payloadSize = Int32(100)
     let payloadCount = Int32(5)
     let config = HowitzerConfig(
@@ -218,7 +218,7 @@ import XCTest
     XCTAssertEqual(channel.writtenMessages.count, 2)
   }
 
-  func testResultAck_receivedDifferentType_callOnTestFailed() {
+  @MainActor func testResultAck_receivedDifferentType_callOnTestFailed() {
     let delegate = ConnectionHowitzerManagerV2DelegateMock()
     let payloadSize = Int32(100)
     let payloadCount = Int32(5)
@@ -234,7 +234,7 @@ import XCTest
     XCTAssertTrue(delegate.onTestFailed)
   }
 
-  func testResultAck_receivedAck_callOnTestCompletedSuccessfully() {
+  @MainActor func testResultAck_receivedAck_callOnTestCompletedSuccessfully() {
     let delegate = ConnectionHowitzerManagerV2DelegateMock()
     let payloadSize = Int32(100)
     let payloadCount = Int32(5)
@@ -250,7 +250,10 @@ import XCTest
     XCTAssertTrue(delegate.onTestCompletedSuccessfully)
   }
 
-  private func finishConfigAck(with channel: SecuredCarChannelMock, with config: HowitzerConfig) {
+  @MainActor private func finishConfigAck(
+    with channel: SecuredCarChannelMock,
+    with config: HowitzerConfig
+  ) {
     manager.onSecureChannelEstablished(for: testCar1)
     connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
     manager.start(with: config)
@@ -258,7 +261,7 @@ import XCTest
     manager.onMessageReceived(makeAckMessageData(), from: testCar1)
   }
 
-  private func receivePayloads(_ count: Int32, _ car: Car) {
+  @MainActor private func receivePayloads(_ count: Int32, _ car: Car) {
     for _ in 1...count {
       manager.onMessageReceived(makePayloadMessageData(manager.config.payloadSize), from: car)
     }

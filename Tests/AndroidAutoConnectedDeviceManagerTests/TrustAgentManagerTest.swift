@@ -12,19 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoConnectedDeviceManagerMocks
-import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoCoreBluetoothProtocolsMocks
-import AndroidAutoSecureChannel
-import CoreBluetooth
+private import AndroidAutoConnectedDeviceManagerMocks
+private import AndroidAutoCoreBluetoothProtocols
+private import AndroidAutoCoreBluetoothProtocolsMocks
+internal import AndroidAutoSecureChannel
+private import CoreBluetooth
 import LocalAuthentication
-import XCTest
-import AndroidAutoTrustAgentProtos
+internal import XCTest
+private import AndroidAutoTrustAgentProtos
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable private import AndroidAutoConnectedDeviceManager
 
 /// Unit tests for `TrustAgentManager`.
-@MainActor class TrustAgentManagerTest: XCTestCase {
+class TrustAgentManagerTest: XCTestCase {
+  private typealias TrustedDeviceMessage = Aae_Trustagent_TrustedDeviceMessage
+  private typealias TrustedDeviceState = Aae_Trustagent_TrustedDeviceState
+
   // The default name that is used when `setUpValidChannel(withCarId:)` is called.
   private let defaultChannelName = "mock car"
   private let testCarId1 = "testCarId1"
@@ -39,7 +42,7 @@ import AndroidAutoTrustAgentProtos
 
   private var trustAgentManager: TrustAgentManager!
 
-  override func setUp() async throws {
+  @MainActor override func setUp() async throws {
     try await super.setUp()
     continueAfterFailure = false
 
@@ -58,7 +61,7 @@ import AndroidAutoTrustAgentProtos
 
   // MARK: - Enrollment error tests
 
-  func testEnroll_carNotConnected_notifiesDelegateOfError() {
+  @MainActor func testEnroll_carNotConnected_notifiesDelegateOfError() {
     let car = Car(id: testCarId1, name: "name")
     let delegate = TrustAgentDelegateMock()
 
@@ -71,7 +74,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertEqual(delegate.enrollingError, .carNotConnected)
   }
 
-  func testEnroll_tokenGenerationFailed_notifiesDelegateOfError() {
+  @MainActor func testEnroll_tokenGenerationFailed_notifiesDelegateOfError() {
     let channel = SecuredCarChannelMock(car: testCar1)
 
     connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
@@ -88,7 +91,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertEqual(delegate.enrollingError, .cannotGenerateToken)
   }
 
-  func testEnroll_writeFails_notifiesDelegateOfError() {
+  @MainActor func testEnroll_writeFails_notifiesDelegateOfError() {
     let delegate = TrustAgentDelegateMock()
     trustAgentManager.delegate = delegate
 
@@ -105,7 +108,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertEqual(delegate.enrollingError, .cannotSendToken)
   }
 
-  func testEnroll_handleStorageFailure_notifiesDelegate() {
+  @MainActor func testEnroll_handleStorageFailure_notifiesDelegate() {
     let delegate = TrustAgentDelegateMock()
     trustAgentManager.delegate = delegate
 
@@ -129,16 +132,16 @@ import AndroidAutoTrustAgentProtos
 
   // MARK: - Enrollment tests
 
-  func testEnroll_validFlow() {
+  @MainActor func testEnroll_validFlow() {
     runThroughEnrollmentFlow(withCarId: testCarId1)
   }
 
-  func testEnroll_validFlow_isEnrolledReturnsTrue() {
+  @MainActor func testEnroll_validFlow_isEnrolledReturnsTrue() {
     runThroughEnrollmentFlow(withCarId: testCar1.id)
     XCTAssertTrue(trustAgentManager.isEnrolled(with: testCar1))
   }
 
-  func testEnroll_successful_notifiesDelegate() {
+  @MainActor func testEnroll_successful_notifiesDelegate() {
     let delegate = TrustAgentDelegateMock()
     trustAgentManager.delegate = delegate
 
@@ -149,7 +152,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertEqual(delegate.enrolledCar, channel.car)
   }
 
-  func testEnroll_eachRequestSendsEscrowToken() {
+  @MainActor func testEnroll_eachRequestSendsEscrowToken() {
     let car = Car(id: testCarId1, name: "name")
     let channel = SecuredCarChannelMock(car: car)
 
@@ -170,7 +173,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertEqual(channel.writtenMessages[1], tokenMessage)
   }
 
-  func testEnroll_canEnrollAfterStopCall() {
+  @MainActor func testEnroll_canEnrollAfterStopCall() {
     let delegate = TrustAgentDelegateMock()
     trustAgentManager.delegate = delegate
 
@@ -191,7 +194,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertEqual(channel.writtenMessages.count, 2)
   }
 
-  func testEnroll_DoesNotInterfereWithUnlock() {
+  @MainActor func testEnroll_DoesNotInterfereWithUnlock() {
     let delegate = TrustAgentDelegateMock()
     trustAgentManager.delegate = delegate
 
@@ -223,7 +226,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertFalse(delegate.didCompleteEnrollingCalled)
   }
 
-  func testStopEnrolling_ignoresSentHandle() {
+  @MainActor func testStopEnrolling_ignoresSentHandle() {
     let delegate = TrustAgentDelegateMock()
     trustAgentManager.delegate = delegate
 
@@ -245,7 +248,7 @@ import AndroidAutoTrustAgentProtos
 
   // MARK: - Car initiated enrollment tests.
 
-  func testStartEnrollment_sendsEscrowToken() {
+  @MainActor func testStartEnrollment_sendsEscrowToken() {
     let channel = SecuredCarChannelMock(car: testCar1)
 
     connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
@@ -267,7 +270,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertEqual(channel.writtenMessages[0], escrowTokenMessage)
   }
 
-  func testStartEnrollment_sendsEscrowTokenMultipleTimes() {
+  @MainActor func testStartEnrollment_sendsEscrowTokenMultipleTimes() {
     let channel = SecuredCarChannelMock(car: testCar1)
 
     connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
@@ -294,7 +297,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertEqual(channel.writtenMessages[1], escrowTokenMessage)
   }
 
-  func testStartEnrollment_notifiesDelegateIfError() {
+  @MainActor func testStartEnrollment_notifiesDelegateIfError() {
     let delegate = TrustAgentDelegateMock()
     trustAgentManager.delegate = delegate
 
@@ -316,7 +319,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertEqual(delegate.enrollingError, .cannotGenerateToken)
   }
 
-  func testEnrollmentFails_NoPasscode() throws {
+  @MainActor func testEnrollmentFails_NoPasscode() throws {
     let delegate = TrustAgentDelegateMock()
     config.isPasscodeRequired = true
     config.isPasscodeSet = false
@@ -348,7 +351,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertTrue(delegate.didEncounterEnrollingErrorCalled)
   }
 
-  func testStartEnrollment_sendsEscrowTokenIfAlreadyEnrolled() {
+  @MainActor func testStartEnrollment_sendsEscrowTokenIfAlreadyEnrolled() {
     let delegate = TrustAgentDelegateMock()
     trustAgentManager.delegate = delegate
 
@@ -378,7 +381,7 @@ import AndroidAutoTrustAgentProtos
 
   // MARK: - Send phone credentials tests.
 
-  func testSendPhoneCredentials_toSingleConnectedCar() {
+  @MainActor func testSendPhoneCredentials_toSingleConnectedCar() {
     let (token, handle) = setUpAsEnrolled(carId: testCarId1)
     let channel = SecuredCarChannelMock(car: testCar1)
 
@@ -392,7 +395,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertEqual(channel.writtenMessages[0], messageData)
   }
 
-  func testSendPhoneCredentials_toMultipleConnectedCars() {
+  @MainActor func testSendPhoneCredentials_toMultipleConnectedCars() {
     let (token1, handle1) = setUpAsEnrolled(carId: testCarId1)
     let channel1 = SecuredCarChannelMock(car: testCar1)
 
@@ -421,7 +424,7 @@ import AndroidAutoTrustAgentProtos
       channel2.writtenMessages[0], messageData2)
   }
 
-  func testSendPhoneCredentials_noPasscodeSetOrRequired_notEnrolled_doesNotthrowError() {
+  @MainActor func testSendPhoneCredentials_noPasscodeSetOrRequired_notEnrolled_doesNotthrowError() {
     let delegate = TrustAgentDelegateMock()
     config.isPasscodeRequired = true
     config.isPasscodeSet = true
@@ -435,7 +438,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertFalse(delegate.didEncounterErrorCalled)
   }
 
-  func testSendPhoneCredentials_passcodeRequired_throwsError() {
+  @MainActor func testSendPhoneCredentials_passcodeRequired_throwsError() {
     let delegate = TrustAgentDelegateMock()
     config.isPasscodeRequired = true
     config.isPasscodeSet = false
@@ -451,7 +454,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertEqual(delegate.error, .passcodeNotSet)
   }
 
-  func testSendPhoneCredentials_deviceUnlockRequiredWithDeviceLocked_throwsError() {
+  @MainActor func testSendPhoneCredentials_deviceUnlockRequiredWithDeviceLocked_throwsError() {
     let delegate = TrustAgentDelegateMock()
     config.setDeviceUnlockRequired(true, for: testCar1)
     config.isDeviceUnlocked = false
@@ -467,7 +470,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertEqual(delegate.error, .deviceLocked)
   }
 
-  func testSendPhoneCredentials_receivedUnlockRequestFromEnrolledCar_sendCrendentials() {
+  @MainActor func testSendPhoneCredentials_receivedUnlockRequestFromEnrolledCar_sendCrendentials() {
     let (token, handle) = setUpAsEnrolled(carId: testCarId1)
     let channel = SecuredCarChannelMock(car: testCar1)
     let unlockRequestMessageData = makeMessageData(type: .unlockRequest)
@@ -484,6 +487,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertEqual(channel.writtenMessages[1], credentialsMessageData)
   }
 
+  @MainActor
   func testSendPhoneCredentials_receivedUnlockRequestFromNotEnrolledCar_doNotSendCrendentials() {
     let channel = SecuredCarChannelMock(car: testCar1)
     let unlockRequestMessageData = makeMessageData(type: .unlockRequest)
@@ -496,7 +500,7 @@ import AndroidAutoTrustAgentProtos
 
   // MARK: - Delegate notification tests.
 
-  func testUnlock_notifiesDelegateOfStart() {
+  @MainActor func testUnlock_notifiesDelegateOfStart() {
     let delegate = TrustAgentDelegateMock()
     trustAgentManager.delegate = delegate
 
@@ -510,7 +514,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertEqual(delegate.didStartUnlockingCar!.id, channel.id)
   }
 
-  func testUnlock_notifiesDelegateOfStart_afterSecuredChannelNotification() {
+  @MainActor func testUnlock_notifiesDelegateOfStart_afterSecuredChannelNotification() {
     let delegate = TrustAgentDelegateMock()
     trustAgentManager.delegate = delegate
 
@@ -527,7 +531,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertEqual(delegate.didStartUnlockingCar!.id, channel.id)
   }
 
-  func testSuccessfulUnlock_ofConnectedCar_notifiesDelegate() {
+  @MainActor func testSuccessfulUnlock_ofConnectedCar_notifiesDelegate() {
     let delegate = TrustAgentDelegateMock()
     trustAgentManager.delegate = delegate
 
@@ -549,7 +553,7 @@ import AndroidAutoTrustAgentProtos
 
   // MARK: - Error tests.
 
-  func testNoValidToken_doesNothing() {
+  @MainActor func testNoValidToken_doesNothing() {
     let channel = SecuredCarChannelMock(car: testCar1)
     let delegate = TrustAgentDelegateMock()
 
@@ -562,7 +566,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertTrue(channel.writtenMessages.isEmpty)
   }
 
-  func testNoValidHandle_doesNothing() {
+  @MainActor func testNoValidHandle_doesNothing() {
     let channel = SecuredCarChannelMock(car: testCar1)
     let delegate = TrustAgentDelegateMock()
 
@@ -578,7 +582,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertTrue(channel.writtenMessages.isEmpty)
   }
 
-  func testReceivedMessage_fromWrongUUID_doesNotNotifyDelegate() {
+  @MainActor func testReceivedMessage_fromWrongUUID_doesNotNotifyDelegate() {
     let delegate = TrustAgentDelegateMock()
     trustAgentManager.delegate = delegate
 
@@ -602,7 +606,7 @@ import AndroidAutoTrustAgentProtos
 
   // MARK: - Disconnection tests
 
-  func testDisconnection_duringEnrollmentNotifiesDelegate() {
+  @MainActor func testDisconnection_duringEnrollmentNotifiesDelegate() {
     let delegate = TrustAgentDelegateMock()
     trustAgentManager.delegate = delegate
 
@@ -618,9 +622,20 @@ import AndroidAutoTrustAgentProtos
     XCTAssertEqual(delegate.enrollingError, .carNotConnected)
   }
 
+  // MARK: - Association tests
+  @MainActor func testAssociation_clearsStoredTokenAndHandleAndUnlockHistory() {
+    runThroughEnrollmentFlow(withCarId: testCar1.id)
+
+    // Trigger that this enrolled car was associated again without proper dissociation.
+    connectedCarManagerMock.triggerAssociation(for: testCar1)
+
+    XCTAssertFalse(trustAgentManager.isEnrolled(with: testCar1))
+    XCTAssertTrue(trustAgentManager.unlockHistory(for: testCar1).isEmpty)
+  }
+
   // MARK: - Dissociation tests
 
-  func testDissociation_clearsStoredTokenAndHandleAndUnlockHistory() {
+  @MainActor func testDissociation_clearsStoredTokenAndHandleAndUnlockHistory() {
     runThroughEnrollmentFlow(withCarId: testCar1.id)
 
     // Trigger that this enrolled car was dissociated
@@ -630,7 +645,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertTrue(trustAgentManager.unlockHistory(for: testCar1).isEmpty)
   }
 
-  func testDissociation_retainsTokenAndHandleForAssociatedCars() {
+  @MainActor func testDissociation_retainsTokenAndHandleForAssociatedCars() {
     setUpAsEnrolled(carId: testCar1.id)
 
     // Trigger a dissociation for an unenrolled car.
@@ -643,7 +658,7 @@ import AndroidAutoTrustAgentProtos
 
   // MARK: - Stop enrollment tests.
 
-  func testStopEnrollment_notifiesCallback() {
+  @MainActor func testStopEnrollment_notifiesCallback() {
     let delegate = TrustAgentDelegateMock()
     trustAgentManager.delegate = delegate
 
@@ -656,7 +671,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertFalse(delegate.unenrollInitiatedFromCar)
   }
 
-  func testStopEnrollment_doesNotNotifyCallbackIfUnenrolled() {
+  @MainActor func testStopEnrollment_doesNotNotifyCallbackIfUnenrolled() {
     let delegate = TrustAgentDelegateMock()
     trustAgentManager.delegate = delegate
 
@@ -667,7 +682,7 @@ import AndroidAutoTrustAgentProtos
 
   // MARK: - Feature status sync tests.
 
-  func testFeatureSync_syncsStatusFromCar() {
+  @MainActor func testFeatureSync_syncsStatusFromCar() {
     let delegate = TrustAgentDelegateMock()
     trustAgentManager.delegate = delegate
 
@@ -685,7 +700,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertTrue(delegate.unenrollInitiatedFromCar)
   }
 
-  func testFeatureSync_doesNotDuplicateStatusBackToCar() {
+  @MainActor func testFeatureSync_doesNotDuplicateStatusBackToCar() {
     let delegate = TrustAgentDelegateMock()
     trustAgentManager.delegate = delegate
 
@@ -701,7 +716,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertEqual(channel.writtenMessages.count, messageCount)
   }
 
-  func testFeatureSync_doesNotSendAnyStatusForUnenrolledCar() {
+  @MainActor func testFeatureSync_doesNotSendAnyStatusForUnenrolledCar() {
     let channel = SecuredCarChannelMock(car: testCar1)
 
     connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
@@ -709,7 +724,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssert(channel.writtenMessages.isEmpty)
   }
 
-  func testFeatureSync_ignoresEnabledStatusFromUnenrolledCar() {
+  @MainActor func testFeatureSync_ignoresEnabledStatusFromUnenrolledCar() {
     let channel = SecuredCarChannelMock(car: testCar1)
 
     connectedCarManagerMock.triggerSecureChannelSetUp(with: channel)
@@ -722,7 +737,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertFalse(trustAgentManager.isEnrolled(with: testCar1))
   }
 
-  func testFeatureSync_sendsStatusMessageToCarWhenUnenrolled() {
+  @MainActor func testFeatureSync_sendsStatusMessageToCarWhenUnenrolled() {
     let channel = runThroughEnrollmentFlow(withCarId: testCarId1)
 
     trustAgentManager.stopEnrollment(for: testCar1)
@@ -734,7 +749,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertEqual(lastMessage, expectedMessage)
   }
 
-  func testFeatureSync_doesNotSendOnDisassociation() {
+  @MainActor func testFeatureSync_doesNotSendOnDisassociation() {
     let channel = runThroughEnrollmentFlow(withCarId: testCar1.id)
     let messageCount = channel.writtenMessages.count
 
@@ -745,7 +760,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertEqual(channel.writtenMessages.count, messageCount)
   }
 
-  func testFeatureSync_syncsOnNextConnection() {
+  @MainActor func testFeatureSync_syncsOnNextConnection() {
     let channel = runThroughEnrollmentFlow(withCarId: testCarId1)
     let messageCount = channel.writtenMessages.count
 
@@ -766,7 +781,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertEqual(channel.writtenMessages.last, expectedMessage)
   }
 
-  func testFeatureSync_doesNotSyncIfPreviousSyncSuccessful() {
+  @MainActor func testFeatureSync_doesNotSyncIfPreviousSyncSuccessful() {
     let channel = runThroughEnrollmentFlow(withCarId: testCarId1)
 
     // The car is disconnected and enrollment is cleared.
@@ -786,7 +801,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertEqual(channel.writtenMessages.count, messageCount)
   }
 
-  func testFeatureSync_clearsOnDisassociation() {
+  @MainActor func testFeatureSync_clearsOnDisassociation() {
     var channel = runThroughEnrollmentFlow(withCarId: testCarId1)
 
     // The car is disconnected and enrollment is cleared.
@@ -808,7 +823,7 @@ import AndroidAutoTrustAgentProtos
 
   // MARK: - Unlock history tests.
 
-  func testUnlockHistory_emptyIfNoUnlocks() {
+  @MainActor func testUnlockHistory_emptyIfNoUnlocks() {
     setUpAsEnrolled(carId: testCarId1)
     let channel = SecuredCarChannelMock(car: testCar1)
 
@@ -818,7 +833,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertTrue(trustAgentManager.unlockHistory(for: testCar1).isEmpty)
   }
 
-  func testSuccessfulUnlock_storesUnlockHistory() {
+  @MainActor func testSuccessfulUnlock_storesUnlockHistory() {
     setUpAsEnrolled(carId: testCarId1)
     let channel = SecuredCarChannelMock(car: testCar1)
 
@@ -831,7 +846,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssert(trustAgentManager.unlockHistory(for: testCar1).count == 1)
   }
 
-  func testSuccessfulUnlock_notStoredIfHistoryDisabled() {
+  @MainActor func testSuccessfulUnlock_notStoredIfHistoryDisabled() {
     config.isUnlockHistoryEnabled = false
 
     setUpAsEnrolled(carId: testCarId1)
@@ -846,7 +861,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssert(trustAgentManager.unlockHistory(for: testCar1).isEmpty)
   }
 
-  func testUnlockHistory_keepsHistorySeparateForCars() {
+  @MainActor func testUnlockHistory_keepsHistorySeparateForCars() {
     setUpAsEnrolled(carId: testCarId1)
     let channel = SecuredCarChannelMock(car: testCar1)
 
@@ -860,7 +875,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertTrue(trustAgentManager.unlockHistory(for: testCar2).isEmpty)
   }
 
-  func testClearUnlockHistory() {
+  @MainActor func testClearUnlockHistory() {
     setUpAsEnrolled(carId: testCarId1)
     let channel = SecuredCarChannelMock(car: testCar1)
 
@@ -875,7 +890,7 @@ import AndroidAutoTrustAgentProtos
     XCTAssertTrue(trustAgentManager.unlockHistory(for: testCar1).isEmpty)
   }
 
-  func testClearUnlockHistory_clearsOnlyForSelectedCar() {
+  @MainActor func testClearUnlockHistory_clearsOnlyForSelectedCar() {
     // Set up unlock history for unrelated car.
     trustAgentStorage.addUnlockDate(Date(), for: testCar2)
 
@@ -893,12 +908,14 @@ import AndroidAutoTrustAgentProtos
     XCTAssert(trustAgentManager.unlockHistory(for: testCar2).count == 1)
   }
 
-  func testUnlockHistory_clearedIfConfigChanged() {
+  @MainActor func testUnlockHistory_clearedIfConfigChanged() {
     // Set up unlock history for car.
     trustAgentStorage.addUnlockDate(Date(), for: testCar1)
 
     // Create a new trust agent manager with the same config.
     config.isUnlockHistoryEnabled = false
+    // Clear existing feature registration so the manager can be reinstantiated.
+    connectedCarManagerMock.supportedFeatures.removeAll()
     trustAgentManager = TrustAgentManager(
       connectedCarManager: connectedCarManagerMock,
       escrowTokenManager: escrowTokenManager,
@@ -917,7 +934,7 @@ import AndroidAutoTrustAgentProtos
   ///
   /// - Returns: A mock channel that has been enrolled.
   @discardableResult
-  private func runThroughEnrollmentFlow(withCarId id: String) -> SecuredCarChannelMock {
+  @MainActor private func runThroughEnrollmentFlow(withCarId id: String) -> SecuredCarChannelMock {
     let car = Car(id: id, name: defaultChannelName)
     let channel = SecuredCarChannelMock(car: car)
 
@@ -951,7 +968,7 @@ import AndroidAutoTrustAgentProtos
   /// Simply sets up the car with the given [id] as enrolled and returns the registered token and
   /// handle.
   @discardableResult
-  private func setUpAsEnrolled(carId: String) -> (token: Data, handle: Data) {
+  @MainActor private func setUpAsEnrolled(carId: String) -> (token: Data, handle: Data) {
     let token = escrowTokenManager.generateAndStoreToken(for: carId)!
 
     let handle = Data("handle".utf8)
@@ -960,7 +977,7 @@ import AndroidAutoTrustAgentProtos
   }
 
   /// Simulates an `ACK` message being sent over the given channel.
-  private func respondWithAck(over channel: SecuredCarChannelMock) {
+  @MainActor private func respondWithAck(over channel: SecuredCarChannelMock) {
     let acknowledgementMessage = makeMessageData(type: .ack, payload: nil)
     channel.triggerMessageReceived(acknowledgementMessage, from: TrustAgentManager.recipientUUID)
   }
@@ -972,7 +989,7 @@ import AndroidAutoTrustAgentProtos
   ///   - payload: The optional message payload data.
   /// - Returns: The generated trusted device message data.
   /// - Throws: An error if the message fails to serialize to data
-  private func makeMessageData(
+  @MainActor private func makeMessageData(
     type: TrustedDeviceMessage.MessageType,
     payload: Data? = nil
   ) -> Data {

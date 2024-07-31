@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoMessageStream
-import AndroidAutoSecureChannel
-import CoreBluetooth
-import Foundation
-import XCTest
+public import AndroidAutoCoreBluetoothProtocols
+public import AndroidAutoMessageStream
+public import AndroidAutoSecureChannel
+public import CoreBluetooth
+public import Foundation
+public import XCTest
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable public import AndroidAutoConnectedDeviceManager
 
 /// An implementation of a secure channel for testing purposes.
 ///

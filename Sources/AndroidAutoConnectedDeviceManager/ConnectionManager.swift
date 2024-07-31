@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-@_implementationOnly import AndroidAutoConnectedDeviceTransport
-@_implementationOnly import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoLogger
-@_implementationOnly import AndroidAutoMessageStream
-@_implementationOnly import AndroidAutoSecureChannel
-import CoreBluetooth
-import Foundation
+internal import AndroidAutoConnectedDeviceTransport
+internal import AndroidAutoCoreBluetoothProtocols
+fileprivate import AndroidAutoLogger
+internal import AndroidAutoMessageStream
+internal import AndroidAutoSecureChannel
+import AndroidAutoUtils
+public import CoreBluetooth
+internal import Foundation
 
 /// Delegate that will be notified of the status of association.
 @MainActor public protocol ConnectionManagerAssociationDelegate: AnyObject {
@@ -133,7 +134,10 @@ private enum ConnectionManagerSignposts {
 
 extension BuildNumber {
   /// The version of this SDK.
-  fileprivate static let sdkVersion = BuildNumber(major: 4, minor: 0, patch: 1)
+  fileprivate static let sdkVersion = BuildNumber(major: 4, minor: 2, patch: 0)
+
+  /// The key for storing the SDK version in `UserDefaults`.
+  fileprivate static let sdkVersionStorageKey = "AndroidAutoSDKVersion"
 }
 
 /// Holds all the necessary information to try a reconnection for a `Peripheral`.
@@ -283,7 +287,6 @@ private struct ConnectionRetryState {
   }
 
   override fileprivate func resolveError(_ error: NSError) -> Error {
-    guard #available(iOS 13.4, watchOS 6.4, *) else { return error }
     guard isAssociating else { return error }
 
     switch error.code {
@@ -375,7 +378,8 @@ private struct ConnectionRetryState {
 }
 
 /// Listens to and manages state changes on the bluetooth stack.
-@MainActor public class ConnectionManager<CentralManager>:
+@MainActor
+public class ConnectionManager<CentralManager>:
   NSObject,
   SomeConnectionManager,
   AnyConnectionManager
@@ -397,7 +401,7 @@ where CentralManager: SomeCentralManager {
 
   private let plistLoader = PListLoaderImpl(plistFileName: plistFileName)
 
-  private let uuidConfig: UUIDConfig
+  public private(set) var uuidConfig: UUIDConfig
 
   /// A value to add as as prefix to any cars that are discovered for association.
   private var associationNamePrefix = ""
@@ -434,8 +438,11 @@ where CentralManager: SomeCentralManager {
     connected: [UUID: (ConnectedCarManager, Car) -> Void](),
     securedChannel: [UUID: (ConnectedCarManager, SecuredCarChannel) -> Void](),
     disconnected: [UUID: (ConnectedCarManager, Car) -> Void](),
-    dissociation: [UUID: (ConnectedCarManager, Car) -> Void]()
+    dissociation: [UUID: (ConnectedCarManager, Car) -> Void](),
+    association: [UUID: (ConnectedCarManager, Car) -> Void]()
   )
+
+  private var supportedFeatures = Set<UUID>()
 
   /// Actions to perform sequentially once the power state has been determined.
   private var pendingPowerStateActions: [(RadioState) -> Void] = []
@@ -505,7 +512,14 @@ where CentralManager: SomeCentralManager {
     // Calling `super` here so that subsequent code can use `self`.
     super.init()
 
+    var store = UserDefaultsPropertyListStore()
+    if let previousSDKVersion: BuildNumber = store[BuildNumber.sdkVersionStorageKey] {
+      log("Previous SDK Version: \(previousSDKVersion)")
+    } else {
+      log("The previous SDK version could not be determined.")
+    }
     log("SDK Version: \(BuildNumber.sdkVersion)")
+    store[BuildNumber.sdkVersionStorageKey] = BuildNumber.sdkVersion
 
     let connectionHandleProxy = ConnectionHandleProxy(connectionManager: self)
     let overlay = plistLoader.loadOverlayValues()
@@ -1062,6 +1076,30 @@ extension ConnectionManager: ConnectedCarManager {
       self?.observations.dissociation.removeValue(forKey: id)
     }
   }
+
+  /// Observe when a car has been associated from this manager.
+  @discardableResult
+  public func observeAssociation(
+    using observation: @escaping (ConnectedCarManager, Car) -> Void
+  ) -> ObservationHandle {
+    let id = UUID()
+    observations.association[id] = observation
+
+    return ObservationHandle { [weak self] in
+      self?.observations.association.removeValue(forKey: id)
+    }
+  }
+}
+
+extension ConnectionManager: FeatureSupportStatusProvider {
+  public func isFeatureSupported(_ featureID: UUID) -> Bool {
+    return supportedFeatures.contains(featureID)
+  }
+
+  public func register(_ featureManager: FeatureManager) -> Bool {
+    log("Registering feature \(featureManager.featureID) as supported.")
+    return supportedFeatures.insert(featureManager.featureID).inserted
+  }
 }
 
 // MARK: - CommunicationManagerDelegate
@@ -1139,6 +1177,10 @@ extension ConnectionManager: AssociationManagerDelegate {
 
     self.observations.securedChannel.values.forEach { observation in
       observation(self, securedCarChannel)
+    }
+
+    self.observations.association.values.forEach { observation in
+      observation(self, car)
     }
 
     self.connectToAssociatedCars()

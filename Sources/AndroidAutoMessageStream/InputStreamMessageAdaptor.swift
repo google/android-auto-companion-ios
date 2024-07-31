@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoLogger
-import Foundation
-import SwiftProtobuf
+private import AndroidAutoLogger
+public import Foundation
+public import SwiftProtobuf
 
 /// Reads protobuf messages of a specific type from an input stream and decodes them progressively.
 public struct InputStreamMessageAdaptor<Element: Message> {

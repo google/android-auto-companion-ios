@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCoreBluetoothProtocols
-import AndroidAutoMessageStream
-import AndroidAutoSecureChannel
+public import AndroidAutoCoreBluetoothProtocols
+public import AndroidAutoMessageStream
+internal import AndroidAutoSecureChannel
 
-@testable import AndroidAutoConnectedDeviceManager
+@testable public import AndroidAutoConnectedDeviceManager
 
 /// The fake factory for making message exchange helper mocks.
 public struct AssociationMessageHelperFactoryFake: AssociationMessageHelperFactory {

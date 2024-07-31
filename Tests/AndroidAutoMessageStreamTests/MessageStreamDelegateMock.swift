@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCoreBluetoothProtocols
-import Foundation
+private import AndroidAutoCoreBluetoothProtocols
+internal import Foundation
 
-@testable import AndroidAutoMessageStream
+@testable internal import AndroidAutoMessageStream
 
 /// Allows for verification of method invocations within a `MessageStreamDelegate`.
 class MessageStreamDelegateMock: NSObject, MessageStreamDelegate {

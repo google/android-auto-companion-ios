@@ -12,24 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoLogger
-import XCTest
+internal import AndroidAutoLogger
+internal import XCTest
 
 /// Mock `PersistentLogStore`
-public class MockLogStore: PersistentLogStore {
-  public var writeRecordExpectation: XCTestExpectation?
-  public var appendDataExpectation: XCTestExpectation?
+class MockLogStore: PersistentLogStore {
+  var writeRecordExpectation: XCTestExpectation?
+  var appendDataExpectation: XCTestExpectation?
 
-  public let date: Date
+  let date: Date
 
-  public init(date: Date) {
+  init(date: Date) {
     self.date = date
   }
 
   /// Returns `true` if the specified date represents the same day as this archive's date in GMT.
   ///
   /// - Parameter date: The date with which to compare.
-  public func canLogDate(_ date: Date) -> Bool {
+  func canLogDate(_ date: Date) -> Bool {
     let calendar = Calendar(identifier: .gregorian)
     let yearMonthDay = LoggingMockUtils.dayComponentsForDate(self.date)
     return calendar.date(date, matchesComponents: yearMonthDay)
@@ -38,14 +38,14 @@ public class MockLogStore: PersistentLogStore {
   /// Write the specified record to the log file.
   ///
   /// - Parameter record: The log record to append.
-  public func writeRecord(_ record: LogRecord) {
+  func writeRecord(_ record: LogRecord) {
     writeRecordExpectation?.fulfill()
   }
 
   /// Append the data to the log file.
   ///
   /// - Parameter data: The data to append.
-  public func appendData(_ data: Data) {
+  func appendData(_ data: Data) {
     appendDataExpectation?.fulfill()
   }
 }

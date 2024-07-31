@@ -14,11 +14,11 @@
 
 #if canImport(ExternalAccessory)
 
-  import AndroidAutoLogger
-  import Foundation
-  @_implementationOnly import AndroidAutoCompanionProtos
+  private import AndroidAutoLogger
+  internal import Foundation
+  private import AndroidAutoCompanionProtos
 
-  import ExternalAccessory
+  internal import ExternalAccessory
 
   private typealias OutOfBandAssociationToken = Com_Google_Companionprotos_OutOfBandAssociationToken
 

@@ -12,19 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoConnectedDeviceManager
-import AndroidAutoConnectedDeviceManagerMocks
-import XCTest
+private import AndroidAutoConnectedDeviceManager
+private import AndroidAutoConnectedDeviceManagerMocks
+internal import XCTest
 
-@testable import AndroidAutoAccountTransfer
+@testable private import AndroidAutoAccountTransfer
 
-@MainActor class AccountTransferManagerTest: XCTestCase {
+class AccountTransferManagerTest: XCTestCase {
   private var connectedCarManagerMock: ConnectedCarManagerMock!
   private var channelMock: SecuredCarChannelMock!
 
   private var accountTransferManager: AccountTransferManager!
 
-  override func setUp() {
+  @MainActor override func setUp() {
     super.setUp()
     continueAfterFailure = false
     connectedCarManagerMock = ConnectedCarManagerMock()
@@ -32,7 +32,7 @@ import XCTest
     accountTransferManager = AccountTransferManager(connectedCarManager: connectedCarManagerMock)
   }
 
-  func testIgnoreMalformedMessage() {
+  @MainActor func testIgnoreMalformedMessage() {
     let car = Car(id: "id", name: "mock")
 
     connectedCarManagerMock.triggerSecureChannelSetUp(with: channelMock)
