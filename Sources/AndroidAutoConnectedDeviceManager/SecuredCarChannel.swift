@@ -33,7 +33,7 @@ enum SecuredCarChannelError: Error {
 }
 
 /// A channel for a car that can be used to send encrypted messages.
-@MainActor public protocol SecuredCarChannel: AnyObject {
+@MainActor public protocol SecuredCarChannel: AnyObject, Sendable {
   /// A car that messages are being sent to and from.
   var car: Car { get }
 
@@ -100,7 +100,7 @@ enum SecuredCarChannelError: Error {
   func writeEncryptedMessage(
     _ message: Data,
     to recipient: UUID,
-    completion: ((Bool) -> Void)?
+    completion: (@MainActor (Bool) -> Void)?
   ) throws
 
   /// Sends a query request to the recipient on the car associated with this class.

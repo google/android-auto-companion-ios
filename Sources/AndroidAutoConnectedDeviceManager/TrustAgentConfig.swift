@@ -16,7 +16,7 @@ private import AndroidAutoLogger
 internal import Foundation
 
 /// Protocol configuration for the TrustAgent library.
-protocol TrustAgentConfig: AnyObject {
+@MainActor protocol TrustAgentConfig: AnyObject {
 
   /// Whether a passcode is required for enrolling and unlocking.
   var isPasscodeRequired: Bool { get set }

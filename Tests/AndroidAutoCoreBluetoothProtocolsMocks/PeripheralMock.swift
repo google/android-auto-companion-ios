@@ -12,24 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCoreBluetoothProtocols
-import CoreBluetooth
-import Foundation
+public import AndroidAutoCoreBluetoothProtocols
+public import AndroidAutoConnectedDeviceTransport
+public import CoreBluetooth
+private import os
 
 /// A mock of a `CBPeripheral` that allows its name and services to be set. It also contains
 /// fields that allow a user to assert if its methods have been called and with what value.
-public class PeripheralMock: NSObject, BLEPeripheral {
+@MainActor public class PeripheralMock: NSObject, BLEPeripheral {
   private var serviceObserver: ((any BLEPeripheral, [BLEService]) -> Void)? = nil
 
   public weak var delegate: BLEPeripheralDelegate?
 
-  public var identifier = UUID()
+  nonisolated public let identifier: UUID
 
-  public var identifierString: String { identifier.uuidString }
+  nonisolated public var identifierString: String { identifier.uuidString }
 
-  public var name: String?
+  nonisolated public let name: String?
 
-  public var state = CBPeripheralState.connected
+  private let lockingState = OSAllocatedUnfairLock(initialState: CBPeripheralState.connected)
+
+  public var state: CBPeripheralState {
+    get {
+      lockingState.withLock { $0 }
+    }
+    set {
+      lockingState.withLock { state in
+        state = newValue
+      }
+    }
+  }
 
   public var services: [BLEService]?
 
@@ -58,14 +70,15 @@ public class PeripheralMock: NSObject, BLEPeripheral {
   // 185 is the default write length for iOS 10.0 and above.
   public var maximumWriteValueLength = 185
 
-  public init(name: String?, services: [BLEService]?) {
+  public init(identifier: UUID = UUID(), name: String?, services: [BLEService]?) {
+    self.identifier = identifier
     self.name = name
     self.services = services
   }
 
   /// Creates a peripheral mock with `nil` services.
-  public convenience init(name: String?) {
-    self.init(name: name, services: nil)
+  public convenience init(identifier: UUID = UUID(), name: String?) {
+    self.init(identifier: identifier, name: name, services: nil)
   }
 
   public func isServiceInvalidated(uuids: Set<String>) -> Bool {

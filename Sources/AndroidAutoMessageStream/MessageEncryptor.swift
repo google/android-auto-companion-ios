@@ -15,7 +15,7 @@
 public import Foundation
 
 /// An encryptor that will be used by a `BLEMessageStream` to encrypt and decrypt messages.
-public protocol MessageEncryptor {
+@MainActor public protocol MessageEncryptor {
   /// Encrypts the given message for sending.
   ///
   /// - Return: The encrypted message.

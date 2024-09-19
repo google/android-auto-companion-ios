@@ -30,7 +30,7 @@ protocol CarAuthenticator {
   ///
   /// - Parameter size: The size of the salt in bytes.
   /// - Returns: The generated salt.
-  static func randomSalt(size: Int) -> Data
+  @MainActor static func randomSalt(size: Int) -> Data
 
   /// Find a car among those specified which authenticate against the specified advertisement.
   ///
@@ -38,7 +38,7 @@ protocol CarAuthenticator {
   ///   - advertisementData: The advertisement data containing the truncated HMAC and salt.
   ///   - cars: The set of cars among which to test for a match.
   /// - Returns: The matching car plus full HMAC or `nil` if none matches.
-  static func first(
+  @MainActor static func first(
     among cars: Set<Car>,
     matchingData advertisementData: Data
   ) -> CarAdvertisementMatch?
@@ -49,7 +49,7 @@ protocol CarAuthenticator {
   ///   - challenge: The challenge salt for which to compute the HMAC.
   ///   - hmac: The HMAC data with which to compare with the computed HMAC.
   /// - Returns: `true` if the computed HMAC matches that specified HMAC.
-  func isMatch(challenge: Data, hmac: Data) -> Bool
+  @MainActor func isMatch(challenge: Data, hmac: Data) -> Bool
 }
 
 /// Responsible for authenticating the car for reconnection.
@@ -196,7 +196,7 @@ struct CarAuthenticatorImpl: CarAuthenticator {
   ///   - cars: The set of cars among which to test for a match.
   ///   - advertisementData: The advertisement data containing the truncated HMAC and salt.
   /// - Returns: The matching car plus full HMAC or `nil` if none matches.
-  static func first(
+  @MainActor static func first(
     among cars: Set<Car>,
     matchingData advertisementData: Data
   ) -> CarAdvertisementMatch? {

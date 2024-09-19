@@ -19,7 +19,7 @@ internal import Foundation
 /// All properties are values captured when the snapshot was recorded.
 @available(macOS 10.15, *)
 @dynamicMemberLookup
-public struct LogRecord {
+public struct LogRecord: Sendable {
   /// The logger which recorded this record.
   let logger: Logger
 

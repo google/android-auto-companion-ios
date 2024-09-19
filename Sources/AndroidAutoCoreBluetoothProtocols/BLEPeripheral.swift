@@ -13,11 +13,11 @@
 // limitations under the License.
 
 public import AndroidAutoConnectedDeviceTransport
-import CoreBluetooth
-import Foundation
+public import CoreBluetooth
+internal import Foundation
 
 /// A delegate to be notified of various connection updates on a `BLEPeripheral`.
-public protocol BLEPeripheralDelegate: AnyObject {
+@MainActor public protocol BLEPeripheralDelegate: AnyObject {
   /// Invoked upon discovery of a peripheral's services.
   ///
   /// - Parameters:
@@ -61,23 +61,23 @@ public protocol BLEPeripheralDelegate: AnyObject {
 }
 
 /// A remote peripheral that supports BLE.
-public protocol BLEPeripheral: TransportPeripheral {
+@MainActor public protocol BLEPeripheral: TransportPeripheral, Sendable {
   /// A unique identifier for this peripheral.
-  var identifier: UUID { get }
+  nonisolated var identifier: UUID { get }
 
   /// The delegate that will be notified of any peripheral events. This delegate should be
   /// declared as `weak` if possible
   var delegate: BLEPeripheralDelegate? { get set }
 
   /// The name of the peripheral.
-  var name: String? { get }
+  nonisolated var name: String? { get }
 
   /// The services of a peripheral that have been discovered. This value should only be populated
   /// after `discoverServices` has been called.
   var services: [BLEService]? { get }
 
   /// The connection state of this peripheral.
-  var state: CBPeripheralState { get }
+  nonisolated var state: CBPeripheralState { get }
 
   /// The maximum length in bytes that can be written per message for this peripheral.
   var maximumWriteValueLength: Int { get }
@@ -139,24 +139,8 @@ public protocol BLEPeripheral: TransportPeripheral {
 /// Default implementations.
 extension BLEPeripheral {
   /// ID for conformance to `TransportPeripheral`.
-  public var id: UUID { identifier }
+  nonisolated public var id: UUID { identifier }
 
   /// Returns a log-friendly name for the given `BLEPeripheral`.
-  public var displayName: String { name ?? "no name" }
-
-  /// Status for this peripheral based on the BLE peripheral state.
-  public var status: PeripheralStatus {
-    switch state {
-    case .disconnected:
-      return .disconnected
-    case .connecting:
-      return .connecting
-    case .connected:
-      return .connected
-    case .disconnecting:
-      return .disconnecting
-    default:
-      return .other(String(describing: state))
-    }
-  }
+  nonisolated public var displayName: String { name ?? "no name" }
 }

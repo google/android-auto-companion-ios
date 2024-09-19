@@ -65,7 +65,7 @@ class SystemFeatureManager: FeatureManager {
     from car: Car,
     responseHandle: QueryResponseHandle
   ) {
-    guard let systemQuery = try? SystemQuery(serializedData: query.request) else {
+    guard let systemQuery = try? SystemQuery(serializedBytes: query.request) else {
       Self.log.error("Received query from car \(car) but unable to parse. Ignoring.")
       return
     }
@@ -151,7 +151,7 @@ class SystemFeatureManager: FeatureManager {
 extension SystemFeatureManager: ChannelFeatureProvider {
   /// Request the user role (driver/passenger) for the specified channel.
   func requestUserRole(
-    with channel: SecuredCarChannel,
+    with channel: any SecuredCarChannel,
     completion: @escaping (UserRole?) -> Void
   ) {
     do {
@@ -167,7 +167,7 @@ extension SystemFeatureManager: ChannelFeatureProvider {
           return
         }
         guard
-          let response = try? SystemUserRoleResponse(serializedData: queryResponse.response)
+          let response = try? SystemUserRoleResponse(serializedBytes: queryResponse.response)
         else {
           completion(nil)
           return

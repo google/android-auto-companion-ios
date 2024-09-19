@@ -17,8 +17,8 @@ internal import AndroidAutoCoreBluetoothProtocols
 fileprivate import AndroidAutoLogger
 internal import AndroidAutoMessageStream
 internal import AndroidAutoSecureChannel
-import AndroidAutoUtils
-public import CoreBluetooth
+internal import AndroidAutoUtils
+@preconcurrency public import CoreBluetooth
 internal import Foundation
 
 /// Delegate that will be notified of the status of association.
@@ -33,7 +33,7 @@ internal import Foundation
   ///       match the name in `car.name`.
   func connectionManager(
     _ connectionManager: AnyConnectionManager,
-    didDiscover car: AnyPeripheral,
+    didDiscover car: any AutoPeripheral,
     advertisedName: String?)
 
   /// Invoked when a connection is successfully created with a peripheral.
@@ -43,7 +43,7 @@ internal import Foundation
   ///   - peripheral: The peripheral that has been connected to.
   func connectionManager(
     _ connectionManager: AnyConnectionManager,
-    didConnect peripheral: AnyPeripheral
+    didConnect peripheral: any AutoPeripheral
   )
 
   /// Invoked when the connection manager has finished the association of a device.
@@ -115,12 +115,6 @@ enum StartAssociationError: Error {
 
 private let plistFileName = "connected_device_manager"
 
-/// The length in bytes of the advertisement data that indicates whether the value should be
-/// converted to a string via UTF-8 encoding.
-///
-/// If the length does not match, then the data should be converted to a hexadecimal representation.
-private let advertisementLengthForUTF8Conversion = 8
-
 private let signpostMetrics = SignpostMetrics(category: "ConnectionManager")
 
 private enum ConnectionManagerSignposts {
@@ -134,7 +128,7 @@ private enum ConnectionManagerSignposts {
 
 extension BuildNumber {
   /// The version of this SDK.
-  fileprivate static let sdkVersion = BuildNumber(major: 4, minor: 2, patch: 0)
+  fileprivate static let sdkVersion = BuildNumber(major: 5, minor: 0, patch: 0)
 
   /// The key for storing the SDK version in `UserDefaults`.
   fileprivate static let sdkVersionStorageKey = "AndroidAutoSDKVersion"
@@ -203,7 +197,9 @@ private struct ConnectionRetryState {
 
   private let centralManagerWrapper: CoreBluetoothCentralManagerWrapper
 
-  public override init() {
+  /// This  initializer is isolated to the `MainActor` so it needs a unique signature since the
+  /// superclass's empty initializer is nonisolated.
+  public init(_ dummy: Void = ()) {
     centralManagerWrapper = CoreBluetoothCentralManagerWrapper()
     super.init(
       centralManager: centralManagerWrapper.centralManager,
@@ -382,7 +378,8 @@ private struct ConnectionRetryState {
 public class ConnectionManager<CentralManager>:
   NSObject,
   SomeConnectionManager,
-  AnyConnectionManager
+  AnyConnectionManager,
+  Sendable
 where CentralManager: SomeCentralManager {
   public typealias Peripheral = CentralManager.Peripheral
 
@@ -434,18 +431,20 @@ where CentralManager: SomeCentralManager {
   /// Each observable event is a mapping of a unique id to a closure function that is executed when
   /// that state changes.
   fileprivate var observations = (
-    state: [UUID: (ConnectedCarManager, RadioState) -> Void](),
-    connected: [UUID: (ConnectedCarManager, Car) -> Void](),
-    securedChannel: [UUID: (ConnectedCarManager, SecuredCarChannel) -> Void](),
-    disconnected: [UUID: (ConnectedCarManager, Car) -> Void](),
-    dissociation: [UUID: (ConnectedCarManager, Car) -> Void](),
-    association: [UUID: (ConnectedCarManager, Car) -> Void]()
+    state: [UUID: @MainActor @Sendable (any ConnectedCarManager, any RadioState) -> Void](),
+    connected: [UUID: @MainActor @Sendable (any ConnectedCarManager, Car) -> Void](),
+    securedChannel: [
+      UUID: @MainActor @Sendable (any ConnectedCarManager, any SecuredCarChannel) -> Void
+    ](),
+    disconnected: [UUID: @MainActor @Sendable (any ConnectedCarManager, Car) -> Void](),
+    dissociation: [UUID: @MainActor @Sendable (any ConnectedCarManager, Car) -> Void](),
+    association: [UUID: @MainActor @Sendable (any ConnectedCarManager, Car) -> Void]()
   )
 
   private var supportedFeatures = Set<UUID>()
 
   /// Actions to perform sequentially once the power state has been determined.
-  private var pendingPowerStateActions: [(RadioState) -> Void] = []
+  private var pendingPowerStateActions: [(any RadioState) -> Void] = []
 
   /// Maps `Peripheral`s by their identifier to its associated device ID.
   ///
@@ -467,7 +466,7 @@ where CentralManager: SomeCentralManager {
   public weak var associationDelegate: ConnectionManagerAssociationDelegate?
 
   /// The current state of bluetooth.
-  public var state: RadioState = CBManagerState.unknown
+  public var state: any RadioState = CBManagerState.unknown
 
   public fileprivate(set) var securedChannels: [SecuredCarChannel] = []
   let secureSessionManager: SecureSessionManager = KeychainSecureSessionManager()
@@ -650,7 +649,7 @@ where CentralManager: SomeCentralManager {
   /// The action is passed the power state (e.g. powered on, off).
   ///
   /// - Parameter action: Action to perform when the power state becomes known.
-  public func requestRadioStateAction(_ action: @escaping (RadioState) -> Void) {
+  public func requestRadioStateAction(_ action: @escaping (any RadioState) -> Void) {
     if state.isUnknown {
       log("Power state is unknown, pending requested action.")
       pendingPowerStateActions.append(action)
@@ -1012,33 +1011,38 @@ extension ConnectionManager: ConnectedCarManager {
   /// Observe when the `state` of the connection manager has changed.
   @discardableResult
   public func observeStateChange(
-    using observation: @escaping (ConnectedCarManager, RadioState) -> Void
+    using observation: @escaping @MainActor @Sendable (any ConnectedCarManager, any RadioState) ->
+      Void
   ) -> ObservationHandle {
     let id = UUID()
     observations.state[id] = observation
 
     return ObservationHandle { [weak self] in
-      self?.observations.state.removeValue(forKey: id)
+      guard let self else { return }
+      self.observations.state.removeValue(forKey: id)
     }
   }
 
   /// Observe when a device has been connected to this manager.
   @discardableResult
   public func observeConnection(
-    using observation: @escaping (ConnectedCarManager, Car) -> Void
+    using observation: @escaping @MainActor @Sendable (any ConnectedCarManager, Car) -> Void
   ) -> ObservationHandle {
     let id = UUID()
     observations.connected[id] = observation
 
     return ObservationHandle { [weak self] in
-      self?.observations.connected.removeValue(forKey: id)
+      guard let self else { return }
+      self.observations.connected.removeValue(forKey: id)
     }
   }
 
   /// Observe when a secure channel has been set up with a given device.
   @discardableResult
   public func observeSecureChannelSetUp(
-    using observation: @escaping (ConnectedCarManager, SecuredCarChannel) -> Void
+    using observation: @escaping @MainActor @Sendable (
+      any ConnectedCarManager, any SecuredCarChannel
+    ) -> Void
   ) -> ObservationHandle {
     let id = UUID()
     observations.securedChannel[id] = observation
@@ -1047,46 +1051,50 @@ extension ConnectionManager: ConnectedCarManager {
     securedChannels.forEach { observation(self, $0) }
 
     return ObservationHandle { [weak self] in
-      self?.observations.securedChannel.removeValue(forKey: id)
+      guard let self else { return }
+      self.observations.securedChannel.removeValue(forKey: id)
     }
   }
 
   /// Observe when a device has been disconnected from this manager.
   @discardableResult
   public func observeDisconnection(
-    using observation: @escaping (ConnectedCarManager, Car) -> Void
+    using observation: @escaping @MainActor @Sendable (any ConnectedCarManager, Car) -> Void
   ) -> ObservationHandle {
     let id = UUID()
     observations.disconnected[id] = observation
 
     return ObservationHandle { [weak self] in
-      self?.observations.disconnected.removeValue(forKey: id)
+      guard let self else { return }
+      self.observations.disconnected.removeValue(forKey: id)
     }
   }
 
   /// Observe when a car has been dissociated from this manager.
   @discardableResult
   public func observeDissociation(
-    using observation: @escaping (ConnectedCarManager, Car) -> Void
+    using observation: @escaping @MainActor @Sendable (any ConnectedCarManager, Car) -> Void
   ) -> ObservationHandle {
     let id = UUID()
     observations.dissociation[id] = observation
 
     return ObservationHandle { [weak self] in
-      self?.observations.dissociation.removeValue(forKey: id)
+      guard let self else { return }
+      self.observations.dissociation.removeValue(forKey: id)
     }
   }
 
   /// Observe when a car has been associated from this manager.
   @discardableResult
   public func observeAssociation(
-    using observation: @escaping (ConnectedCarManager, Car) -> Void
+    using observation: @escaping @MainActor @Sendable (any ConnectedCarManager, Car) -> Void
   ) -> ObservationHandle {
     let id = UUID()
     observations.association[id] = observation
 
     return ObservationHandle { [weak self] in
-      self?.observations.association.removeValue(forKey: id)
+      guard let self else { return }
+      self.observations.association.removeValue(forKey: id)
     }
   }
 }
@@ -1300,10 +1308,10 @@ extension ConnectionManager: CentralManagerDelegate {
     }
   }
 
-  public func centralManager(_ central: CentralManager, willRestoreState dict: [String: Any]) {
-    if let peripherals = dict[CBCentralManagerRestoredStatePeripheralsKey]
-      as? [CentralManager.Peripheral]
-    {
+  public func centralManager(
+    _ central: CentralManager, willRestoreState state: RestorationState<CentralManager>
+  ) {
+    if let peripherals = state.peripherals {
       // Silence API misuse errors since we need to hold references to the restored peripherals as
       // the restoration mechanism attempts to reconnect them.
       discoveredPeripherals.formUnion(peripherals)
@@ -1314,9 +1322,7 @@ extension ConnectionManager: CentralManagerDelegate {
       return
     }
 
-    guard let services = dict[CBCentralManagerRestoredStateScanServicesKey] as? [CBUUID],
-      !services.isEmpty
-    else {
+    guard let services = state.services, !services.isEmpty else {
       log("No services for restored central manager to resume scanning.")
       return
     }
@@ -1338,14 +1344,14 @@ extension ConnectionManager: CentralManagerDelegate {
   public func centralManager(
     _ central: CentralManager,
     didDiscover peripheral: Peripheral,
-    advertisementData: [String: Any],
+    advertisement: Advertisement,
     rssi RSSI: NSNumber
   ) {
     log("centralManager did discover peripheral: \(peripheral.logName)")
 
     guard shouldConnect(to: peripheral) else { return }
 
-    let advertisedName = resolveName(from: advertisementData)
+    let advertisedName = advertisement.resolveName(using: uuidConfig)
     log(
       """
       Discovered device (\(peripheral.logName): \(peripheral.identifier.uuidString)). \
@@ -1365,7 +1371,7 @@ extension ConnectionManager: CentralManagerDelegate {
     }
 
     discoveredPeripherals.insert(peripheral)
-    attemptReconnection(with: peripheral, advertisementData: advertisementData)
+    attemptReconnection(with: peripheral, advertisement: advertisement)
   }
 
   private func handleDiscoveryForAssociation(of peripheral: Peripheral, advertisedName: String?) {
@@ -1387,40 +1393,11 @@ extension ConnectionManager: CentralManagerDelegate {
     }
     discoveredPeripherals.insert(peripheral)
     let fullName =
-      requiresNamePrefix(advertisedName) ? associationNamePrefix + advertisedName : advertisedName
+      Advertisement.requiresNamePrefix(advertisedName)
+      ? associationNamePrefix
+        + advertisedName : advertisedName
 
     associationDelegate?.connectionManager(self, didDiscover: peripheral, advertisedName: fullName)
-  }
-
-  private func resolveName(from advertisementData: [String: Any]) -> String? {
-    // The advertised name can come from two sources. In newer versions, the name is stored in the
-    // scan response and retrievable by the `associationDataUUID`. Otherwise, it's the standard
-    // advertised name.
-    guard
-      let dataContents = advertisementData[CBAdvertisementDataServiceDataKey] as? NSDictionary,
-      let rawData = dataContents[uuidConfig.associationDataUUID] as? Data
-    else {
-      log("Retrieving default advertised name from advertisement data.")
-
-      // iOS will cache the name of the discovered peripheral if it is paired via Bluetooth. This
-      // means `peripheral.name` might not be up to date. As a result, manually read the advertised
-      // name to use as a backup name.
-      return advertisementData[CBAdvertisementDataLocalNameKey] as? String
-    }
-
-    if rawData.count == advertisementLengthForUTF8Conversion {
-      log("Retrieving advertised name with association UUID using UTF-8.")
-      return String(decoding: rawData, as: UTF8.self)
-    }
-
-    log("Advertisement data of length \(rawData.count). Converting to hex value.")
-    return rawData.hex
-  }
-
-  /// Returns `true` if the `advertisedName` is a new version name and a prefix needs to be
-  /// prepended.
-  private func requiresNamePrefix(_ advertisedName: String) -> Bool {
-    return advertisedName.count != advertisementLengthForUTF8Conversion
   }
 
   /// Returns `true` if a connection should be attempted with the given `peripheral`.
@@ -1469,12 +1446,12 @@ extension ConnectionManager: CentralManagerDelegate {
     return true
   }
 
-  private func attemptReconnection(with peripheral: Peripheral, advertisementData: [String: Any]) {
+  private func attemptReconnection(with peripheral: Peripheral, advertisement: Advertisement) {
     signpostMetrics.postIfAvailable(ConnectionManagerSignposts.reconnectionDuration.begin)
     do {
       let reconnectionHelper = try reconnectionHelperFactory.makeHelper(
         peripheral: peripheral,
-        advertisementData: advertisementData,
+        advertisement: advertisement,
         associatedCars: associatedCars,
         uuidConfig: uuidConfig,
         authenticator: CarAuthenticatorImpl.self
@@ -1632,24 +1609,30 @@ extension ConnectionManager: CentralManagerDelegate {
 ///
 /// We need this class because Objective-C protocol requirements can't be satisfied
 /// by a generic equivalent. Namely we need this to handle `CBCentralManagerDelegate`.
-private class CoreBluetoothCentralManagerWrapper: NSObject {
+@MainActor private final class CoreBluetoothCentralManagerWrapper: NSObject {
   private static let log = Logger(for: CoreBluetoothCentralManagerWrapper.self)
 
   /// The key that is passed to the central manager to enable state restoration.
-  private static var centralManagerRestoreKey =
+  private static let centralManagerRestoreKey =
     "com.google.ios.aae.trustagentclient.CBCentralManagerRestoreKey"
 
   weak fileprivate var connectionManager: CoreBluetoothConnectionManager?
   fileprivate var centralManager: CBCentralManager!
 
-  override init() {
+  /// This  initializer is isolated to the `MainActor` so it needs a unique signature since the
+  /// superclass's empty initializer is nonisolated.
+  init(_ dummy: Void = ()) {
     // Calling `super` here so that subsequent code can use `self`.
     super.init()
 
     // Use a serialized queue to ensure that all requests are processed in-order.
     centralManager = CBCentralManager(
       delegate: self,
-      queue: nil,
+      // LINT.IfChange
+      queue: nil,  // `nil` means the delegate will be called on the main thread.
+      // LINT.ThenChange(
+      //   //depot/google3/third_party/swift/AndroidAutoCompanion/Sources/AndroidAutoConnectedDeviceManager/CBPeripheralWrapper.swift
+      // )
       options: [
         CBCentralManagerOptionShowPowerAlertKey: true,
         CBCentralManagerOptionRestoreIdentifierKey: Self.centralManagerRestoreKey,
@@ -1664,29 +1647,37 @@ private class CoreBluetoothCentralManagerWrapper: NSObject {
 // allow conditional conformance to an objc protocol. So we can't provide conditional
 // conformance for ConnectionManager to CBCentralManagerDelegate.
 extension CoreBluetoothCentralManagerWrapper: CBCentralManagerDelegate {
-  public func centralManagerDidUpdateState(_ central: CBCentralManager) {
-    Task {
-      await connectionManager?.centralManagerDidUpdateState(central)
+  nonisolated public func centralManagerDidUpdateState(_ central: CBCentralManager) {
+    // The `CBCentralManager` was configured to call the delegate on the main queue.
+    MainActor.assumeIsolated {
+      connectionManager?.centralManagerDidUpdateState(central)
     }
   }
 
-  public func centralManager(_ central: CBCentralManager, willRestoreState dict: [String: Any]) {
-    Task {
-      await connectionManager?.centralManager(central, willRestoreState: dict)
+  nonisolated public func centralManager(
+    _ central: CBCentralManager, willRestoreState dict: [String: Any]
+  ) {
+    let state = RestorationState<CBCentralManager>(state: dict)
+    // The `CBCentralManager` was configured to call the delegate on the main queue.
+    MainActor.assumeIsolated {
+      connectionManager?.centralManager(central, willRestoreState: state)
     }
   }
 
-  public func centralManager(
+  nonisolated public func centralManager(
     _ central: CBCentralManager,
     didDiscover peripheral: CBPeripheral,
     advertisementData: [String: Any],
     rssi RSSI: NSNumber
   ) {
-    Task {
-      await connectionManager?.centralManager(
+    let advertisement = Advertisement(data: advertisementData)
+    // The `CBCentralManager` was configured to call the delegate on the main queue.
+    MainActor.assumeIsolated {
+      guard let connectionManager else { return }
+      connectionManager.centralManager(
         central,
         didDiscover: peripheral,
-        advertisementData: advertisementData,
+        advertisement: advertisement,
         rssi: RSSI)
     }
   }
@@ -1695,49 +1686,74 @@ extension CoreBluetoothCentralManagerWrapper: CBCentralManagerDelegate {
   ///
   /// Attempt to discover the appropriate lock or unlock characteristics on the connected
   /// peripheral depending on if `scanToAssociate` or `scanToUnlock` was called.
-  public func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-    Task {
-      await connectionManager?.centralManager(central, didConnect: peripheral)
+  nonisolated public func centralManager(
+    _ central: CBCentralManager, didConnect peripheral: CBPeripheral
+  ) {
+    // The `CBCentralManager` was configured to call the delegate on the main queue.
+    MainActor.assumeIsolated {
+      connectionManager?.centralManager(central, didConnect: peripheral)
     }
   }
 
-  public func centralManager(
+  nonisolated public func centralManager(
     _ central: CBCentralManager,
     didDisconnectPeripheral peripheral: CBPeripheral,
     error: Error?
   ) {
-    Task {
-      await connectionManager?.centralManager(
+    // The `CBCentralManager` was configured to call the delegate on the main queue.
+    MainActor.assumeIsolated {
+      connectionManager?.centralManager(
         central, didDisconnectPeripheral: peripheral, error: error)
     }
   }
 
-  public func centralManager(
+  nonisolated public func centralManager(
     _ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?
   ) {
-    Task {
-      await connectionManager?.centralManager(central, didFailToConnect: peripheral, error: error)
+    // The `CBCentralManager` was configured to call the delegate on the main queue.
+    MainActor.assumeIsolated {
+      connectionManager?.centralManager(central, didFailToConnect: peripheral, error: error)
     }
   }
 }
 
 // MARK: - Peripheral and Central Manager Protocols
 
-public protocol AnyPeripheral {
+/// Automotive peripheral aligned with `CBPeripheral` as a reference implementation.
+public protocol AutoPeripheral: Hashable {
+  associatedtype PeripheralState: AutoPeripheralState
+
+  /// The peripheral's connection state.
+  var state: PeripheralState { get }
+
+  /// Unique identifier for the peripheral.
   var identifier: UUID { get }
+
+  /// Advertised name for the peripheral.
   var name: String? { get }
 }
 
-/// Homogeneous protocol that any peripheral should implement so we can abstract
-/// away from Core Bluetooth.
-public protocol SomePeripheral: AnyPeripheral, Hashable {
-  var state: CBPeripheralState { get }
+/// Automotive peripheral state aligned with `CBPeripheralState` as a reference implementation.
+public protocol AutoPeripheralState: RawRepresentable, Equatable, Sendable where RawValue == Int {
+  /// The peripheral is not connected.
+  static var disconnected: Self { get }
+
+  /// Connection to the peripheral has commenced.
+  static var connecting: Self { get }
+
+  /// The peripheral is connected (possibly without encryption).
+  static var connected: Self { get }
+
+  /// The connection to the peripheral is being terminated.
+  static var disconnecting: Self { get }
 }
+
+extension CBPeripheralState: AutoPeripheralState {}
 
 /// Common protocol that all central managers should implement so we can abstract
 /// away from Core Bluetooth.
-public protocol SomeCentralManager {
-  associatedtype Peripheral: SomePeripheral
+@MainActor public protocol SomeCentralManager {
+  associatedtype Peripheral: AutoPeripheral
 
   var state: CBManagerState { get }
   var isScanning: Bool { get }
@@ -1749,10 +1765,10 @@ public protocol SomeCentralManager {
   func cancelPeripheralConnection(_ peripheral: Peripheral)
 }
 
-// MARK: - AnyPeripheral extensions
+// MARK: - AutoPeripheral extensions
 
 /// Default implementations.
-extension AnyPeripheral {
+extension AutoPeripheral {
   /// Returns a log-friendly name.
   public var logName: String { name ?? "no name" }
 }
@@ -1760,8 +1776,8 @@ extension AnyPeripheral {
 // MARK: - CoreBluetooth extensions
 
 /// Formally declare CBPeripheral to conform to `SomePeripheral`.
-extension CBPeripheral: SomePeripheral {
-  // Empty - already conforms to the protocol requirements
+extension CBPeripheral: AutoPeripheral {
+  public typealias PeripheralState = CBPeripheralState
 }
 
 /// Formally declare CBCentralManager to conform to `SomeCentralManager`.
@@ -1770,12 +1786,13 @@ extension CBCentralManager: SomeCentralManager {
 }
 
 /// Delegate for all central managers that mirrors CBCentralManagerDelegate.
-public protocol CentralManagerDelegate {
+@MainActor public protocol CentralManagerDelegate {
   associatedtype CentralManager: SomeCentralManager
 
   func centralManagerDidUpdateState(_ central: CentralManager)
 
-  func centralManager(_ central: CentralManager, willRestoreState dict: [String: Any])
+  func centralManager(
+    _ central: CentralManager, willRestoreState state: RestorationState<CentralManager>)
 
   /// Called when a scan for peripherals that have the appropriate lock/unlock characteristics have
   /// been discovered.
@@ -1784,7 +1801,7 @@ public protocol CentralManagerDelegate {
   func centralManager(
     _ central: CentralManager,
     didDiscover peripheral: CentralManager.Peripheral,
-    advertisementData: [String: Any],
+    advertisement: Advertisement,
     rssi RSSI: NSNumber
   )
 
@@ -1810,34 +1827,27 @@ public protocol CentralManagerDelegate {
   )
 }
 
-/// Provide `RadioState` conformance.
-extension CBManagerState: RadioState {
-  public var description: String {
-    switch self {
-    case .poweredOn:
-      return "poweredOn"
-    case .poweredOff:
-      return "poweredOff"
-    case .unknown:
-      return "unknown"
-    default:
-      return "other"
-    }
+/// Declare `RadioState` conformance.
+extension CBManagerState: RadioState {}
+
+/// Encapsulate restoration state so it can be passed across concurrency boundaries.
+///
+/// Note that this class isn't verifiably safe due to the `Any` values in the state. We cannot
+/// make hard guarantees that it won't be mutated elsewhere, however, the expectation for the
+/// restoration dictionary is that it will be passed around on the `MainActor`. It originates
+/// on the main queue, but we can't prove that to the compiler.
+public class RestorationState<CentralManager: SomeCentralManager>: @unchecked Sendable {
+  private let state: [String: Any]
+
+  var peripherals: [CentralManager.Peripheral]? {
+    state[CBCentralManagerRestoredStatePeripheralsKey] as? [CentralManager.Peripheral]
   }
 
-  public var isPoweredOn: Bool {
-    self == .poweredOn
+  var services: [CBUUID]? {
+    state[CBCentralManagerRestoredStateScanServicesKey] as? [CBUUID]
   }
 
-  public var isPoweredOff: Bool {
-    self == .poweredOff
-  }
-
-  public var isUnknown: Bool {
-    self == .unknown
-  }
-
-  public var isOther: Bool {
-    !isPoweredOn && !isPoweredOff && !isUnknown
+  init(state: [String: Any]) {
+    self.state = state
   }
 }

@@ -17,7 +17,7 @@
 /// The `id` is the unique identifier for the car. All additional information is cached from the
 /// time of association; it is possible that a property like the name of the device has, in reality,
 /// changed without this saved state knowing about it.
-public struct Car {
+public struct Car: Sendable {
   public let id: String
   public let name: String?
 

@@ -22,9 +22,9 @@ internal import Foundation
 /// A channel that utilizes UKey2 (go/ukey2) to establish secure communication.
 ///
 /// UKey2 is a Diffie-Hellman based authenticated key exchange protocol.
-class UKey2Channel: SecureBLEChannel {
+@MainActor class UKey2Channel: SecureBLEChannel {
   /// Token used for verification when establishing a UKey2 channel.
-  struct VerificationToken: SecurityVerificationToken {
+  @MainActor struct VerificationToken: SecurityVerificationToken {
     private static let log = Logger(for: VerificationToken.self)
 
     /// Length of the visual pairing code.

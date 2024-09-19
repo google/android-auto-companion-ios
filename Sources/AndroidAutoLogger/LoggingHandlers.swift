@@ -40,7 +40,7 @@ public struct LoggingHandlers {
 /// This log handler is thread safe, but it does not guarantee that its child log handlers are, so
 /// it is only as thread safe as its children are collectively.
 @available(macOS 10.15, *)
-public class CompoundLogHandler: LoggerDelegate {
+final public class CompoundLogHandler: LoggerDelegate {
   /// Child handlers.
   private let handlers: [LoggerDelegate]
 

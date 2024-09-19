@@ -21,7 +21,16 @@ public final class FakePeripheral: TransportPeripheral {
   public let id = UUID()
   public var displayName = "abc"
   public var isConnected = false
-  public var status: PeripheralStatus = .discovered
+  public var state: State = .disconnected
 
   public init() {}
+}
+
+extension FakePeripheral {
+  public enum State: TransportPeripheralState {
+    case disconnected
+    case connecting
+    case connected
+    case disconnecting
+  }
 }

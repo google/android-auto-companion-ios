@@ -187,7 +187,7 @@ private import AndroidAutoCompanionProtos
         } else {
           Self.log("Parsing token.")
           let messageData = Data(message)
-          let token = try OutOfBandAssociationToken(serializedData: messageData)
+          let token = try OutOfBandAssociationToken(serializedBytes: messageData)
           self = .token(token)
         }
       }

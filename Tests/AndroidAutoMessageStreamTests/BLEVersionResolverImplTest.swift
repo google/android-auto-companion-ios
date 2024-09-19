@@ -31,12 +31,19 @@ class BLEVersionResolverImplTest: XCTestCase {
 
   private let writeCharacteristic = CharacteristicMock(uuid: CBUUID(string: "bad2"), value: nil)
 
-  private let peripheralMock = PeripheralMock(name: "mock", services: nil)
-  private let delegateMock = BLEVersionResolverDelegateMock()
+  private var peripheralMock: PeripheralMock!
+  private var delegateMock: BLEVersionResolverDelegateMock!
 
-  override func setUp() {
-    super.setUp()
+  override func setUp() async throws {
+    try await super.setUp()
     continueAfterFailure = false
+
+    await setUpOnMain()
+  }
+
+  @MainActor private func setUpOnMain() {
+    peripheralMock = PeripheralMock(name: "mock", services: nil)
+    delegateMock = BLEVersionResolverDelegateMock()
 
     readCharacteristic.value = nil
     writeCharacteristic.value = nil
@@ -50,7 +57,7 @@ class BLEVersionResolverImplTest: XCTestCase {
 
   // MARK: - Peripheral set up tests.
 
-  func testResolveVersion_correctlySetsNotifyOnReadCharacteristic() {
+  @MainActor func testResolveVersion_correctlySetsNotifyOnReadCharacteristic() {
     bleVersionResolver.resolveVersion(
       with: peripheralMock,
       readCharacteristic: readCharacteristic,
@@ -63,7 +70,7 @@ class BLEVersionResolverImplTest: XCTestCase {
     XCTAssert(peripheralMock.characteristicToNotifyFor === readCharacteristic)
   }
 
-  func testResolveVersion_correctlySetsPeripheralDelegate() {
+  @MainActor func testResolveVersion_correctlySetsPeripheralDelegate() {
     bleVersionResolver.resolveVersion(
       with: peripheralMock,
       readCharacteristic: readCharacteristic,
@@ -76,7 +83,7 @@ class BLEVersionResolverImplTest: XCTestCase {
 
   // MARK: - Created proto validation test
 
-  func testVersionResolver_createsCorrectVersionProto() {
+  @MainActor func testVersionResolver_createsCorrectVersionProto() {
     bleVersionResolver.resolveVersion(
       with: peripheralMock,
       readCharacteristic: readCharacteristic,
@@ -89,7 +96,7 @@ class BLEVersionResolverImplTest: XCTestCase {
 
     // Now assert the version information.
     let versionProto = try! VersionExchange(
-      serializedData: peripheralMock.writtenData[0])
+      serializedBytes: peripheralMock.writtenData[0])
 
     XCTAssertEqual(versionProto.maxSupportedMessagingVersion, 3)
     XCTAssertEqual(versionProto.minSupportedMessagingVersion, 2)
@@ -99,7 +106,7 @@ class BLEVersionResolverImplTest: XCTestCase {
 
   // MARK: - Valid version resolution tests.
 
-  func testResolveVersion_correctlyResolvesVersionWithSameMaxMin() {
+  @MainActor func testResolveVersion_correctlyResolvesVersionWithSameMaxMin() {
     bleVersionResolver.resolveVersion(
       with: peripheralMock,
       readCharacteristic: readCharacteristic,
@@ -118,7 +125,7 @@ class BLEVersionResolverImplTest: XCTestCase {
     XCTAssertNil(delegateMock.encounteredError)
   }
 
-  func testResolveVersion_correctlyResolvesStreamVersionToTwo() {
+  @MainActor func testResolveVersion_correctlyResolvesStreamVersionToTwo() {
     bleVersionResolver.resolveVersion(
       with: peripheralMock,
       readCharacteristic: readCharacteristic,
@@ -142,7 +149,7 @@ class BLEVersionResolverImplTest: XCTestCase {
     XCTAssertNil(delegateMock.encounteredError)
   }
 
-  func testResolveVersion_correctlyResolvesSecurityVersionToTwo() {
+  @MainActor func testResolveVersion_correctlyResolvesSecurityVersionToTwo() {
     bleVersionResolver.resolveVersion(
       with: peripheralMock,
       readCharacteristic: readCharacteristic,
@@ -166,7 +173,7 @@ class BLEVersionResolverImplTest: XCTestCase {
     XCTAssertNil(delegateMock.encounteredError)
   }
 
-  func testResolveVersion_correctlyResolvesSecurityVersionToThree() {
+  @MainActor func testResolveVersion_correctlyResolvesSecurityVersionToThree() {
     bleVersionResolver.resolveVersion(
       with: peripheralMock,
       readCharacteristic: readCharacteristic,
@@ -190,7 +197,7 @@ class BLEVersionResolverImplTest: XCTestCase {
     XCTAssertNil(delegateMock.encounteredError)
   }
 
-  func testResolveVersion_correctlyResolvesWithCapabilitiesExchange() {
+  @MainActor func testResolveVersion_correctlyResolvesWithCapabilitiesExchange() {
     bleVersionResolver.resolveVersion(
       with: peripheralMock,
       readCharacteristic: readCharacteristic,
@@ -220,7 +227,7 @@ class BLEVersionResolverImplTest: XCTestCase {
     XCTAssertNil(delegateMock.encounteredError)
   }
 
-  func testResolveVersion_correctlyResolvesSecurityVersionToFour() {
+  @MainActor func testResolveVersion_correctlyResolvesSecurityVersionToFour() {
     bleVersionResolver.resolveVersion(
       with: peripheralMock,
       readCharacteristic: readCharacteristic,
@@ -244,7 +251,7 @@ class BLEVersionResolverImplTest: XCTestCase {
     XCTAssertNil(delegateMock.encounteredError)
   }
 
-  func testResolveVersion_correctlyResolvesIfMinimumVersionMatches() {
+  @MainActor func testResolveVersion_correctlyResolvesIfMinimumVersionMatches() {
     bleVersionResolver.resolveVersion(
       with: peripheralMock,
       readCharacteristic: readCharacteristic,
@@ -275,7 +282,7 @@ class BLEVersionResolverImplTest: XCTestCase {
 
   // MARK: - Invalid version resolution test.
 
-  func testResolveVersion_MessageStreamVersionNotSupported() {
+  @MainActor func testResolveVersion_MessageStreamVersionNotSupported() {
     bleVersionResolver.resolveVersion(
       with: peripheralMock,
       readCharacteristic: readCharacteristic,
@@ -300,7 +307,7 @@ class BLEVersionResolverImplTest: XCTestCase {
     XCTAssertNil(delegateMock.resolvedPeripheral)
   }
 
-  func testResolveVersion_SecurityVersionNotSupported() {
+  @MainActor func testResolveVersion_SecurityVersionNotSupported() {
     bleVersionResolver.resolveVersion(
       with: peripheralMock,
       readCharacteristic: readCharacteristic,
@@ -325,7 +332,7 @@ class BLEVersionResolverImplTest: XCTestCase {
     XCTAssertNil(delegateMock.resolvedPeripheral)
   }
 
-  func testResolveVersion_invalidIfNoSupportedVersionPresent() {
+  @MainActor func testResolveVersion_invalidIfNoSupportedVersionPresent() {
     bleVersionResolver.resolveVersion(
       with: peripheralMock,
       readCharacteristic: readCharacteristic,
@@ -355,7 +362,7 @@ class BLEVersionResolverImplTest: XCTestCase {
 
   // MARK: - Peripheral error tests.
 
-  func testUpdateError_correctlyNotifiesDelegate() {
+  @MainActor func testUpdateError_correctlyNotifiesDelegate() {
     bleVersionResolver.resolveVersion(
       with: peripheralMock,
       readCharacteristic: readCharacteristic,
@@ -376,7 +383,7 @@ class BLEVersionResolverImplTest: XCTestCase {
     XCTAssertNil(delegateMock.resolvedPeripheral)
   }
 
-  func testEmptyResponse_correctlyNotifiesDelegate() {
+  @MainActor func testEmptyResponse_correctlyNotifiesDelegate() {
     bleVersionResolver.resolveVersion(
       with: peripheralMock,
       readCharacteristic: readCharacteristic,
@@ -404,7 +411,7 @@ class BLEVersionResolverImplTest: XCTestCase {
     return NSError(domain: "", code: 0, userInfo: nil)
   }
 
-  private func notify(from peripheral: any BLEPeripheral, withValue value: Data) {
+  @MainActor private func notify(from peripheral: any BLEPeripheral, withValue value: Data) {
     readCharacteristic.value = value
     bleVersionResolver.peripheral(peripheral, didUpdateValueFor: readCharacteristic, error: nil)
   }

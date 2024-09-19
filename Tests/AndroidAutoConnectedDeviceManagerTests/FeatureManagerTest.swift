@@ -31,11 +31,14 @@ class FeatureManagerTest: XCTestCase {
   private var connectedCarManagerMock: ConnectedCarManagerMock!
   private var featureManager: ObservableFeatureManager!
 
-  @MainActor override func setUp() async throws {
+  override func setUp() async throws {
     try await super.setUp()
-
     continueAfterFailure = false
 
+    await setUpOnMain()
+  }
+
+  @MainActor private func setUpOnMain() {
     connectedCarManagerMock = ConnectedCarManagerMock()
     featureManager = ObservableFeatureManager(connectedCarManager: connectedCarManagerMock)
   }

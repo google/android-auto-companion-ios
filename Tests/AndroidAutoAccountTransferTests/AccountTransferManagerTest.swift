@@ -24,9 +24,14 @@ class AccountTransferManagerTest: XCTestCase {
 
   private var accountTransferManager: AccountTransferManager!
 
-  @MainActor override func setUp() {
-    super.setUp()
+  override func setUp() async throws {
+    try await super.setUp()
     continueAfterFailure = false
+
+    await setUpOnMain()
+  }
+
+  @MainActor private func setUpOnMain() {
     connectedCarManagerMock = ConnectedCarManagerMock()
     channelMock = SecuredCarChannelMock(id: "id", name: "mock")
     accountTransferManager = AccountTransferManager(connectedCarManager: connectedCarManagerMock)

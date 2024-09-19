@@ -3,6 +3,17 @@
 **NOTE:** Entries are ordered chronologically with the newest entries at the
 top.
 
+## iOS Companion 5.0.0
+
+The following changes have been made:
+- The minimimum iOS supported version is now iOS 16.
+- Adopted strict concurrency correctness for Swift 6 compatibility.
+
+## iOS Companion 4.3.0
+
+The following changes have been made:
+- Addressed concurrency correctness for Swift 6 compatibility.
+
 ## iOS Companion 4.2.0
 
 The following changes have been made:

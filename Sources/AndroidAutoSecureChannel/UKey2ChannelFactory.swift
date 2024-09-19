@@ -15,7 +15,7 @@
 public import Foundation
 
 /// Creator of `UKey2Channel`s.
-public class UKey2ChannelFactory: NSObject, SecureBLEChannelFactory {
+@MainActor public class UKey2ChannelFactory: NSObject, SecureBLEChannelFactory {
   /// Creates a new instance of a `UKey2Channel`.
   public func makeChannel() -> SecureBLEChannel {
     return UKey2Channel()

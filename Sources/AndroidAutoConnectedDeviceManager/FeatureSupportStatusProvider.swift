@@ -15,7 +15,7 @@
 public import Foundation
 
 /// Provides whether a feature is supported on this device.
-public protocol FeatureSupportStatusProvider {
+@MainActor public protocol FeatureSupportStatusProvider {
 
   /// Returns whether the feature manager successfully registered itself as supported.
   func register(_ featureManager: FeatureManager) -> Bool

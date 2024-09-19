@@ -42,10 +42,14 @@ class TrustAgentManagerTest: XCTestCase {
 
   private var trustAgentManager: TrustAgentManager!
 
-  @MainActor override func setUp() async throws {
+  override func setUp() async throws {
     try await super.setUp()
     continueAfterFailure = false
 
+    await setUpOnMain()
+  }
+
+  @MainActor private func setUpOnMain() {
     connectedCarManagerMock = ConnectedCarManagerMock()
     escrowTokenManager = EscrowTokenManagerFake()
     trustAgentStorage = TrustAgentManagerStorageFake()

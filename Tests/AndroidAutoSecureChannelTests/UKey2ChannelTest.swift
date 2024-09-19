@@ -16,7 +16,7 @@ private import AndroidAutoConnectedDeviceTransportFakes
 private import AndroidAutoMessageStream
 private import AndroidAutoUKey2Wrapper
 private import CoreBluetooth
-internal import XCTest
+@preconcurrency internal import XCTest
 
 @testable internal import AndroidAutoSecureChannel
 
@@ -27,28 +27,32 @@ class UKey2ChannelTest: XCTestCase {
   private var messageStream: FakeMessageStream!
   private var ukey2Channel: UKey2Channel!
 
-  override func setUp() {
-    super.setUp()
+  override func setUp() async throws {
+    try await super.setUp()
     continueAfterFailure = false
 
+    await setUpOnMain()
+  }
+
+  @MainActor private func setUpOnMain() {
     messageStream = FakeMessageStream(peripheral: FakePeripheral())
     ukey2Channel = UKey2Channel()
   }
 
   // MARK: - establish(with:readCharacteristic:) tests.
 
-  func testEstablish_setsDelegateOnPeripheral() {
+  @MainActor func testEstablish_setsDelegateOnPeripheral() {
     XCTAssertNoThrow(try ukey2Channel.establish(using: messageStream))
     XCTAssertNotNil(ukey2Channel.messageStream)
     XCTAssert(ukey2Channel.messageStream!.delegate === ukey2Channel)
   }
 
-  func testEstablish_setsStateToInProgress() {
+  @MainActor func testEstablish_setsStateToInProgress() {
     XCTAssertNoThrow(try ukey2Channel.establish(using: messageStream))
     XCTAssertEqual(ukey2Channel.state, .inProgress)
   }
 
-  func testEstablish_sendsCorrectInitMessage() {
+  @MainActor func testEstablish_sendsCorrectInitMessage() {
     XCTAssertNoThrow(try ukey2Channel.establish(using: messageStream))
     XCTAssertEqual(messageStream.writtenData.count, 1)
 
@@ -61,14 +65,14 @@ class UKey2ChannelTest: XCTestCase {
     XCTAssertTrue(result.isSuccessful)
   }
 
-  func testEstablish_notifiesDelegateOfError() {
+  @MainActor func testEstablish_notifiesDelegateOfError() {
     messageStream.writeMessageSucceeds = { false }
     XCTAssertThrowsError(try ukey2Channel.establish(using: messageStream))
   }
 
   // MARK: - Continue handshake tests.
 
-  func testHandshakeFlow_leadsToVerificationNeeded() {
+  @MainActor func testHandshakeFlow_leadsToVerificationNeeded() {
     XCTAssertNoThrow(try ukey2Channel.establish(using: messageStream))
 
     XCTAssertEqual(messageStream.writtenData.count, 1)
@@ -95,7 +99,7 @@ class UKey2ChannelTest: XCTestCase {
     XCTAssertEqual(ukey2Channel.state, .verificationNeeded)
   }
 
-  func testHandshakeFlow_errorNotifiesDelegate() {
+  @MainActor func testHandshakeFlow_errorNotifiesDelegate() {
     let delegateMock = SecureBLEChannelDelegateMock()
     ukey2Channel.delegate = delegateMock
 
@@ -120,7 +124,7 @@ class UKey2ChannelTest: XCTestCase {
 
   // MARK: - Verification code tests.
 
-  func testHandshakeFlow_notifiesDelegateThatVerificationIsNeeded() {
+  @MainActor func testHandshakeFlow_notifiesDelegateThatVerificationIsNeeded() {
     let delegateMock = SecureBLEChannelDelegateMock()
 
     ukey2Channel.delegate = delegateMock
@@ -140,7 +144,7 @@ class UKey2ChannelTest: XCTestCase {
     XCTAssertTrue(delegateMock.requiresVerificationCalled)
   }
 
-  func testHandshakeFlow_pairingCodePasssedToDelegateMatchesCar() {
+  @MainActor func testHandshakeFlow_pairingCodePasssedToDelegateMatchesCar() {
     let delegateMock = SecureBLEChannelDelegateMock()
 
     ukey2Channel.delegate = delegateMock
@@ -170,7 +174,7 @@ class UKey2ChannelTest: XCTestCase {
     XCTAssertEqual(delegateMock.requiredPairingCode, pairingCodeStr)
   }
 
-  func testVerificationTokenReadablePairingCode_modsBytesAcrossRange() {
+  @MainActor func testVerificationTokenReadablePairingCode_modsBytesAcrossRange() {
     // 194 is an example of a value that would fail if using signed instead of unsigned ints
     // 194 -> 11000010
     // 11000010 -> 194 (unsigned 8-bit int)
@@ -183,7 +187,7 @@ class UKey2ChannelTest: XCTestCase {
 
   // MARK: - Notify pairing code called tests.
 
-  func testNotifyPairingCodeAccepted_completesEstablishment() {
+  @MainActor func testNotifyPairingCodeAccepted_completesEstablishment() {
     setUpHandshake(phoneChannel: ukey2Channel)
 
     XCTAssertNoThrow(try ukey2Channel.notifyPairingCodeAccepted())
@@ -191,7 +195,7 @@ class UKey2ChannelTest: XCTestCase {
     XCTAssertEqual(ukey2Channel.state, .established)
   }
 
-  func testNotifyPairingCodeAccepted_notifiesDelegateOfEstablishment() {
+  @MainActor func testNotifyPairingCodeAccepted_notifiesDelegateOfEstablishment() {
     let delegateMock = SecureBLEChannelDelegateMock()
 
     ukey2Channel.delegate = delegateMock
@@ -204,7 +208,7 @@ class UKey2ChannelTest: XCTestCase {
     XCTAssert(delegateMock.establishedStream === messageStream)
   }
 
-  func testNotifyPairingCodeAccepted_setMessageEncryptor() {
+  @MainActor func testNotifyPairingCodeAccepted_setMessageEncryptor() {
     let delegateMock = SecureBLEChannelDelegateMock()
 
     ukey2Channel.delegate = delegateMock
@@ -220,7 +224,7 @@ class UKey2ChannelTest: XCTestCase {
 
   // MARK: - Encrypt/Decrypt messages tests.
 
-  func testEncrypt_carCanDecryptMessages() {
+  @MainActor func testEncrypt_carCanDecryptMessages() {
     let delegateMock = SecureBLEChannelDelegateMock()
 
     ukey2Channel.delegate = delegateMock
@@ -238,7 +242,7 @@ class UKey2ChannelTest: XCTestCase {
     XCTAssertEqual(car.decode(encryptedMessage!), message)
   }
 
-  func testDecrypt_phoneCanDecryptCarMessage() {
+  @MainActor func testDecrypt_phoneCanDecryptCarMessage() {
     let delegateMock = SecureBLEChannelDelegateMock()
 
     ukey2Channel.delegate = delegateMock
@@ -257,7 +261,7 @@ class UKey2ChannelTest: XCTestCase {
 
   // MARK - Operation type check tests.
 
-  func testOperationType_respectedForV2Stream() {
+  @MainActor func testOperationType_respectedForV2Stream() {
     let delegate = SecureBLEChannelDelegateMock()
     ukey2Channel.delegate = delegate
 
@@ -284,7 +288,7 @@ class UKey2ChannelTest: XCTestCase {
 
   // MARK: - Reconnection flow tests
 
-  func testReconnection() {
+  @MainActor func testReconnection() {
     var car = setUpHandshake(phoneChannel: ukey2Channel)
 
     XCTAssertNoThrow(try ukey2Channel.notifyPairingCodeAccepted())
@@ -355,7 +359,7 @@ class UKey2ChannelTest: XCTestCase {
     }
   }
 
-  func testReconnectionError_notifiesDelegate() {
+  @MainActor func testReconnectionError_notifiesDelegate() {
     let delegateMock = SecureBLEChannelDelegateMock()
     ukey2Channel.delegate = delegateMock
 
@@ -397,7 +401,7 @@ class UKey2ChannelTest: XCTestCase {
   // MARK: - Helper functions.
 
   /// Simulates to the `UKey2Channel` that the given `message` has been sent from the car.
-  private func simulateMessageFromCar(
+  @MainActor private func simulateMessageFromCar(
     _ message: Data,
     operationType: StreamOperationType = .encryptionHandshake
   ) {
@@ -418,7 +422,7 @@ class UKey2ChannelTest: XCTestCase {
   ///     represents the phone.
   /// - Returns: The car instance, which just needs verification of its pairing code.
   @discardableResult
-  private func setUpHandshake(phoneChannel: UKey2Channel) -> UKey2Wrapper {
+  @MainActor private func setUpHandshake(phoneChannel: UKey2Channel) -> UKey2Wrapper {
     XCTAssertNoThrow(try ukey2Channel.establish(using: messageStream))
 
     let car = UKey2Wrapper(role: .responder)

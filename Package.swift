@@ -19,7 +19,7 @@ import PackageDescription
 let package = Package(
   name: "AndroidAutoCompanion",
   platforms: [
-    .iOS(.v15), .watchOS(.v8),
+    .iOS(.v16), .watchOS(.v8),
   ],
   products: [
     .library(
@@ -37,6 +37,9 @@ let package = Package(
     .library(
       name: "AndroidAutoConnectionHowitzerManagerV2",
       targets: ["AndroidAutoConnectionHowitzerManagerV2"]),
+    .library(
+      name: "AndroidAutoRemoteSetup",
+      targets: ["AndroidAutoRemoteSetup"]),
     .library(
       name: "AndroidAutoUtils",
       targets: ["AndroidAutoUtils"]),
@@ -70,20 +73,12 @@ let package = Package(
     .target(
       name: "AndroidAutoCompanionProtos",
       dependencies: [.product(name: "SwiftProtobuf", package: "swift-protobuf")],
-      swiftSettings: [
-        .enableExperimentalFeature("AccessLevelOnImport"),
-        .enableUpcomingFeature("InternalImportsByDefault"),
-      ],
       plugins: [.plugin(name: "ProtoSourceGenerator")]
 
     ),
     .target(
       name: "AndroidAutoTrustAgentProtos",
       dependencies: [.product(name: "SwiftProtobuf", package: "swift-protobuf")],
-      swiftSettings: [
-        .enableExperimentalFeature("AccessLevelOnImport"),
-        .enableUpcomingFeature("InternalImportsByDefault"),
-      ],
       plugins: [.plugin(name: "ProtoSourceGenerator")]
     ),
     .target(
@@ -207,6 +202,21 @@ let package = Package(
       dependencies: [.product(name: "SwiftProtobuf", package: "swift-protobuf")],
       plugins: [.plugin(name: "ProtoSourceGenerator")]
     ),
+    .target(
+      name: "AndroidAutoRemoteSetup",
+      dependencies: [
+        "RemoteSetup",
+        "AndroidAutoConnectedDeviceManager",
+        "AndroidAutoLogger",
+      ],
+      swiftSettings: [
+        .enableExperimentalFeature("AccessLevelOnImport"),
+        .enableUpcomingFeature("InternalImportsByDefault"),
+      ]
+    ),
+    .binaryTarget(
+      name: "RemoteSetup",
+      path: "Binaries/RemoteSetup.xcframework"),
     .target(
       name: "AndroidAutoConnectionHowitzerManagerV2",
       dependencies: [

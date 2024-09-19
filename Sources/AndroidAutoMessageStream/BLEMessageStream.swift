@@ -16,7 +16,7 @@ public import AndroidAutoConnectedDeviceTransport
 public import AndroidAutoCoreBluetoothProtocols
 
 /// Message stream which is specific for BLE transport.
-public protocol BLEMessageStream: MessageStream {
+@MainActor public protocol BLEMessageStream: MessageStream {
   /// The peripheral as a `BLEPeripheral`.
   var peripheral: any BLEPeripheral { get }
 }

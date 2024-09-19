@@ -16,7 +16,7 @@ public import Foundation
 
 /// Protocol for factories which make log stores.
 @available(macOS 10.15, *)
-public protocol PersistentLogStoreFactory {
+public protocol PersistentLogStoreFactory: Sendable {
   /// Make storage for logs with the specified date.
   ///
   /// Note that the date for the logs is based on GMT providing a consistent file timestamp

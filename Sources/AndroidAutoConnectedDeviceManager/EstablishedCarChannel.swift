@@ -23,7 +23,7 @@ private typealias QueryProto = Com_Google_Companionprotos_Query
 private typealias QueryResponseProto = Com_Google_Companionprotos_QueryResponse
 
 /// A car that can be used to send encrypted messages.
-@MainActor class EstablishedCarChannel: NSObject, SecuredCarChannelPeripheral {
+@MainActor class EstablishedCarChannel: NSObject, SecuredCarChannelPeripheral, Sendable {
   private static let log = Logger(for: EstablishedCarChannel.self)
 
   let messageStream: MessageStream
@@ -133,8 +133,9 @@ extension EstablishedCarChannel: SecuredCarChannel {
     }
 
     return ObservationHandle { [weak self] in
-      self?.receivedMessageObservations.removeValue(forKey: id)
-      self?.messageRecipientToObservations[recipient] = nil
+      guard let self else { return }
+      self.receivedMessageObservations.removeValue(forKey: id)
+      self.messageRecipientToObservations[recipient] = nil
     }
   }
 
@@ -162,15 +163,16 @@ extension EstablishedCarChannel: SecuredCarChannel {
     }
 
     return ObservationHandle { [weak self] in
-      self?.receivedQueryObservations.removeValue(forKey: id)
-      self?.queryRecipientToObservations[recipient] = nil
+      guard let self else { return }
+      self.receivedQueryObservations.removeValue(forKey: id)
+      self.queryRecipientToObservations[recipient] = nil
     }
   }
 
   public func writeEncryptedMessage(
     _ message: Data,
     to recipient: UUID,
-    completion: ((Bool) -> Void)?
+    completion: (@MainActor (Bool) -> Void)?
   ) throws {
     guard isValid else {
       throw SecuredCarChannelError.invalidChannel
@@ -253,7 +255,7 @@ extension EstablishedCarChannel: SecuredCarChannel {
   }
 
   /// Convenience method that performs no action.
-  private func noop(_ value: Bool) {}
+  @MainActor private func noop(_ value: Bool) {}
 }
 
 // MARK: - SecuredConnectedDeviceChannel
@@ -344,7 +346,7 @@ extension EstablishedCarChannel: MessageStreamDelegate {
   }
 
   private func handleQueryResponse(_ message: Data) {
-    guard let query = try? QueryResponseProto(serializedData: message) else {
+    guard let query = try? QueryResponseProto(serializedBytes: message) else {
       Self.log.error("Received query response but unable to parse. Ignoring.")
       return
     }
@@ -363,7 +365,7 @@ extension EstablishedCarChannel: MessageStreamDelegate {
   }
 
   private func handleQuery(_ message: Data, for recipient: UUID) {
-    guard let query = try? QueryProto(serializedData: message) else {
+    guard let query = try? QueryProto(serializedBytes: message) else {
       Self.log.error("Received query but unable to parse. Ignoring.")
       return
     }

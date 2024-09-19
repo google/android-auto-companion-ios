@@ -43,7 +43,7 @@ public actor LogArchiver: LoggerDelegate {
   private var records: [LogRecord] = []
 
   /// Serially writes records to the persistent store.
-  private var serialWriter: LogSerialWriter
+  nonisolated private let serialWriter: LogSerialWriter
 
   /// Initialize with `FileLogStoreFactory` for persistence.
   init() {

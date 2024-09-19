@@ -16,7 +16,7 @@ internal import AndroidAutoLogger
 internal import XCTest
 
 /// Mock `PersistentLogStoreFactory`
-class MockLogStoreFactory: PersistentLogStoreFactory {
+final class MockLogStoreFactory: PersistentLogStoreFactory, @unchecked Sendable {
   var makeStoreExpectation: XCTestExpectation?
 
   var appendDataStore: MockLogStore?

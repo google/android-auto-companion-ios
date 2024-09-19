@@ -24,10 +24,10 @@ internal import Foundation
 ///
 /// This version has been deprecated as a result of the privacy implications. See
 /// go/aae-batmobile-device-id-exchange for more details.
-class ReconnectionHelperV1 {
+@MainActor class ReconnectionHelperV1 {
   private static let log = Logger(for: ReconnectionHelperV1.self)
 
-  let peripheral: AnyPeripheral
+  let peripheral: any AutoPeripheral
   var carId: String?
   var onReadyForHandshake: (() -> Void)?
 
@@ -35,7 +35,7 @@ class ReconnectionHelperV1 {
   var isReadyForHandshake = true
 
   /// Initializer for variant where the carId comes in a later message.
-  init(peripheral: AnyPeripheral) {
+  init(peripheral: any AutoPeripheral) {
     self.peripheral = peripheral
   }
 }

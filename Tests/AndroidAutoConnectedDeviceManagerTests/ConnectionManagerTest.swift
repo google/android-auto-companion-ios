@@ -17,6 +17,7 @@ internal import AndroidAutoSecureChannel
 private import CoreBluetooth
 internal import Foundation
 internal import XCTest
+private import os
 import AndroidAutoCompanionProtos
 
 @testable private import AndroidAutoConnectedDeviceManager
@@ -34,10 +35,14 @@ class ConnectionManagerTest: XCTestCase {
   private var uuidConfig: UUIDConfig!
   private var versionResolverFake: BLEVersionResolverFake!
 
-  @MainActor override func setUp() async throws {
+  override func setUp() async throws {
     try await super.setUp()
     continueAfterFailure = false
 
+    await setUpOnMain()
+  }
+
+  @MainActor private func setUpOnMain() {
     uuidConfig = UUIDConfig(plistLoader: PListLoaderFake())
     versionResolverFake = BLEVersionResolverFake()
 
@@ -234,7 +239,7 @@ class ConnectionManagerTest: XCTestCase {
     connectionManager.centralManagerDidUpdateState(centralManagerMock)
 
     var actionPerformed = false
-    var state: RadioState = CBManagerState.unknown
+    var state: any RadioState = CBManagerState.unknown
     connectionManager.requestRadioStateAction {
       state = $0
       actionPerformed = true
@@ -254,7 +259,7 @@ class ConnectionManagerTest: XCTestCase {
     connectionManager.centralManagerDidUpdateState(centralManagerMock)
 
     var actionPerformed = false
-    var state: RadioState = CBManagerState.unknown
+    var state: any RadioState = CBManagerState.unknown
     connectionManager.requestRadioStateAction {
       state = $0
       actionPerformed = true
@@ -274,7 +279,7 @@ class ConnectionManagerTest: XCTestCase {
     connectionManager.centralManagerDidUpdateState(centralManagerMock)
 
     var actionPerformed = false
-    var state: RadioState = CBManagerState.unknown
+    var state: any RadioState = CBManagerState.unknown
     connectionManager.requestRadioStateAction {
       state = $0
       actionPerformed = true
@@ -289,7 +294,7 @@ class ConnectionManagerTest: XCTestCase {
     connectionManager.centralManagerDidUpdateState(centralManagerMock)
 
     var actionPerformed = false
-    var state: RadioState = CBManagerState.unknown
+    var state: any RadioState = CBManagerState.unknown
     connectionManager.requestRadioStateAction {
       state = $0
       actionPerformed = true
@@ -301,7 +306,9 @@ class ConnectionManagerTest: XCTestCase {
 
   @MainActor func testCentralManagerPoweredOnAndWillRestoreState_ScansForPeripherals() {
     centralManagerMock.state = .poweredOn
-    let restorationState = [CBCentralManagerRestoredStateScanServicesKey: [CBUUID()]]
+    let restorationState = RestorationState<CentralManagerMock>(
+      state: [CBCentralManagerRestoredStateScanServicesKey: [CBUUID()]]
+    )
     connectionManager.centralManager(centralManagerMock, willRestoreState: restorationState)
     XCTAssertTrue(centralManagerMock.scanForPeripheralsCalled)
   }
@@ -349,8 +356,9 @@ class ConnectionManagerTest: XCTestCase {
   @MainActor func testCentralManagerDidDiscoverPeripheral_doesNotNotifyDelegateIfNoName() {
     let peripheralMock = PeripheralMock(name: "Test")
 
+    let advertisement = Advertisement()
     connectionManager.centralManager(
-      centralManagerMock, didDiscover: peripheralMock, advertisementData: ["": ""], rssi: 1.0)
+      centralManagerMock, didDiscover: peripheralMock, advertisement: advertisement, rssi: 1.0)
 
     XCTAssertFalse(associationDelegateMock.discoveredCars.contains(peripheralMock))
   }
@@ -358,10 +366,11 @@ class ConnectionManagerTest: XCTestCase {
   @MainActor func testCentralManagerDidDiscoverPeripheral_doesNotNotifyDelegateIfNotAssociating() {
     let peripheralMock = PeripheralMock(name: "Test")
 
+    let advertisement: Advertisement = [CBAdvertisementDataLocalNameKey: "advertisedName"]
     connectionManager.centralManager(
       centralManagerMock,
       didDiscover: peripheralMock,
-      advertisementData: [CBAdvertisementDataLocalNameKey: "advertisedName"],
+      advertisement: advertisement,
       rssi: 1.0)
 
     XCTAssertFalse(associationDelegateMock.discoveredCars.contains(peripheralMock))
@@ -377,7 +386,7 @@ class ConnectionManagerTest: XCTestCase {
     connectionManager.centralManager(
       centralManagerMock,
       didDiscover: peripheralMock,
-      advertisementData: [CBAdvertisementDataLocalNameKey: advertisedName],
+      advertisement: [CBAdvertisementDataLocalNameKey: advertisedName],
       rssi: 1.0)
 
     XCTAssertTrue(connectionManager.discoveredPeripherals.contains(peripheralMock))
@@ -400,7 +409,7 @@ class ConnectionManagerTest: XCTestCase {
 
     XCTAssertNoThrow(try connectionManager.associate(peripheralMock))
 
-    let advertisementData: [String: Any] = [
+    let advertisement: Advertisement = [
       CBAdvertisementDataLocalNameKey: advertisedName,
       CBAdvertisementDataServiceDataKey: [uuidConfig.associationDataUUID: Data(utf8Name.utf8)],
     ]
@@ -408,7 +417,7 @@ class ConnectionManagerTest: XCTestCase {
     connectionManager.centralManager(
       centralManagerMock,
       didDiscover: peripheralMock,
-      advertisementData: advertisementData,
+      advertisement: advertisement,
       rssi: 1.0)
 
     XCTAssertTrue(connectionManager.discoveredPeripherals.contains(peripheralMock))
@@ -430,7 +439,7 @@ class ConnectionManagerTest: XCTestCase {
 
     XCTAssertNoThrow(try connectionManager.associate(peripheralMock))
 
-    let advertisementData: [String: Any] = [
+    let advertisement: Advertisement = [
       CBAdvertisementDataLocalNameKey: advertisedName,
       CBAdvertisementDataServiceDataKey: [uuidConfig.associationDataUUID: hexNameData],
     ]
@@ -438,7 +447,7 @@ class ConnectionManagerTest: XCTestCase {
     connectionManager.centralManager(
       centralManagerMock,
       didDiscover: peripheralMock,
-      advertisementData: advertisementData,
+      advertisement: advertisement,
       rssi: 1.0)
 
     XCTAssertTrue(connectionManager.discoveredPeripherals.contains(peripheralMock))
@@ -474,14 +483,14 @@ class ConnectionManagerTest: XCTestCase {
     connectionManager.scanForCarsToAssociate(namePrefix: namePrefix, outOfBandSource: dataSource)
     XCTAssertNoThrow(try connectionManager.associate(peripheralMock))
 
-    let advertisementData: [String: Any] = [
+    let advertisement: Advertisement = [
       CBAdvertisementDataLocalNameKey: advertisedName,
       CBAdvertisementDataServiceDataKey: [uuidConfig.associationDataUUID: hexNameData],
     ]
     connectionManager.centralManager(
       centralManagerMock,
       didDiscover: peripheralMock,
-      advertisementData: advertisementData,
+      advertisement: advertisement,
       rssi: 1.0)
 
     XCTAssertTrue(connectionManager.discoveredPeripherals.contains(peripheralMock))
@@ -520,7 +529,7 @@ class ConnectionManagerTest: XCTestCase {
     connectionManager.scanForCarsToAssociate(namePrefix: namePrefix, outOfBandSource: dataSource)
     XCTAssertNoThrow(try connectionManager.associate(peripheralMock))
 
-    let advertisementData: [String: Any] = [
+    let advertisement: Advertisement = [
       CBAdvertisementDataLocalNameKey: advertisedName,
       CBAdvertisementDataServiceDataKey: [uuidConfig.associationDataUUID: Data(utf8Name.utf8)],
     ]
@@ -528,7 +537,7 @@ class ConnectionManagerTest: XCTestCase {
     connectionManager.centralManager(
       centralManagerMock,
       didDiscover: peripheralMock,
-      advertisementData: advertisementData,
+      advertisement: advertisement,
       rssi: 1.0)
 
     XCTAssertFalse(associationDelegateMock.discoveredCars.contains(peripheralMock))
@@ -561,7 +570,7 @@ class ConnectionManagerTest: XCTestCase {
     connectionManager.centralManager(
       centralManagerMock,
       didDiscover: peripheralMock,
-      advertisementData: [CBAdvertisementDataLocalNameKey: "advertisedName"],
+      advertisement: [CBAdvertisementDataLocalNameKey: "advertisedName"],
       rssi: 1.0)
 
     peripheralMock.state = .disconnected
@@ -602,7 +611,7 @@ class ConnectionManagerTest: XCTestCase {
 
     // Simulate a device being discovered and then connected to.
     connectionManager.centralManager(
-      centralManagerMock, didDiscover: peripheralMock, advertisementData: ["": ""], rssi: 1.0)
+      centralManagerMock, didDiscover: peripheralMock, advertisement: ["": ""], rssi: 1.0)
     setUpValidConnection(for: peripheralMock)
 
     let scanForPeripheralsExpectation =
@@ -649,7 +658,7 @@ class ConnectionManagerTest: XCTestCase {
 
     // Simulate a device being discovered and then connected to.
     connectionManager.centralManager(
-      centralManagerMock, didDiscover: peripheralMock, advertisementData: ["": ""], rssi: 1.0)
+      centralManagerMock, didDiscover: peripheralMock, advertisement: ["": ""], rssi: 1.0)
     setUpValidConnection(for: peripheralMock)
 
     connectionManager.communicationManager(
@@ -671,7 +680,7 @@ class ConnectionManagerTest: XCTestCase {
     connectionManager.centralManager(
       centralManagerMock,
       didDiscover: peripheralMock,
-      advertisementData: [CBAdvertisementDataServiceUUIDsKey: [DeviceIdManager.deviceId]],
+      advertisement: [CBAdvertisementDataServiceUUIDsKey: [DeviceIdManager.deviceId]],
       rssi: 1.0)
     setUpValidConnection(for: peripheralMock)
 
@@ -681,7 +690,7 @@ class ConnectionManagerTest: XCTestCase {
     connectionManager.centralManager(
       centralManagerMock,
       didDiscover: peripheralMock,
-      advertisementData: [CBAdvertisementDataServiceUUIDsKey: [DeviceIdManager.deviceId]],
+      advertisement: [CBAdvertisementDataServiceUUIDsKey: [DeviceIdManager.deviceId]],
       rssi: 1.0)
 
     XCTAssertFalse(centralManagerMock.cancelPeripheralConnectionCalled)
@@ -700,7 +709,7 @@ class ConnectionManagerTest: XCTestCase {
     connectionManager.centralManager(
       centralManagerMock,
       didDiscover: peripheralMock,
-      advertisementData: [CBAdvertisementDataServiceUUIDsKey: [DeviceIdManager.deviceId]],
+      advertisement: [CBAdvertisementDataServiceUUIDsKey: [DeviceIdManager.deviceId]],
       rssi: 1.0)
     setUpValidConnection(for: peripheralMock)
 
@@ -708,7 +717,7 @@ class ConnectionManagerTest: XCTestCase {
     connectionManager.centralManager(
       centralManagerMock,
       didDiscover: peripheralMock,
-      advertisementData: [CBAdvertisementDataServiceUUIDsKey: [DeviceIdManager.deviceId]],
+      advertisement: [CBAdvertisementDataServiceUUIDsKey: [DeviceIdManager.deviceId]],
       rssi: 1.0)
 
     // Peripheral should not have been disconnected, but connected.
@@ -733,7 +742,7 @@ class ConnectionManagerTest: XCTestCase {
     connectionManager.centralManager(
       centralManagerMock,
       didDiscover: peripheralMock,
-      advertisementData: [CBAdvertisementDataServiceUUIDsKey: [DeviceIdManager.deviceId]],
+      advertisement: [CBAdvertisementDataServiceUUIDsKey: [DeviceIdManager.deviceId]],
       rssi: 1.0)
     setUpValidConnection(for: peripheralMock)
 
@@ -741,7 +750,7 @@ class ConnectionManagerTest: XCTestCase {
     connectionManager.centralManager(
       centralManagerMock,
       didDiscover: peripheralMock,
-      advertisementData: [CBAdvertisementDataServiceUUIDsKey: [DeviceIdManager.deviceId]],
+      advertisement: [CBAdvertisementDataServiceUUIDsKey: [DeviceIdManager.deviceId]],
       rssi: 1.0)
 
     // Peripheral should have been disconnected, but no connection called.
@@ -757,15 +766,21 @@ class ConnectionManagerTest: XCTestCase {
 
     // Simulate a device being discovered and then connected to.
     connectionManager.centralManager(
-      centralManagerMock, didDiscover: peripheralMock, advertisementData: ["": ""], rssi: 1.0)
+      centralManagerMock, didDiscover: peripheralMock, advertisement: ["": ""], rssi: 1.0)
     setUpValidConnection(for: peripheralMock)
 
-    var disconnectedCarIdentifier: String? = nil
+    // Introduce this type to avoid concurrency mutation errors.
+    struct TestState {
+      var disconnectedCarIdentifier: String? = nil
+    }
+    let testState = OSAllocatedUnfairLock(initialState: TestState())
     let observerCalledExpectation = XCTestExpectation(description: "Disconnection observer called")
 
-    connectionManager.observeDisconnection { _, car in
-      disconnectedCarIdentifier = car.id
-      observerCalledExpectation.fulfill()
+    connectionManager.observeDisconnection { @Sendable _, car in
+      testState.withLock {
+        $0.disconnectedCarIdentifier = car.id
+        observerCalledExpectation.fulfill()
+      }
     }
 
     peripheralMock.state = .disconnected
@@ -775,7 +790,10 @@ class ConnectionManagerTest: XCTestCase {
     // Only a 2 second timeout since this call should happen immediately.
     wait(for: [observerCalledExpectation], timeout: 2.0)
 
-    XCTAssertEqual(peripheralMock.identifier.uuidString, disconnectedCarIdentifier)
+    XCTAssertEqual(
+      peripheralMock.identifier.uuidString,
+      testState.withLock { $0.disconnectedCarIdentifier }
+    )
   }
 
   @MainActor
@@ -806,7 +824,7 @@ class ConnectionManagerTest: XCTestCase {
 
     // Simulate a device being discovered and then connected to.
     connectionManager.centralManager(
-      centralManagerMock, didDiscover: peripheralMock, advertisementData: ["": ""], rssi: 1.0)
+      centralManagerMock, didDiscover: peripheralMock, advertisement: ["": ""], rssi: 1.0)
     setUpValidConnection(for: peripheralMock)
 
     let scanForPeripheralsExpectation =

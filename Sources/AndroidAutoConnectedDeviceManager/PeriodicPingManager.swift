@@ -28,7 +28,7 @@ public class PeriodicPingManager: FeatureManager {
   // MARK: - Overriding Methods
 
   public override func onMessageReceived(_ message: Data, from car: Car) {
-    guard let periodicPingMessage = try? PeriodicPingMessage(serializedData: message) else {
+    guard let periodicPingMessage = try? PeriodicPingMessage(serializedBytes: message) else {
       Self.log.error("Failed to decode message from serialized data.")
       return
     }

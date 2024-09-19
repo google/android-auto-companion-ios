@@ -16,7 +16,7 @@ public import AndroidAutoConnectedDeviceTransport
 public import Foundation
 
 /// Delegate to be notified of message stream events.
-public protocol MessageStreamDelegate: AnyObject {
+@MainActor public protocol MessageStreamDelegate: AnyObject {
   /// Called when the read characteristic has updated its value.
   ///
   /// This method will be called when a complete message has been received from the characteristic.
@@ -70,7 +70,7 @@ public protocol MessageStreamDelegate: AnyObject {
 /// This stream will handle if messages to a particular peripheral need to be split into
 /// multiple messages or if the messages can be sent all at once. Internally, it will have its own
 /// protocol for how the split messages are structured.
-public protocol MessageStream: AnyObject {
+@MainActor public protocol MessageStream: AnyObject {
   /// The version of this stream.
   var version: MessageStreamVersion { get }
 

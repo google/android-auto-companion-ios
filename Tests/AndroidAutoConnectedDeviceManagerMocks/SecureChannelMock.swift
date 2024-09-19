@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-public import AndroidAutoCoreBluetoothProtocols
+private import AndroidAutoCoreBluetoothProtocols
 public import AndroidAutoMessageStream
 public import AndroidAutoSecureChannel
 public import CoreBluetooth
-public import Foundation
-public import XCTest
+private import Foundation
+private import XCTest
 
-@testable public import AndroidAutoConnectedDeviceManager
+@testable private import AndroidAutoConnectedDeviceManager
 
 /// An implementation of a secure channel for testing purposes.
 ///
@@ -28,7 +28,7 @@ public import XCTest
 ///
 /// Encrypting and decrypting a message returns the same message.
 final public class SecureBLEChannelMock: NSObject, SecureBLEChannel {
-  public static let mockSavedSession = Data("SecureBLEChannelMockSavedSession".utf8)
+  nonisolated public static let mockSavedSession = Data("SecureBLEChannelMockSavedSession".utf8)
 
   /// The state of the secure channel.
   private(set) public var state: SecureBLEChannelState = .uninitialized

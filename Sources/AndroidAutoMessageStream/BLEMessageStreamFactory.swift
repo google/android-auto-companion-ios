@@ -16,7 +16,7 @@ public import AndroidAutoCoreBluetoothProtocols
 internal import Foundation
 
 /// Creator of different message streams.
-public enum BLEMessageStreamFactory {
+@MainActor public enum BLEMessageStreamFactory {
   /// Creates a message stream of the given version.
   ///
   /// - Parameters:

@@ -24,7 +24,7 @@ private import os.log
 /// This protocol is only intended for private use, but is marked internal here to accommodate
 /// unit testing.
 @available(macOS 12.0, *)
-protocol SignpostMetricsHandler {
+protocol SignpostMetricsHandler: Sendable {
   /// Indicates whether this handler is valid for posting metrics.
   var isValid: Bool { get }
 
@@ -53,7 +53,7 @@ protocol SignpostMetricsHandler {
 ///
 /// An instance represents a single category and role used for posting named signposts.
 @available(macOS 12.0, *)
-public struct SignpostMetrics {
+public struct SignpostMetrics: Sendable {
   /// Indicates whether signpost metric logging is available on the current system.
   public static let isSystemSupported: Bool = {
     #if canImport(MetricKit)

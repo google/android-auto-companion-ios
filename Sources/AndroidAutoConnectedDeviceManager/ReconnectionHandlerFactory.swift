@@ -17,7 +17,7 @@ internal import AndroidAutoSecureChannel
 internal import Foundation
 
 /// A creator of `ReconnectionHandler`.
-protocol ReconnectionHandlerFactory {
+@MainActor protocol ReconnectionHandlerFactory {
   /// Creates a handler that can be used to set up secure communication with the given car.
   ///
   /// - Parameters:

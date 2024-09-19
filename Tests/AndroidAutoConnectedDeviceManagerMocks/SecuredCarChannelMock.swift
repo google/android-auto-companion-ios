@@ -14,14 +14,15 @@
 
 public import AndroidAutoConnectedDeviceTransport
 public import AndroidAutoCoreBluetoothProtocols
-public import AndroidAutoCoreBluetoothProtocolsMocks
+private import AndroidAutoCoreBluetoothProtocolsMocks
 public import Foundation
 
 @testable public import AndroidAutoConnectedDeviceManager
 
 /// A mock of the `SecuredCarChannel`.
 public class SecuredCarChannelMock: SecuredCarChannelPeripheral {
-  private var receivedMessageObservations: [UUID: (SecuredCarChannel, Data) -> Void] = [:]
+  private var receivedMessageObservations: [UUID: (any SecuredCarChannel, Data) -> Void] =
+    [:]
   private var messageRecipientToObservations: [UUID: UUID] = [:]
 
   public var queryID: Int32 = 0
@@ -102,7 +103,7 @@ extension SecuredCarChannelMock: SecuredConnectedDeviceChannel {
   public func writeEncryptedMessage(
     _ message: Data,
     to recipient: UUID,
-    completion: ((Bool) -> Void)?
+    completion: (@MainActor (Bool) -> Void)?
   ) throws {
     if !isValid {
       completion?(false)
@@ -156,14 +157,15 @@ extension SecuredCarChannelMock: SecuredConnectedDeviceChannel {
     messageRecipientToObservations[recipient] = id
 
     return ObservationHandle { [weak self] in
-      self?.receivedMessageObservations.removeValue(forKey: id)
-      self?.messageRecipientToObservations[recipient] = nil
+      guard let self else { return }
+      self.receivedMessageObservations.removeValue(forKey: id)
+      self.messageRecipientToObservations[recipient] = nil
     }
   }
 
   public func observeQueryReceived(
     from recipient: UUID,
-    using observation: @escaping ((Int32, UUID, Query) -> Void)
+    using observation: @escaping (Int32, UUID, Query) -> Void
   ) throws -> ObservationHandle {
     let id = UUID()
     receivedQueryObservations[id] = observation
@@ -172,8 +174,9 @@ extension SecuredCarChannelMock: SecuredConnectedDeviceChannel {
     queryRecipientToObservations[recipient] = id
 
     return ObservationHandle { [weak self] in
-      self?.receivedQueryObservations.removeValue(forKey: id)
-      self?.queryRecipientToObservations[recipient] = nil
+      guard let self else { return }
+      self.receivedQueryObservations.removeValue(forKey: id)
+      self.queryRecipientToObservations[recipient] = nil
     }
   }
 }

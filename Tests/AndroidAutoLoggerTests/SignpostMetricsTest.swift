@@ -56,7 +56,7 @@ class SignpostMetricsTest: XCTestCase {
   }
 }
 
-private class SignpostMetricsHandlerMock: SignpostMetricsHandler {
+private final class SignpostMetricsHandlerMock: SignpostMetricsHandler, @unchecked Sendable {
   let category: String
   var isValid = false
 

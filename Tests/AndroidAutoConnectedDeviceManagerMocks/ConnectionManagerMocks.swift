@@ -19,8 +19,8 @@ public import XCTest
 
 @testable public import AndroidAutoConnectedDeviceManager
 
-// extend PeripheralMock to conform to SomePeripheral
-extension PeripheralMock: SomePeripheral {
+// extend PeripheralMock to conform to AutoPeripheral
+extension PeripheralMock: AutoPeripheral {
   // Empty: already satisfies the requirements
 }
 
@@ -152,7 +152,7 @@ public class ConnectionManagerAssociationDelegateMock: ConnectionManagerAssociat
 
   public func connectionManager(
     _ connectionManager: AnyConnectionManager,
-    didDiscover anyCar: AnyPeripheral,
+    didDiscover anyCar: any AutoPeripheral,
     advertisedName: String?
   ) {
     guard let car = anyCar as? PeripheralMock else {
@@ -164,7 +164,7 @@ public class ConnectionManagerAssociationDelegateMock: ConnectionManagerAssociat
 
   public func connectionManager(
     _ connectionManager: AnyConnectionManager,
-    didConnect anyPeripheral: AnyPeripheral
+    didConnect anyPeripheral: any AutoPeripheral
   ) {
     guard let peripheral = anyPeripheral as? PeripheralMock else {
       fatalError("car is not a PeripheralMock: \(type(of: anyPeripheral))")

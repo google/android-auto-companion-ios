@@ -27,7 +27,7 @@ class TrustAgentConfigTest: XCTestCase {
     storage.clearAll()
   }
 
-  func testIsPasscodeRequired_defaultValueIsTrue() {
+  @MainActor func testIsPasscodeRequired_defaultValueIsTrue() {
     let config = TrustAgentConfigUserDefaults(plistLoader: PListLoaderFake())
 
     XCTAssertTrue(config.isPasscodeRequired)
@@ -36,7 +36,7 @@ class TrustAgentConfigTest: XCTestCase {
     XCTAssertTrue(storage.bool(forKey: TrustAgentConfigUserDefaults.isPasscodeRequiredKey))
   }
 
-  func testIsPasscodeRequired_setValue() {
+  @MainActor func testIsPasscodeRequired_setValue() {
     let config = TrustAgentConfigUserDefaults(plistLoader: PListLoaderFake())
 
     config.isPasscodeRequired = false
@@ -48,12 +48,12 @@ class TrustAgentConfigTest: XCTestCase {
     XCTAssertTrue(storage.bool(forKey: TrustAgentConfigUserDefaults.isPasscodeRequiredKey))
   }
 
-  func testIsDeviceUnlockRequired_defaultValueIsTrue() {
+  @MainActor func testIsDeviceUnlockRequired_defaultValueIsTrue() {
     let config = TrustAgentConfigUserDefaults(plistLoader: PListLoaderFake())
     XCTAssertTrue(config.isDeviceUnlockRequired(for: testCar))
   }
 
-  func testSetDeviceUnlockRequired_updateValue() {
+  @MainActor func testSetDeviceUnlockRequired_updateValue() {
     let config = TrustAgentConfigUserDefaults(plistLoader: PListLoaderFake())
 
     config.setDeviceUnlockRequired(false, for: testCar)
@@ -80,7 +80,7 @@ class TrustAgentConfigTest: XCTestCase {
     }
   }
 
-  func testRemove_clearConfigurationForCar() {
+  @MainActor func testRemove_clearConfigurationForCar() {
     let config = TrustAgentConfigUserDefaults(plistLoader: PListLoaderFake())
     config.setDeviceUnlockRequired(true, for: testCar)
     XCTAssertTrue(config.isDeviceUnlockRequired(for: testCar))
@@ -90,12 +90,12 @@ class TrustAgentConfigTest: XCTestCase {
     XCTAssertTrue(config.isDeviceUnlockRequired(for: testCar))
   }
 
-  func testUnlockHistoryEnabled_defaultIsTrue() {
+  @MainActor func testUnlockHistoryEnabled_defaultIsTrue() {
     let config = TrustAgentConfigUserDefaults(plistLoader: PListLoaderFake())
     XCTAssertTrue(config.isUnlockHistoryEnabled)
   }
 
-  func testUnlockHistoryEnabled_loadsFromOverlayValue() {
+  @MainActor func testUnlockHistoryEnabled_loadsFromOverlayValue() {
     let plistLoader = PListLoaderFake(
       overlayValues: [TrustAgentConfigUserDefaults.unlockHistoryKey: false]
     )

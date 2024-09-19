@@ -71,7 +71,7 @@ extension AssociationMessageHelperV4: AssociationMessageHelper {
       associator.notifyDelegateOfError(.unknown)
     case .visualConfirmation:
       do {
-        let code = try VerificationCode(serializedData: message)
+        let code = try VerificationCode(serializedBytes: message)
         guard code.state == .visualConfirmation else {
           Self.log.error("Expecting visual confirmation, but instead received: \(code.state)")
           associator.notifyDelegateOfError(.unknown)
@@ -83,7 +83,7 @@ extension AssociationMessageHelperV4: AssociationMessageHelper {
       }
     case let .outOfBandConfirmation(securityToken, outOfBandToken):
       do {
-        let code = try VerificationCode(serializedData: message)
+        let code = try VerificationCode(serializedBytes: message)
         guard code.state == .oobVerification else {
           Self.log.error("Expecting Out-Of-Band confirmation, but instead received: \(code.state)")
           associator.notifyDelegateOfError(.unknown)

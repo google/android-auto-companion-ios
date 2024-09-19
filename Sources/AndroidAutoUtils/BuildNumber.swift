@@ -19,7 +19,7 @@
 /// - minor: Changes with new features that are backwards compatible.
 /// - patch: Backwards compatible bug fixes.
 ///
-public struct BuildNumber {
+public struct BuildNumber: Sendable {
   /// Tracks builds that introduce incompatible API changes.
   public let major: Int
 

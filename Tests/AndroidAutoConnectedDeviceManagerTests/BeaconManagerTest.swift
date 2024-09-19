@@ -26,9 +26,13 @@
     private var connectedCarManagerMock: ConnectedCarManagerMock!
     private var manager: BeaconManagerImpl<MockBeaconMonitor>!
 
-    @MainActor override func setUp() {
-      super.setUp()
+    override func setUp() async throws {
+      try await super.setUp()
 
+      await setUpOnMain()
+    }
+
+    @MainActor private func setUpOnMain() {
       connectedCarManagerMock = ConnectedCarManagerMock()
       uuidConfig = UUIDConfig(plistLoader: PListLoaderFake())
     }
@@ -44,7 +48,7 @@
     }
   }
 
-  private class MockBeaconMonitor: BeaconMonitor {
+  private class MockBeaconMonitor: BeaconMonitor, @unchecked Sendable {
     fileprivate var startMonitoringCalled = false
 
     fileprivate var events: [String] = []

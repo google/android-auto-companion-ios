@@ -12,40 +12,45 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// MARK: - PeripheralStatus
+public import CoreBluetooth
+
+// MARK: - TransportPeripheralState
 
 /// Status of a peripheral.
-public enum PeripheralStatus: Equatable {
-  /// Starting state.
-  case discovered
+public protocol TransportPeripheralState: Equatable {
+  /// The peripheral is not connected.
+  static var disconnected: Self { get }
 
   /// Connection to the peripheral has commenced.
-  case connecting
+  static var connecting: Self { get }
 
   /// The peripheral is connected (possibly without encryption).
-  case connected
-
-  /// The connection to the peripheral has terminated.
-  case disconnected
+  static var connected: Self { get }
 
   /// The connection to the peripheral is being terminated.
-  case disconnecting
-
-  /// Other status with the specified description.
-  case other(String)
+  static var disconnecting: Self { get }
 }
 
 // MARK: - TransportPeripheral
 
 /// Homogeneous protocol for a peripheral using a specific communication transport.
 public protocol TransportPeripheral: AnyObject, Hashable, Identifiable {
+  associatedtype State: TransportPeripheralState
+
+  /// Unique identifier for the peripheral.
   var identifierString: String { get }
+
+  /// Name to display for the peripheral.
   var displayName: String { get }
+
+  /// Peripheral name that can be logged.
   var logName: String { get }
+
+  /// Indicates whether the peripheral is connected.
   var isConnected: Bool { get }
 
   /// Current status for this peripheral.
-  var status: PeripheralStatus { get }
+  var state: State { get }
 }
 
 // MARK: - TransportPeripheral Extensions
@@ -56,7 +61,7 @@ extension TransportPeripheral {
   public var logName: String { displayName }
 
   public var isConnected: Bool {
-    status == .connected
+    state == .connected
   }
 }
 
@@ -77,3 +82,7 @@ extension TransportPeripheral where ID: Hashable {
     hasher.combine(id)
   }
 }
+
+// MARK: - TransportPeripheralState Conformance
+
+extension CBPeripheralState: TransportPeripheralState {}

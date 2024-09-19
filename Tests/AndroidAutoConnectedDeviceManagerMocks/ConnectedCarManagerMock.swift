@@ -12,21 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-public import AndroidAutoCoreBluetoothProtocolsMocks
+private import AndroidAutoCoreBluetoothProtocolsMocks
 public import CoreBluetooth
-public import Foundation
+private import Foundation
 
 @testable public import AndroidAutoConnectedDeviceManager
 
 /// A mock manager that can manually trigger observations.
 @MainActor public class ConnectedCarManagerMock: NSObject {
   private var observations = (
-    state: [UUID: (ConnectedCarManager, RadioState) -> Void](),
-    connected: [UUID: (ConnectedCarManager, Car) -> Void](),
-    securedChannel: [UUID: (ConnectedCarManager, SecuredCarChannel) -> Void](),
-    disconnected: [UUID: (ConnectedCarManager, Car) -> Void](),
-    dissociation: [UUID: (ConnectedCarManager, Car) -> Void](),
-    association: [UUID: (ConnectedCarManager, Car) -> Void]()
+    state: [UUID: @MainActor @Sendable (any ConnectedCarManager, any RadioState) -> Void](),
+    connected: [UUID: @MainActor @Sendable (any ConnectedCarManager, Car) -> Void](),
+    securedChannel: [
+      UUID: @MainActor @Sendable (any ConnectedCarManager, any SecuredCarChannel) -> Void
+    ](),
+    disconnected: [UUID: @MainActor @Sendable (any ConnectedCarManager, Car) -> Void](),
+    dissociation: [UUID: @MainActor @Sendable (any ConnectedCarManager, Car) -> Void](),
+    association: [UUID: @MainActor @Sendable (any ConnectedCarManager, Car) -> Void]()
   )
 
   public var supportedFeatures: Set<UUID> = []
@@ -77,7 +79,9 @@ extension ConnectedCarManagerMock: ConnectedCarManager {
 
   @discardableResult
   public func observeSecureChannelSetUp(
-    using observation: @escaping (ConnectedCarManager, SecuredCarChannel) -> Void
+    using observation: @escaping @MainActor @Sendable (
+      any ConnectedCarManager, any SecuredCarChannel
+    ) -> Void
   ) -> ObservationHandle {
     let id = UUID()
     observations.securedChannel[id] = observation
@@ -86,67 +90,74 @@ extension ConnectedCarManagerMock: ConnectedCarManager {
     securedChannels.forEach { observation(self, $0) }
 
     return ObservationHandle { [weak self] in
-      self?.observations.securedChannel.removeValue(forKey: id)
+      guard let self else { return }
+      self.observations.securedChannel.removeValue(forKey: id)
     }
   }
 
   @discardableResult
   public func observeStateChange(
-    using observation: @escaping (ConnectedCarManager, RadioState) -> Void
+    using observation: @escaping @MainActor @Sendable (any ConnectedCarManager, any RadioState) ->
+      Void
   ) -> ObservationHandle {
     let id = UUID()
     observations.state[id] = observation
 
     return ObservationHandle { [weak self] in
-      self?.observations.state.removeValue(forKey: id)
+      guard let self else { return }
+      self.observations.state.removeValue(forKey: id)
     }
   }
 
   @discardableResult
   public func observeConnection(
-    using observation: @escaping (ConnectedCarManager, Car) -> Void
+    using observation: @escaping @MainActor @Sendable (any ConnectedCarManager, Car) -> Void
   ) -> ObservationHandle {
     let id = UUID()
     observations.connected[id] = observation
 
     return ObservationHandle { [weak self] in
-      self?.observations.connected.removeValue(forKey: id)
+      guard let self else { return }
+      self.observations.connected.removeValue(forKey: id)
     }
   }
 
   @discardableResult
   public func observeDisconnection(
-    using observation: @escaping (ConnectedCarManager, Car) -> Void
+    using observation: @escaping @MainActor @Sendable (any ConnectedCarManager, Car) -> Void
   ) -> ObservationHandle {
     let id = UUID()
     observations.disconnected[id] = observation
 
     return ObservationHandle { [weak self] in
-      self?.observations.disconnected.removeValue(forKey: id)
+      guard let self else { return }
+      self.observations.disconnected.removeValue(forKey: id)
     }
   }
 
   @discardableResult
   public func observeDissociation(
-    using observation: @escaping (ConnectedCarManager, Car) -> Void
+    using observation: @escaping @MainActor @Sendable (any ConnectedCarManager, Car) -> Void
   ) -> ObservationHandle {
     let id = UUID()
     observations.dissociation[id] = observation
 
     return ObservationHandle { [weak self] in
-      self?.observations.dissociation.removeValue(forKey: id)
+      guard let self else { return }
+      self.observations.dissociation.removeValue(forKey: id)
     }
   }
 
   @discardableResult
   public func observeAssociation(
-    using observation: @escaping (ConnectedCarManager, Car) -> Void
+    using observation: @escaping @MainActor @Sendable (any ConnectedCarManager, Car) -> Void
   ) -> ObservationHandle {
     let id = UUID()
     observations.association[id] = observation
 
     return ObservationHandle { [weak self] in
-      self?.observations.association.removeValue(forKey: id)
+      guard let self else { return }
+      self.observations.association.removeValue(forKey: id)
     }
   }
 

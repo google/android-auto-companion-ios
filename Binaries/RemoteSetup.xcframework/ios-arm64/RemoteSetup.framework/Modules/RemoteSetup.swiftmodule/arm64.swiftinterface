@@ -1,0 +1,74 @@
+// swift-interface-format-version: 1.0
+// swift-compiler-version: Apple Swift version 6.0 (swiftlang-6.0.0.7.6 clang-1600.0.24.1)
+// swift-module-flags: -target arm64-apple-ios16.0 -enable-objc-interop -enable-library-evolution -swift-version 6 -enforce-exclusivity=checked -Onone -module-alias SwiftProtobuf=AndroidAutoInternalSwiftProtobuf -enable-experimental-feature AccessLevelOnImport -enable-bare-slash-regex -module-name RemoteSetup -package-name third_party/swift/AndroidAutoCompanion/Frameworks/RemoteSetup
+import Foundation
+import SafariServices
+import Swift
+import _Concurrency
+import _StringProcessing
+import _SwiftConcurrencyShims
+@_Concurrency.MainActor public protocol Messenger : AnyObject {
+  associatedtype Remote : Swift.Equatable
+  @_Concurrency.MainActor func sendMessage(_ message: Foundation.Data, to car: Self.Remote, completion: (@_Concurrency.MainActor @Sendable (Swift.Bool) -> Swift.Void)?) throws
+}
+public protocol RemoteSetupLogger {
+  init(for type: any Any.Type, context: Swift.String)
+  func log(_ messageGenerator: @autoclosure () -> Swift.String, redacting redactableMessage: @autoclosure () -> Swift.String?, backtraceOffset: Swift.UInt, file: Swift.String, line: Swift.Int, function: Swift.String)
+}
+@objc @_Concurrency.MainActor public class RemoteSetupManagerCore : ObjectiveC.NSObject {
+  public enum Logo {
+    public static let googleGColor: UIKit.UIImage
+    public static let googleGDark: UIKit.UIImage
+    public static let googleGLight: UIKit.UIImage
+  }
+  public enum Title {
+    public static let short: Swift.String
+  }
+  public enum Subtitle {
+    public static let short: Swift.String
+  }
+  @_Concurrency.MainActor public var isWebAppLaunched: Swift.Bool {
+    get
+  }
+  @_Concurrency.MainActor public init(logger: any RemoteSetup.RemoteSetupLogger.Type)
+  @_Concurrency.MainActor public func startRemoteSetup(_ uiViewController: UIKit.UIViewController, vehicle: RemoteSetup.RemoteSetupVehicle, configure: ((inout RemoteSetup.RemoteSetupManagerCore.SafariViewWrapper) -> Swift.Void)? = nil)
+  @_Concurrency.MainActor public func finishRemoteSetup(redirectURL: Foundation.URL) -> Swift.Bool
+  @objc deinit
+}
+extension RemoteSetup.RemoteSetupManagerCore : SafariServices.SFSafariViewControllerDelegate {
+  @objc nonisolated dynamic public func safariViewController(_ viewController: SafariServices.SFSafariViewController, initialLoadDidRedirectTo: Foundation.URL)
+  @objc nonisolated dynamic public func safariViewControllerDidFinish(_ viewController: SafariServices.SFSafariViewController)
+}
+extension RemoteSetup.RemoteSetupManagerCore {
+  @dynamicMemberLookup public struct SafariViewWrapper {
+    public subscript<T>(dynamicMember keyPath: Swift.ReferenceWritableKeyPath<any RemoteSetup.RemoteSafariView, T>) -> T {
+      get
+      set
+    }
+  }
+}
+@_Concurrency.MainActor public protocol RemoteSafariView : AnyObject {
+  @_Concurrency.MainActor var preferredBarTintColor: UIKit.UIColor? { get set }
+  @_Concurrency.MainActor var preferredControlTintColor: UIKit.UIColor? { get set }
+}
+extension SafariServices.SFSafariViewController : RemoteSetup.RemoteSafariView {
+}
+@_Concurrency.MainActor public struct RemoteSetupPreferenceMessageHandler<M> where M : RemoteSetup.Messenger {
+  @_Concurrency.MainActor public init(_ messenger: M, logger: any RemoteSetup.RemoteSetupLogger.Type)
+  @_Concurrency.MainActor public func handleMessage(_ message: Foundation.Data, from car: M.Remote) throws
+}
+public enum RemoteSetupPreferenceMessageHandlerError : Swift.Error {
+  case malformedRequest(Swift.String)
+}
+extension RemoteSetup.RemoteSetupPreferenceMessageHandlerError : Foundation.LocalizedError {
+  public var errorDescription: Swift.String? {
+    get
+  }
+}
+public struct RemoteSetupVehicle {
+}
+extension RemoteSetup.RemoteSetupVehicle {
+  public init?(make: Swift.String? = nil, model: Swift.String? = nil, year: Swift.String? = nil, redirectURL: Swift.String? = nil, brand: Swift.String? = nil, product: Swift.String? = nil, device: Swift.String? = nil, buildFingerprint: Swift.String? = nil)
+}
+extension RemoteSetup.RemoteSetupManagerCore : Swift.Sendable {}
+extension RemoteSetup.RemoteSetupPreferenceMessageHandler : Swift.Sendable {}

@@ -17,7 +17,7 @@ internal import os.log
 
 /// Handler which feeds the logs to system log using os_log.
 @available(macOS 10.15, *)
-public class SystemLogHandler: LoggerDelegate {
+final public class SystemLogHandler: LoggerDelegate {
   /// Log the record to the system log.
   ///
   /// Messages for public logs will be tagged "%{public}s". The record level will be mapped to the

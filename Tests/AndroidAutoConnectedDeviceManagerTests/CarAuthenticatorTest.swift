@@ -41,7 +41,7 @@ class CarAuthenticatorImplTest: XCTestCase {
   }
 
   /// Test that key -> data -> key regenerates an equivalent authenticator.
-  func testRegenerateKeyFromData() {
+  @MainActor func testRegenerateKeyFromData() {
     let authenticator = CarAuthenticatorImpl()
     let copy = try! CarAuthenticatorImpl(keyData: authenticator.keyData)
 
@@ -54,7 +54,7 @@ class CarAuthenticatorImplTest: XCTestCase {
   }
 
   /// Pass data of varying length and test that we always get a 256 bit mac.
-  func testGenerates256BitHMAC() {
+  @MainActor func testGenerates256BitHMAC() {
     let authenticator = CarAuthenticatorImpl()
 
     for _ in 0..<100 {
@@ -67,7 +67,7 @@ class CarAuthenticatorImplTest: XCTestCase {
 
   /// Test that different input data results in different macs.
   /// The HMACs should be random enough that feasibly this should always pass.
-  func testUniqueDataGeneratesUniqueHMAC() {
+  @MainActor func testUniqueDataGeneratesUniqueHMAC() {
     let authenticator = CarAuthenticatorImpl()
 
     let data1 = Data("test1".utf8)
@@ -82,7 +82,7 @@ class CarAuthenticatorImplTest: XCTestCase {
   }
 
   /// Test that the same authenticator generates the same input given the same data.
-  func testGeneratesSameHMACForSameInput() {
+  @MainActor func testGeneratesSameHMACForSameInput() {
     let authenticator = CarAuthenticatorImpl()
 
     let data = Data("test".utf8)
@@ -95,13 +95,13 @@ class CarAuthenticatorImplTest: XCTestCase {
     XCTAssertEqual(hmac1, hmac2)
   }
 
-  func testRandomSaltsNotEqual() {
+  @MainActor func testRandomSaltsNotEqual() {
     let salt1 = CarAuthenticatorImpl.randomSalt(size: 12)
     let salt2 = CarAuthenticatorImpl.randomSalt(size: 12)
     XCTAssertNotEqual(salt1, salt2)
   }
 
-  func testRandomSaltSizes() {
+  @MainActor func testRandomSaltSizes() {
     for _ in 1...100 {
       let size = Int.random(in: 1...5000)
       let salt1 = CarAuthenticatorImpl.randomSalt(size: size)
@@ -109,7 +109,7 @@ class CarAuthenticatorImplTest: XCTestCase {
     }
   }
 
-  func testSaveRestoreRemoveKey() {
+  @MainActor func testSaveRestoreRemoveKey() {
     let id = UUID().uuidString
     XCTAssertNoThrow(try CarAuthenticatorImpl().saveKey(forIdentifier: id))
     let match = try? CarAuthenticatorImpl(carId: id)
@@ -119,7 +119,7 @@ class CarAuthenticatorImplTest: XCTestCase {
     XCTAssertNil(removed)
   }
 
-  func testMismatchLookupThrowsUnknownCar() {
+  @MainActor func testMismatchLookupThrowsUnknownCar() {
     XCTAssertThrowsError(try CarAuthenticatorImpl(carId: "bad")) { (error) in
       guard case let CarAuthenticatorImpl.KeyError.unknownCar(carId) = error else {
         XCTFail("Expected unknownCar, but got a different error: \(error).")
@@ -169,7 +169,7 @@ class CarAuthenticatorImplTest: XCTestCase {
     XCTAssertEqual(truncatedHMAC.count, 3)
   }
 
-  func testFindingMatchingCarForAdvertisementData() {
+  @MainActor func testFindingMatchingCarForAdvertisementData() {
     // Create several cars to associate.
     let aCar = Car(id: "a", name: "hello")
     let testCar = Car(id: "t", name: "test")  // The car to match.
@@ -212,7 +212,7 @@ class CarAuthenticatorImplTest: XCTestCase {
     XCTAssertEqual(testCar, match.car)
   }
 
-  func testNoMatchingCarForAdvertisementData() {
+  @MainActor func testNoMatchingCarForAdvertisementData() {
     // Create several cars to associate.
     let aCar = Car(id: "a", name: "hello")
     let bCar = Car(id: "b", name: "something")
@@ -249,7 +249,7 @@ class CarAuthenticatorImplTest: XCTestCase {
     XCTAssertNil(match)
   }
 
-  func testChallengeAuthenticationSuccess() {
+  @MainActor func testChallengeAuthenticationSuccess() {
     let sourceAuthenticator = CarAuthenticatorImpl()
     let salt = CarAuthenticatorImpl.randomSalt(size: 8)
     let hmac = sourceAuthenticator.computeHMAC(data: salt)
@@ -260,7 +260,7 @@ class CarAuthenticatorImplTest: XCTestCase {
     XCTAssertTrue(result)
   }
 
-  func testChallengeAuthenticationFailure() {
+  @MainActor func testChallengeAuthenticationFailure() {
     let sourceAuthenticator = CarAuthenticatorImpl()
     let salt = CarAuthenticatorImpl.randomSalt(size: 8)
     let hmac = sourceAuthenticator.computeHMAC(data: salt)

@@ -13,26 +13,26 @@
 // limitations under the License.
 
 internal import AndroidAutoCoreBluetoothProtocols
-internal import CoreBluetooth
+@preconcurrency internal import CoreBluetooth
 internal import Foundation
 
 /// A wrapper around a `CBPeripheral` that will make it conform to `BLEPeripheral`.
-class CBPeripheralWrapper: NSObject, BLEPeripheral {
+@MainActor final class CBPeripheralWrapper: NSObject, BLEPeripheral {
   private var serviceObserver: ((any BLEPeripheral, [BLEService]) -> Void)? = nil
 
-  let peripheral: CBPeripheral
+  nonisolated let peripheral: CBPeripheral
 
   private var invalidatedServiceIDs: Set<String> = []
 
   weak var delegate: BLEPeripheralDelegate?
 
-  var id: UUID { peripheral.identifier }
+  nonisolated var id: UUID { peripheral.identifier }
 
-  var identifier: UUID { id }
+  nonisolated var identifier: UUID { id }
 
-  var identifierString: String { identifier.uuidString }
+  nonisolated var identifierString: String { identifier.uuidString }
 
-  var name: String? {
+  nonisolated var name: String? {
     return peripheral.name
   }
 
@@ -94,44 +94,47 @@ class CBPeripheralWrapper: NSObject, BLEPeripheral {
 }
 
 extension CBPeripheralWrapper: CBPeripheralDelegate {
-  func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
-    delegate?.peripheral(self, didDiscoverServices: error)
+  nonisolated func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
+    // The `CBCentralManager` was configured to run on the main queue.
+    MainActor.assumeIsolated {
+      delegate?.peripheral(self, didDiscoverServices: error)
+    }
   }
 
-  func peripheral(
+  nonisolated func peripheral(
     _ peripheral: CBPeripheral,
     didDiscoverCharacteristicsFor service: CBService,
     error: Error?
   ) {
-    delegate?.peripheral(
-      self,
-      didDiscoverCharacteristicsFor: CBServiceWrapper(service: service),
-      error: error
-    )
+    // The `CBCentralManager` was configured to run on the main queue.
+    MainActor.assumeIsolated {
+      delegate?.peripheral(
+        self,
+        didDiscoverCharacteristicsFor: CBServiceWrapper(service: service),
+        error: error
+      )
+    }
   }
 
-  func peripheral(
+  nonisolated func peripheral(
     _ peripheral: CBPeripheral,
     didUpdateValueFor characteristic: CBCharacteristic,
     error: Error?
   ) {
-    delegate?.peripheral(
-      self,
-      didUpdateValueFor: CBCharacteristicWrapper(characteristic: characteristic),
-      error: error
-    )
+    // The `CBCentralManager` was configured to run on the main queue.
+    MainActor.assumeIsolated {
+      delegate?.peripheral(
+        self,
+        didUpdateValueFor: CBCharacteristicWrapper(characteristic: characteristic),
+        error: error
+      )
+    }
   }
 
-  func peripheralIsReady(toSendWriteWithoutResponse peripheral: CBPeripheral) {
-    delegate?.peripheralIsReadyToWrite(self)
-  }
-
-  func peripheral(
-    _ peripheral: CBPeripheral,
-    didModifyServices invalidatedServices: [CBService]
-  ) {
-    let invalidatedServiceWrappers = invalidatedServices.map { CBServiceWrapper(service: $0) }
-    invalidatedServiceIDs.formUnion(invalidatedServiceWrappers.map { $0.uuid.uuidString })
-    serviceObserver?(self, invalidatedServiceWrappers)
+  nonisolated func peripheralIsReady(toSendWriteWithoutResponse peripheral: CBPeripheral) {
+    // The `CBCentralManager` was configured to run on the main queue.
+    MainActor.assumeIsolated {
+      delegate?.peripheralIsReadyToWrite(self)
+    }
   }
 }

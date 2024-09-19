@@ -13,8 +13,8 @@
 // limitations under the License.
 
 public import AndroidAutoMessageStream
-public import AndroidAutoSecureChannel
-public import Foundation
+private import AndroidAutoSecureChannel
+private import Foundation
 
 @testable public import AndroidAutoConnectedDeviceManager
 

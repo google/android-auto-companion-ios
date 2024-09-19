@@ -106,7 +106,7 @@ extension VarintTest {
     XCTAssertEqual(numRead, sizeByteCount)
     let messageData = data[numRead...]
     XCTAssertEqual(dataSize, messageData.count)
-    let testPacket = try Packet(serializedData: messageData)
+    let testPacket = try Packet(serializedBytes: messageData)
     XCTAssertEqual(controlPacket, testPacket)
   }
 }

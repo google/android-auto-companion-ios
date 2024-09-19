@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-public import AndroidAutoCoreBluetoothProtocols
+private import AndroidAutoCoreBluetoothProtocols
 public import AndroidAutoMessageStream
 public import AndroidAutoSecureChannel
 public import Foundation

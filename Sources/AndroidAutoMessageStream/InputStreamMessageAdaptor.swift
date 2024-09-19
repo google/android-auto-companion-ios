@@ -65,7 +65,7 @@ extension InputStreamMessageAdaptor: SerialDecodingAdaptor {
   }
 }
 
-private class StreamHandler<Element: Message>: NSObject, StreamDelegate {
+private final class StreamHandler<Element: Message>: NSObject, StreamDelegate, @unchecked Sendable {
   private static var log: Logger { Logger(for: StreamHandler<Element>.self) }
 
   /// RunLoop period in seconds.
@@ -248,7 +248,7 @@ extension StreamHandler {
           element = Element.init()
         } else {
           let data = pending.subdata(in: pending.startIndex..<pending.startIndex + expecting)
-          element = try Element.init(serializedData: data)
+          element = try Element.init(serializedBytes: data)
         }
         onElementDecoded(.success(element))
 

@@ -45,8 +45,8 @@ class CompoundLogHandlerTest: XCTestCase {
 
 /// Mock for testing handler calls.
 
-private class LogHandlerMock: LoggerDelegate {
-  fileprivate var didLogRecord = false
+private final class LogHandlerMock: LoggerDelegate, @unchecked Sendable {
+  fileprivate private(set) var didLogRecord = false
 
   func loggerDidRecordMessage(_ record: LogRecord) {
     didLogRecord = true

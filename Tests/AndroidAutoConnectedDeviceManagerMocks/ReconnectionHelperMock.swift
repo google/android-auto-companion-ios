@@ -38,11 +38,11 @@ final public class ReconnectionHelperMock {
 
   // MARK: - ReconnectionHelper Stored Properties
   public var carId: String?
-  public let peripheral: AnyPeripheral
+  public let peripheral: any AutoPeripheral
   public var onReadyForHandshake: (() -> Void)?
 
   /// Initializer for variant where the carId comes in a later message.
-  public init(peripheral: AnyPeripheral, pendingCarId: String) {
+  public init(peripheral: some AutoPeripheral, pendingCarId: String) {
     self.peripheral = peripheral
     self.pendingCarId = pendingCarId
   }

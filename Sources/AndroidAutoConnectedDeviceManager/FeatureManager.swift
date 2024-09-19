@@ -68,23 +68,28 @@ public enum FeatureManagerError: Error {
     self.connectedCarManager = connectedCarManager
 
     connectHandle = connectedCarManager.observeConnection { [weak self] _, car in
-      self?.onCarConnected(car)
+      guard let self else { return }
+      self.onCarConnected(car)
     }
 
     dissociationHandle = connectedCarManager.observeDissociation { [weak self] _, car in
-      self?.handleDisassociatedCar(car)
+      guard let self else { return }
+      self.handleDisassociatedCar(car)
     }
 
     disconnectHandle = connectedCarManager.observeDisconnection { [weak self] _, car in
-      self?.handleDisconnectedCar(car)
+      guard let self else { return }
+      self.handleDisconnectedCar(car)
     }
 
     secureChannelHandle = connectedCarManager.observeSecureChannelSetUp { [weak self] _, channel in
-      self?.handleSecureChannelEstablished(channel)
+      guard let self else { return }
+      self.handleSecureChannelEstablished(channel)
     }
 
     associationHandle = connectedCarManager.observeAssociation { [weak self] _, car in
-      self?.onCarAssociated(car)
+      guard let self else { return }
+      self.onCarAssociated(car)
     }
 
     guard connectedCarManager.register(self) else {
@@ -93,13 +98,23 @@ public enum FeatureManagerError: Error {
   }
 
   deinit {
-    secureChannelHandle?.cancel()
-    connectHandle?.cancel()
-    disconnectHandle?.cancel()
-    associationHandle?.cancel()
-    dissociationHandle?.cancel()
-    messageReceivedHandles.values.forEach { $0.cancel() }
-    queryReceivedHandles.values.forEach { $0.cancel() }
+    let secureChannelHandle = self.secureChannelHandle
+    let connectHandle = self.connectHandle
+    let disconnectHandle = self.disconnectHandle
+    let associationHandle = self.associationHandle
+    let dissociationHandle = self.dissociationHandle
+    let messageReceivedHandles = self.messageReceivedHandles.values
+    let queryReceivedHandles = self.queryReceivedHandles.values
+
+    Task { @MainActor in
+      secureChannelHandle?.cancel()
+      connectHandle?.cancel()
+      disconnectHandle?.cancel()
+      associationHandle?.cancel()
+      dissociationHandle?.cancel()
+      messageReceivedHandles.forEach { $0.cancel() }
+      queryReceivedHandles.forEach { $0.cancel() }
+    }
   }
 
   // MARK: - Write methods.
@@ -125,7 +140,7 @@ public enum FeatureManagerError: Error {
   public final func sendMessage(
     _ message: Data,
     to car: Car,
-    completion: ((Bool) -> Void)? = nil
+    completion: (@MainActor @Sendable (Bool) -> Void)? = nil
   ) throws {
     guard let channel = connectedCarManager.securedChannel(for: car) else {
       throw FeatureManagerError.noSecureChannel

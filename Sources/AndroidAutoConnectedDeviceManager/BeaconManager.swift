@@ -27,8 +27,8 @@
   /// Abstracts beacon managers from available implementations.
   public protocol BeaconManager {}
 
-  protocol BeaconMonitor {
-    associatedtype Condition
+  protocol BeaconMonitor: Sendable {
+    associatedtype Condition: Sendable
     associatedtype Events
 
     init(_ name: String) async

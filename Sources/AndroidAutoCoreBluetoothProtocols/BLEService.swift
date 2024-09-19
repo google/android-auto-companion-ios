@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import CoreBluetooth
-import Foundation
+public import CoreBluetooth
+internal import Foundation
 
 /// A service on a BLE peripheral.
 public protocol BLEService: AnyObject {

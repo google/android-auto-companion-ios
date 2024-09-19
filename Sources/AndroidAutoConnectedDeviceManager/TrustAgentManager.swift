@@ -16,6 +16,7 @@ internal import AndroidAutoCoreBluetoothProtocols
 private import AndroidAutoLogger
 internal import AndroidAutoMessageStream
 internal import AndroidAutoSecureChannel
+internal import AndroidAutoUtils
 public import CoreBluetooth
 internal import Foundation
 private import AndroidAutoTrustAgentProtos
@@ -49,7 +50,7 @@ private typealias TrustedDeviceState = Aae_Trustagent_TrustedDeviceState
 /// <false/>
 /// ```
 public class TrustAgentManager: FeatureManager {
-  private static let log = Logger(for: TrustAgentManager.self)
+  nonisolated private static let log = Logger(for: TrustAgentManager.self)
 
   private static let signpostMetrics = SignpostMetrics(category: "TrustAgentManager")
 
@@ -74,7 +75,7 @@ public class TrustAgentManager: FeatureManager {
   private let config: TrustAgentConfig
   private let trustAgentStorage: TrustAgentManagerStorage
 
-  private var deviceUnlockObserver: NSObjectProtocol?
+  private var deviceUnlockObserver: NotificationDispatcher?
 
   /// Dictionary of car ids for cars currently enrolling to a boolean indicating if the enrollment
   /// was initiated by that car.
@@ -141,13 +142,11 @@ public class TrustAgentManager: FeatureManager {
 
     // Whenever the device is unlocked, resend the credentials for the connected cars.
     #if os(iOS)
-      deviceUnlockObserver = NotificationCenter.default.addObserver(
-        forName: UIApplication.protectedDataDidBecomeAvailableNotification,
-        object: nil,
-        queue: OperationQueue.main
-      ) { [unowned self] notification in
+      deviceUnlockObserver = NotificationDispatcher(
+        name: UIApplication.protectedDataDidBecomeAvailableNotification
+      ) { [weak self] in
         Self.log("Device Unlocked - sending credentials for connected cars.")
-        self.sendCredentialsForDeviceUnlockRequiredCars()
+        self?.sendCredentialsForDeviceUnlockRequiredCars()
       }
     #else
       // TODO(b/152639737): provide alternative for watchOS
@@ -156,7 +155,9 @@ public class TrustAgentManager: FeatureManager {
 
   deinit {
     if let unlockObserver = deviceUnlockObserver {
-      NotificationCenter.default.removeObserver(unlockObserver)
+      Task {
+        await unlockObserver.invalidate()
+      }
     }
   }
 
@@ -298,7 +299,7 @@ public class TrustAgentManager: FeatureManager {
   }
 
   public override func onMessageReceived(_ message: Data, from car: Car) {
-    guard let trustedDeviceMessage = try? TrustedDeviceMessage(serializedData: message) else {
+    guard let trustedDeviceMessage = try? TrustedDeviceMessage(serializedBytes: message) else {
       Self.log.error("Failed to decode message from serialized data.")
       // Simply ignore invalid messages.
       return
@@ -598,7 +599,7 @@ public class TrustAgentManager: FeatureManager {
   }
 
   private func syncFeatureStatus(_ featureStatus: Data, from car: Car) {
-    guard let status = try? TrustedDeviceState(serializedData: featureStatus) else {
+    guard let status = try? TrustedDeviceState(serializedBytes: featureStatus) else {
       Self.log.error("Unable to parse feature status from \(car.logName). Ignoring.")
       return
     }
