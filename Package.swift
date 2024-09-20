@@ -56,7 +56,6 @@ let package = Package(
       dependencies: [],
       swiftSettings: [
         .enableExperimentalFeature("AccessLevelOnImport"),
-        .enableUpcomingFeature("InternalImportsByDefault"),
       ]
     ),
     .target(
@@ -64,7 +63,6 @@ let package = Package(
       dependencies: ["AndroidAutoConnectedDeviceTransport"],
       swiftSettings: [
         .enableExperimentalFeature("AccessLevelOnImport"),
-        .enableUpcomingFeature("InternalImportsByDefault"),
       ]
     ),
     .target(
@@ -72,7 +70,6 @@ let package = Package(
       dependencies: [.product(name: "SwiftProtobuf", package: "swift-protobuf")],
       swiftSettings: [
         .enableExperimentalFeature("AccessLevelOnImport"),
-        .enableUpcomingFeature("InternalImportsByDefault"),
       ],
       plugins: [.plugin(name: "ProtoSourceGenerator")]
 
@@ -82,7 +79,6 @@ let package = Package(
       dependencies: [.product(name: "SwiftProtobuf", package: "swift-protobuf")],
       swiftSettings: [
         .enableExperimentalFeature("AccessLevelOnImport"),
-        .enableUpcomingFeature("InternalImportsByDefault"),
       ],
       plugins: [.plugin(name: "ProtoSourceGenerator")]
     ),
@@ -97,7 +93,6 @@ let package = Package(
       ],
       swiftSettings: [
         .enableExperimentalFeature("AccessLevelOnImport"),
-        .enableUpcomingFeature("InternalImportsByDefault"),
       ]
     ),
     .target(
@@ -109,7 +104,6 @@ let package = Package(
       ],
       swiftSettings: [
         .enableExperimentalFeature("AccessLevelOnImport"),
-        .enableUpcomingFeature("InternalImportsByDefault"),
       ]
     ),
     .target(
@@ -124,7 +118,6 @@ let package = Package(
       ],
       swiftSettings: [
         .enableExperimentalFeature("AccessLevelOnImport"),
-        .enableUpcomingFeature("InternalImportsByDefault"),
       ]
     ),
     .plugin(name: "ProtoSourceGenerator", capability: .buildTool()),
@@ -139,7 +132,6 @@ let package = Package(
       path: "Tests/AndroidAutoConnectedDeviceManagerMocks",
       swiftSettings: [
         .enableExperimentalFeature("AccessLevelOnImport"),
-        .enableUpcomingFeature("InternalImportsByDefault"),
       ]
     ),
     .target(
@@ -147,7 +139,6 @@ let package = Package(
       dependencies: ["AndroidAutoLogger"],
       swiftSettings: [
         .enableExperimentalFeature("AccessLevelOnImport"),
-        .enableUpcomingFeature("InternalImportsByDefault"),
       ]
     ),
     .target(
@@ -155,7 +146,6 @@ let package = Package(
       dependencies: ["AndroidAutoConnectedDeviceTransport"],
       swiftSettings: [
         .enableExperimentalFeature("AccessLevelOnImport"),
-        .enableUpcomingFeature("InternalImportsByDefault"),
       ]
     ),
     .target(
@@ -164,7 +154,6 @@ let package = Package(
       path: "Tests/AndroidAutoCoreBluetoothProtocolsMocks",
       swiftSettings: [
         .enableExperimentalFeature("AccessLevelOnImport"),
-        .enableUpcomingFeature("InternalImportsByDefault"),
       ]
     ),
     .testTarget(
@@ -172,7 +161,6 @@ let package = Package(
       dependencies: ["AndroidAutoLogger"],
       swiftSettings: [
         .enableExperimentalFeature("AccessLevelOnImport"),
-        .enableUpcomingFeature("InternalImportsByDefault"),
       ]
     ),
     .testTarget(
@@ -184,7 +172,6 @@ let package = Package(
       ],
       swiftSettings: [
         .enableExperimentalFeature("AccessLevelOnImport"),
-        .enableUpcomingFeature("InternalImportsByDefault"),
       ]
     ),
     .target(
@@ -196,7 +183,6 @@ let package = Package(
       ],
       swiftSettings: [
         .enableExperimentalFeature("AccessLevelOnImport"),
-        .enableUpcomingFeature("InternalImportsByDefault"),
       ]
     ),
     .binaryTarget(
@@ -216,7 +202,6 @@ let package = Package(
       ],
       swiftSettings: [
         .enableExperimentalFeature("AccessLevelOnImport"),
-        .enableUpcomingFeature("InternalImportsByDefault"),
       ]
     ),
     .target(
@@ -224,7 +209,6 @@ let package = Package(
       dependencies: ["AndroidAutoLogger"],
       swiftSettings: [
         .enableExperimentalFeature("AccessLevelOnImport"),
-        .enableUpcomingFeature("InternalImportsByDefault"),
       ]
     ),
     .testTarget(
@@ -238,7 +222,6 @@ let package = Package(
       ],
       swiftSettings: [
         .enableExperimentalFeature("AccessLevelOnImport"),
-        .enableUpcomingFeature("InternalImportsByDefault"),
       ]
     ),
     .testTarget(
@@ -252,7 +235,6 @@ let package = Package(
       ],
       swiftSettings: [
         .enableExperimentalFeature("AccessLevelOnImport"),
-        .enableUpcomingFeature("InternalImportsByDefault"),
       ]
     ),
     .testTarget(
@@ -265,7 +247,6 @@ let package = Package(
       ],
       swiftSettings: [
         .enableExperimentalFeature("AccessLevelOnImport"),
-        .enableUpcomingFeature("InternalImportsByDefault"),
       ]
     ),
     .testTarget(
@@ -273,7 +254,6 @@ let package = Package(
       dependencies: ["AndroidAutoUtils"],
       swiftSettings: [
         .enableExperimentalFeature("AccessLevelOnImport"),
-        .enableUpcomingFeature("InternalImportsByDefault"),
       ]
     ),
   ]
