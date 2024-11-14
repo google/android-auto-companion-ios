@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-private import AndroidAutoAccountTransferCore
+public import AndroidAutoAccountTransferCore
 public import AndroidAutoConnectedDeviceManager
 private import AndroidAutoLogger
 public import Foundation

@@ -15,7 +15,7 @@
 private import Foundation
 
 /// Protocol for simple types which can be encoded as metadata.
-public protocol LogMetaData: Encodable {}
+public protocol LogMetaData: Encodable, Sendable {}
 
 /// Provide a default implementation for the supported types.
 extension LogMetaData {

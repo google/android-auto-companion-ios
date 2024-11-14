@@ -31,7 +31,7 @@ class BLEMessageStreamV2Test: XCTestCase {
   /// Valid characters for generating a random string for sending data.
   private let characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-  private let peripheralMock = PeripheralMock(name: "fake")
+  private var peripheralMock: PeripheralMock!
 
   private let readCharacteristic = CharacteristicMock(uuid: CBUUID(string: "bad1"), value: nil)
 
@@ -42,9 +42,15 @@ class BLEMessageStreamV2Test: XCTestCase {
   private var messageEncryptor: MessageEncryptorMock!
   private var messageStreamV2: BLEMessageStreamV2!
 
-  override func setUp() {
-    super.setUp()
+  override func setUp() async throws {
+    try await super.setUp()
     continueAfterFailure = false
+
+    await setUpOnMain()
+  }
+
+  @MainActor func setUpOnMain() {
+    peripheralMock = PeripheralMock(name: "fake")
 
     MessageIDGenerator.shared.reset()
     peripheralMock.reset()
@@ -73,18 +79,18 @@ class BLEMessageStreamV2Test: XCTestCase {
 
   // MARK: - Initialization tests.
 
-  func testsBleMessageStream_SetsItselfAsPeripheralDelegate() {
+  @MainActor func testsBleMessageStream_SetsItselfAsPeripheralDelegate() {
     XCTAssert(peripheralMock.delegate === messageStreamV2)
   }
 
-  func testsBleMessageStream_SetsNotifyOnReadCharacteristic() {
+  @MainActor func testsBleMessageStream_SetsNotifyOnReadCharacteristic() {
     XCTAssertTrue(peripheralMock.notifyValueCalled)
     XCTAssert(peripheralMock.characteristicToNotifyFor === readCharacteristic)
   }
 
   // MARK: - Received message tests.
 
-  func testUpdateValue_messageFitsWithoutChunking() {
+  @MainActor func testUpdateValue_messageFitsWithoutChunking() {
     let operation = OperationType.clientMessage
     let recipient = Data("id".utf8)
     let maxSize = 200
@@ -114,7 +120,7 @@ class BLEMessageStreamV2Test: XCTestCase {
     XCTAssertEqual(delegate.updatedMessage, payload)
   }
 
-  func testUpdateValue_messageNeedsToBeChunked() {
+  @MainActor func testUpdateValue_messageNeedsToBeChunked() {
     let operation = OperationType.clientMessage
     let recipient = Data("id".utf8)
 
@@ -149,7 +155,7 @@ class BLEMessageStreamV2Test: XCTestCase {
     XCTAssertEqual(messageEncryptor.decryptCalledCount, 1)
   }
 
-  func testUpdateValue_correctlyPassesParams() {
+  @MainActor func testUpdateValue_correctlyPassesParams() {
     let operation = OperationType.clientMessage
     let recipientUUID = UUID()
     let recipient = withUnsafeBytes(of: recipientUUID.uuid, { Data($0) })
@@ -183,7 +189,7 @@ class BLEMessageStreamV2Test: XCTestCase {
 
   // MARK: - Duplicate message test
 
-  func testDuplicatePacketIsIgnored() {
+  @MainActor func testDuplicatePacketIsIgnored() {
     let operation = OperationType.clientMessage
     let recipient = Data("id".utf8)
 
@@ -225,7 +231,7 @@ class BLEMessageStreamV2Test: XCTestCase {
 
   // MARK: - Out-of-order message test
 
-  func testOutOfOrderMessage_notifiesDelegateOfError() {
+  @MainActor func testOutOfOrderMessage_notifiesDelegateOfError() {
     let operation = OperationType.clientMessage
     let recipient = Data("id".utf8)
 
@@ -258,27 +264,27 @@ class BLEMessageStreamV2Test: XCTestCase {
   }
   // MARK: - writeMessage() tests.
 
-  func testWriteMessage_fitsWithoutChunkingNotifiesDelegate() {
+  @MainActor func testWriteMessage_fitsWithoutChunkingNotifiesDelegate() {
     assertWriteMessage_fitsWithoutChunkingNotifiesDelegate(isEncryptedWrite: false)
   }
 
-  func testWriteMessage_fitsWithoutChunkingCorrectlySplitsPayload() {
+  @MainActor func testWriteMessage_fitsWithoutChunkingCorrectlySplitsPayload() {
     assertWriteMessage_fitsWithoutChunkingCorrectlySplitsPayload(isEncryptedWrite: false)
   }
 
-  func testWriteMessage_requiresChunkingOnlyNotifiesAfterCompleteMessageSent() {
+  @MainActor func testWriteMessage_requiresChunkingOnlyNotifiesAfterCompleteMessageSent() {
     assertWriteMessage_requiresChunkingOnlyNotifiesAfterCompleteMessageSent(isEncryptedWrite: false)
   }
 
-  func testWriteMessage_requiresChunkingCorrectlySplitsPayload() {
+  @MainActor func testWriteMessage_requiresChunkingCorrectlySplitsPayload() {
     assertWriteMessage_requiresChunkingCorrectlySplitsPayload(isEncryptedWrite: false)
   }
 
-  func testWriteMessage_waitsIfSendInProgress() {
+  @MainActor func testWriteMessage_waitsIfSendInProgress() {
     assertWriteMessage_waitsIfSendInProgresss(isEncryptedWrite: false)
   }
 
-  func testWriteCompressedMessage_requiresChunkingCorrectlySplitsPayload() {
+  @MainActor func testWriteCompressedMessage_requiresChunkingCorrectlySplitsPayload() {
     messageStreamV2 = BLEMessageStreamV2(
       peripheral: peripheralMock,
       readCharacteristic: readCharacteristic,
@@ -291,29 +297,29 @@ class BLEMessageStreamV2Test: XCTestCase {
 
   // MARK: - writeEncryptedMessage() tests.
 
-  func testWriteEncryptedMessage_fitsWithoutChunkingNotifiesDelegate() {
+  @MainActor func testWriteEncryptedMessage_fitsWithoutChunkingNotifiesDelegate() {
     assertWriteMessage_fitsWithoutChunkingNotifiesDelegate(isEncryptedWrite: true)
   }
 
-  func testWriteEncryptedMessage_fitsWithoutChunkingCorrectlySplitsPayload() {
+  @MainActor func testWriteEncryptedMessage_fitsWithoutChunkingCorrectlySplitsPayload() {
     assertWriteMessage_fitsWithoutChunkingCorrectlySplitsPayload(isEncryptedWrite: true)
   }
 
-  func testWriteEncryptedMessage_requiresChunkingOnlyNotifiesAfterCompleteMessageSent() {
+  @MainActor func testWriteEncryptedMessage_requiresChunkingOnlyNotifiesAfterCompleteMessageSent() {
     assertWriteMessage_requiresChunkingOnlyNotifiesAfterCompleteMessageSent(isEncryptedWrite: true)
   }
 
-  func testWriteEncryptedMessage_requiresChunkingCorrectlySplitsPayload() {
+  @MainActor func testWriteEncryptedMessage_requiresChunkingCorrectlySplitsPayload() {
     assertWriteMessage_requiresChunkingCorrectlySplitsPayload(isEncryptedWrite: true)
   }
 
-  func testWriteEncryptedMessage_waitsIfSendInProgress() {
+  @MainActor func testWriteEncryptedMessage_waitsIfSendInProgress() {
     assertWriteMessage_waitsIfSendInProgresss(isEncryptedWrite: true)
   }
 
   // MARK: - Error state tests.
 
-  func testWriteEncryptedMessage_throwsErrorIfNoMessageEncryptor() {
+  @MainActor func testWriteEncryptedMessage_throwsErrorIfNoMessageEncryptor() {
     let message = Data("arbitrary_message".utf8)
     messageStreamV2.messageEncryptor = nil
 
@@ -324,7 +330,7 @@ class BLEMessageStreamV2Test: XCTestCase {
     }
   }
 
-  func testWriteEncryptedMessage_throwsErrorIfEncryptionFails() {
+  @MainActor func testWriteEncryptedMessage_throwsErrorIfEncryptionFails() {
     let message = Data("arbitrary_message".utf8)
     messageEncryptor.canEncrypt = false
 
@@ -337,7 +343,7 @@ class BLEMessageStreamV2Test: XCTestCase {
 
   // MARK: - Maximum write length test
 
-  func testMaximumWriteValueLength_constrainedToMaxValue() {
+  @MainActor func testMaximumWriteValueLength_constrainedToMaxValue() {
     // Ensure that the reported max size is greater than the max size in the stream.
     peripheralMock.maximumWriteValueLength = BLEMessageStreamV2.maxWriteValueLength + 1000
 
@@ -352,7 +358,7 @@ class BLEMessageStreamV2Test: XCTestCase {
     XCTAssertEqual(peripheralMock.writtenData.count, 1)
 
     // The written message should be a proto.
-    let proto = try! Packet(serializedData: peripheralMock.writtenData[0])
+    let proto = try! Packet(serializedBytes: peripheralMock.writtenData[0])
 
     // The proto should have been chunked.
     XCTAssertEqual(proto.packetNumber, 1)
@@ -361,7 +367,9 @@ class BLEMessageStreamV2Test: XCTestCase {
 
   // MARK: - Common test assertions
 
-  private func assertWriteMessage_fitsWithoutChunkingNotifiesDelegate(isEncryptedWrite: Bool) {
+  @MainActor private func assertWriteMessage_fitsWithoutChunkingNotifiesDelegate(
+    isEncryptedWrite: Bool
+  ) {
     // Ensure the message fits.
     peripheralMock.maximumWriteValueLength = BLEMessageStreamV2.maxWriteValueLength
     let message = makeMessage(length: 50)
@@ -375,7 +383,7 @@ class BLEMessageStreamV2Test: XCTestCase {
     XCTAssertEqual(delegate.didWriteMessageCalledCount, 1)
   }
 
-  private func assertWriteMessage_fitsWithoutChunkingCorrectlySplitsPayload(
+  @MainActor private func assertWriteMessage_fitsWithoutChunkingCorrectlySplitsPayload(
     isEncryptedWrite: Bool
   ) {
     // Ensure the message fits.
@@ -390,7 +398,7 @@ class BLEMessageStreamV2Test: XCTestCase {
     assertWrittenMessageCorrect(on: peripheralMock, expectedMessage: message)
   }
 
-  private func assertWriteMessage_requiresChunkingOnlyNotifiesAfterCompleteMessageSent(
+  @MainActor private func assertWriteMessage_requiresChunkingOnlyNotifiesAfterCompleteMessageSent(
     isEncryptedWrite: Bool
   ) {
     // Set a message ID to make testing easier.
@@ -415,7 +423,7 @@ class BLEMessageStreamV2Test: XCTestCase {
     XCTAssertEqual(delegate.didWriteMessageCalledCount, 1)
   }
 
-  private func assertWriteMessage_requiresChunkingCorrectlySplitsPayload(
+  @MainActor private func assertWriteMessage_requiresChunkingCorrectlySplitsPayload(
     isEncryptedWrite: Bool
   ) {
     // Set a message ID to make testing easier.
@@ -450,7 +458,7 @@ class BLEMessageStreamV2Test: XCTestCase {
     )
   }
 
-  private func assertWriteMessage_waitsIfSendInProgresss(isEncryptedWrite: Bool) {
+  @MainActor private func assertWriteMessage_waitsIfSendInProgresss(isEncryptedWrite: Bool) {
     // Ensure the message does not fit in 1 message.
     peripheralMock.maximumWriteValueLength = 182
     let message = makeMessage(length: 1000)
@@ -478,7 +486,7 @@ class BLEMessageStreamV2Test: XCTestCase {
   }
 
   /// Asserts that the state of the given message stream after a `writeMessage` was called.
-  private func assertWrittenMessageCorrect(
+  @MainActor private func assertWrittenMessageCorrect(
     on peripheralMock: PeripheralMock,
     expectedMessage: Data
   ) {
@@ -488,13 +496,13 @@ class BLEMessageStreamV2Test: XCTestCase {
     XCTAssertEqual(peripheralMock.writtenData.count, 1)
 
     // The written data should be a proto.
-    let blePacket = try! Packet(serializedData: peripheralMock.writtenData[0])
+    let blePacket = try! Packet(serializedBytes: peripheralMock.writtenData[0])
 
     // The proto should say that there's only 1 packet.
     XCTAssertEqual(blePacket.packetNumber, 1)
     XCTAssertEqual(blePacket.totalPackets, 1)
 
-    let deviceMessage = try! Message(serializedData: blePacket.payload)
+    let deviceMessage = try! Message(serializedBytes: blePacket.payload)
     let payload: Data
     if messageStreamV2.isCompressionEnabled,
       let messageCompressor = messageStreamV2.messageCompressor as? DataCompressorMock
@@ -511,7 +519,7 @@ class BLEMessageStreamV2Test: XCTestCase {
 
   /// Asserts that the header of the `MessagePacket` has the correct packet numbers up to the given
   /// write count and message ID.
-  private func assertChunkedMessageHeaderCorrect(
+  @MainActor private func assertChunkedMessageHeaderCorrect(
     on peripheralMock: PeripheralMock,
     expectedWriteCount: Int,
     messageID: Int32
@@ -527,7 +535,7 @@ class BLEMessageStreamV2Test: XCTestCase {
 
     // Check the packet numbers of each write.
     for index in 0..<expectedWriteCount {
-      let blePacket = try! Packet(serializedData: peripheralMock.writtenData[index])
+      let blePacket = try! Packet(serializedBytes: peripheralMock.writtenData[index])
 
       // Adding 1 to the index since the packet number is 1-based.
       XCTAssertEqual(blePacket.packetNumber, UInt32(index + 1))
@@ -538,7 +546,7 @@ class BLEMessageStreamV2Test: XCTestCase {
 
   /// Asserts that the reconstructed payload of all the `MessagePacket`s matches the given
   /// `expectedPayload`.
-  private func assertChunkedMessagePayloadCorrect(
+  @MainActor private func assertChunkedMessagePayloadCorrect(
     on peripheralMock: PeripheralMock,
     expectedWriteCount: Int,
     expectedPayload: Data,
@@ -548,12 +556,12 @@ class BLEMessageStreamV2Test: XCTestCase {
 
     var packetPayload = Data()
     for writtenData in peripheralMock.writtenData {
-      let blePacket = try! Packet(serializedData: writtenData)
+      let blePacket = try! Packet(serializedBytes: writtenData)
       packetPayload.append(blePacket.payload)
     }
 
     let deviceMessage = try! Com_Google_Companionprotos_Message(
-      serializedData: packetPayload)
+      serializedBytes: packetPayload)
 
     XCTAssertEqual(deviceMessage.isPayloadEncrypted, isEncrypted)
 
@@ -568,7 +576,7 @@ class BLEMessageStreamV2Test: XCTestCase {
 
   // MARK: - Helper functions
 
-  private func writeMessage(
+  @MainActor private func writeMessage(
     _ message: Data,
     isEncryptedWrite: Bool,
     expectedEncryptorCalledCount: Int = 1
@@ -582,7 +590,8 @@ class BLEMessageStreamV2Test: XCTestCase {
     }
   }
 
-  private func simulateMessageReceived(_ message: Data, from peripheral: PeripheralMock) {
+  @MainActor private func simulateMessageReceived(_ message: Data, from peripheral: PeripheralMock)
+  {
     readCharacteristic.value = message
 
     messageStreamV2.peripheral(
@@ -593,7 +602,7 @@ class BLEMessageStreamV2Test: XCTestCase {
   }
 
   /// Notifies that the current peripheral is ready to send another message.
-  private func notifyReadyToWrite(forCount count: Int) {
+  @MainActor private func notifyReadyToWrite(forCount count: Int) {
     for _ in 1...count {
       messageStreamV2.peripheralIsReadyToWrite(peripheralMock)
     }

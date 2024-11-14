@@ -16,7 +16,7 @@ private import Foundation
 
 /// Delegate for handling logging events.
 @available(macOS 10.15, *)
-public protocol LoggerDelegate: AnyObject {
+public protocol LoggerDelegate: AnyObject, Sendable {
   /// The logger did record a message which means the delegate should process the record (e.g.
   /// persisting the record) according to its policy.
   ///
@@ -30,7 +30,7 @@ public protocol LoggerDelegate: AnyObject {
 /// the modifier pattern so modifiers may be used to return copies with modified properties. So,
 /// effectively they can be considered like configurable functions.
 @available(macOS 10.15, *)
-public struct Logger {
+public struct Logger: Sendable {
   /// Default logger with no subsystem or category.
   static public let `default` = Logger()
 
@@ -307,7 +307,7 @@ extension Logger {
   /// significant logs may have a longer persistence. Also, if a cutoff is specified, then
   /// lower level logs may not get persisted at all. Note that debug logs typically don't get
   /// persisted.
-  public enum Level: Int, Encodable, Equatable, Comparable, Hashable {
+  public enum Level: Int, Encodable, Equatable, Comparable, Hashable, Sendable {
     case debug, info, standard, error, fault
 
     /// Name of the current case (e.g. "debug" for debug).

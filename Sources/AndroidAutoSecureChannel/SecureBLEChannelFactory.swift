@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /// Creator of different types of secure channels.
-public protocol SecureBLEChannelFactory {
+@MainActor public protocol SecureBLEChannelFactory {
   /// Creates a new instance of a secure BLE channel.
   func makeChannel() -> SecureBLEChannel
 }

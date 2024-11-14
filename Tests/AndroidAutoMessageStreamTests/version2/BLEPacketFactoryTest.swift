@@ -179,7 +179,7 @@ class MessagePacketFactoryTest: XCTestCase {
       reconstructedPayload.append(packet.payload)
     }
 
-    let deviceMessage = try! Message(serializedData: reconstructedPayload)
+    let deviceMessage = try! Message(serializedBytes: reconstructedPayload)
     XCTAssertEqual(deviceMessage.payload, payload)
   }
 

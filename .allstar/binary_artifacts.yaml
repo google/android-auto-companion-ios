@@ -8,3 +8,10 @@ ignorePaths:
   - Binaries/AndroidAutoAccountTransferCore.xcframework/ios-arm64_x86_64-simulator/AndroidAutoAccountTransferCore.framework/AndroidAutoAccountTransferCore
   - Binaries/AndroidAutoAccountTransferCore.xcframework/ios-arm64_x86_64-simulator/AndroidAutoAccountTransferCore.framework/Modules/AndroidAutoAccountTransferCore.swiftmodule/arm64.swiftdoc
   - Binaries/AndroidAutoAccountTransferCore.xcframework/ios-arm64_x86_64-simulator/AndroidAutoAccountTransferCore.framework/Modules/AndroidAutoAccountTransferCore.swiftmodule/x86_64.swiftdoc
+  - Binaries/RemoteSetup.xcframework/ios-arm64/RemoteSetup.framework/Assets.car
+  - Binaries/RemoteSetup.xcframework/ios-arm64/RemoteSetup.framework/RemoteSetup
+  - Binaries/RemoteSetup.xcframework/ios-arm64/RemoteSetup.framework/Modules/RemoteSetup.swiftmodule/arm64.swiftdoc
+  - Binaries/RemoteSetup.xcframework/ios-arm64_x86_64-simulator/RemoteSetup.framework/Assets.car
+  - Binaries/RemoteSetup.xcframework/ios-arm64_x86_64-simulator/RemoteSetup.framework/RemoteSetup
+  - Binaries/RemoteSetup.xcframework/ios-arm64_x86_64-simulator/RemoteSetup.framework/Modules/RemoteSetup.swiftmodule/arm64.swiftdoc
+  - Binaries/RemoteSetup.xcframework/ios-arm64_x86_64-simulator/RemoteSetup.framework/Modules/RemoteSetup.swiftmodule/x86_64.swiftdoc

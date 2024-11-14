@@ -24,9 +24,13 @@ class PeriodicPingManagerTest: XCTestCase {
   private let testCarId = "testCarId"
   private let testCar = Car(id: "testCarId", name: "mock car")
 
-  @MainActor override func setUp() {
-    super.setUp()
+  override func setUp() async throws {
+    try await super.setUp()
 
+    await setUpOnMain()
+  }
+
+  @MainActor private func setUpOnMain() {
     connectedCarManagerMock = ConnectedCarManagerMock()
     manager = PeriodicPingManager(connectedCarManager: connectedCarManagerMock)
   }
@@ -84,7 +88,7 @@ class PeriodicPingManagerTest: XCTestCase {
 
   private func checkMessageType(_ messageData: Data, expectedType: PeriodicPingMessage.MessageType)
   {
-    let message = try! PeriodicPingMessage(serializedData: messageData)
+    let message = try! PeriodicPingMessage(serializedBytes: messageData)
 
     XCTAssertEqual(message.messageType, expectedType)
   }

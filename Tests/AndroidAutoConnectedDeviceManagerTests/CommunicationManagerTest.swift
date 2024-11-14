@@ -26,9 +26,9 @@ private import AndroidAutoTrustAgentProtos
 /// Unit tests for `CommunicationManager`. Specifically testing the version 2 flow.
 
 class CommunicationManagerTest: XCTestCase {
-  private let associatedCarsManagerMock = AssociatedCarsManagerMock()
-  private let secureSessionManagerMock = SecureSessionManagerMock()
-  private let reconnectionHandlerFactory = ReconnectionHandlerFactoryFake()
+  private var associatedCarsManagerMock: AssociatedCarsManagerMock!
+  private var secureSessionManagerMock: SecureSessionManagerMock!
+  private var reconnectionHandlerFactory: ReconnectionHandlerFactoryFake!
 
   @MainActor private let ioCharactersticsUUIDs = CommunicationManager.versionCharacteristics
 
@@ -47,8 +47,16 @@ class CommunicationManagerTest: XCTestCase {
   private var reconnectionHelpers: [UUID: ReconnectionHelperMock]!
   private var uuidConfig: UUIDConfig!
 
-  @MainActor override func setUp() async throws {
+  override func setUp() async throws {
     try await super.setUp()
+
+    await setUpOnMain()
+  }
+
+  @MainActor private func setUpOnMain() {
+    associatedCarsManagerMock = AssociatedCarsManagerMock()
+    secureSessionManagerMock = SecureSessionManagerMock()
+    reconnectionHandlerFactory = ReconnectionHandlerFactoryFake()
 
     reconnectionHelpers = [:]
 

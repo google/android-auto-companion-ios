@@ -17,9 +17,9 @@ internal import CoreBluetooth
 internal import Foundation
 
 /// Protocol implemented by helpers which manage the reconnection handshake.
-protocol ReconnectionHelper: AnyObject {
+@MainActor protocol ReconnectionHelper: AnyObject {
   /// The peripheral for which reconnection is being attempted.
-  var peripheral: AnyPeripheral { get }
+  var peripheral: any AutoPeripheral { get }
 
   /// The car id should be determined during the handshake. If the car id is `nil` after the
   /// handshake has completed, it implies a failure occurred during the handshake.

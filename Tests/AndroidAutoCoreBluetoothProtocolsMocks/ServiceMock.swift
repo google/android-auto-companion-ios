@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCoreBluetoothProtocols
-import CoreBluetooth
-import Foundation
+public import AndroidAutoCoreBluetoothProtocols
+public import CoreBluetooth
+//import Foundation
 
 /// A mock that allows the service `uuid` and `characteristics` to be set.
 public class ServiceMock: BLEService {

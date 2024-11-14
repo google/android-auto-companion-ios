@@ -26,19 +26,27 @@ internal import XCTest
 
 class ReconnectionHandlerImplTest: XCTestCase {
   private let carId = "carId"
-  private let car = PeripheralMock(name: "carName")
+  private var car: PeripheralMock!
   private let savedSession = SecureBLEChannelMock.mockSavedSession
 
-  private let secureSessionManagerMock = SecureSessionManagerMock()
-  private let secureBLEChannelMock = SecureBLEChannelMock()
+  private var secureSessionManagerMock: SecureSessionManagerMock!
+  private var secureBLEChannelMock: SecureBLEChannelMock!
 
   private var messageStream: BLEMessageStream!
   private var reconnectionHandler: ReconnectionHandlerImpl!
   private var connectionHandle: ConnectionHandleFake!
 
-  @MainActor override func setUp() async throws {
+  override func setUp() async throws {
     try await super.setUp()
     continueAfterFailure = false
+
+    await setUpOnMain()
+  }
+
+  @MainActor private func setUpOnMain() {
+    car = PeripheralMock(name: "carName")
+    secureSessionManagerMock = SecureSessionManagerMock()
+    secureBLEChannelMock = SecureBLEChannelMock()
 
     UserDefaultsStorage.shared.clearAll()
 

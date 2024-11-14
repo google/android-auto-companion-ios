@@ -72,17 +72,21 @@ class AsyncSerialDecodingSequenceTest: XCTestCase {
     XCTAssertEqual(results, input)
   }
 
-  func testElementsDecoded() async throws {
+  @MainActor func testElementsDecoded() async throws {
+    let mockAdaptor = MockSerialDecodingAdaptor()
+    let sequence = AsyncSerialDecodingSequence(mockAdaptor)
+
     let input = [2, 3, 5]
-    Task {
+    Task { @MainActor in
       input.forEach {
         mockAdaptor.post($0)
       }
       mockAdaptor.terminate()
     }
 
-    let results: [Int] = try await sequence.reduce(into: []) { aggregate, value in
-      aggregate.append(value)
+    var results: [Int] = []
+    for try await value in sequence {
+      results.append(value)
     }
 
     XCTAssertFalse(results.isEmpty)
@@ -110,7 +114,7 @@ class AsyncSerialDecodingSequenceTest: XCTestCase {
 
 // MARK: - Mocks
 
-private class MockSerialDecodingAdaptor {
+private final class MockSerialDecodingAdaptor: @unchecked Sendable {
   private var onElementDecoded: ((Result<Int?, Error>) -> Void)?
 
   var startDecodingCalled = false

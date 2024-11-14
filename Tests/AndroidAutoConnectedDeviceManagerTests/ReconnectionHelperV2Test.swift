@@ -23,9 +23,9 @@ internal import XCTest
 
 /// Fake authenticator we can configure for testing the helper.
 private struct CarAuthenticatorFake: CarAuthenticator {
-  static var hmacWillMatchForChallenge: Bool = true
-  static var match: CarAdvertisementMatch? = nil
-  static var nextRandomSalt: Data?
+  @MainActor static var hmacWillMatchForChallenge: Bool = true
+  @MainActor static var match: CarAdvertisementMatch? = nil
+  @MainActor static var nextRandomSalt: Data?
 
   init(carId: String) {}
 
@@ -33,18 +33,18 @@ private struct CarAuthenticatorFake: CarAuthenticator {
   ///
   /// - Parameter size: The size of the salt in bytes.
   /// - Returns: The generated salt.
-  static func randomSalt(size: Int) -> Data {
+  @MainActor static func randomSalt(size: Int) -> Data {
     return nextRandomSalt ?? CarAuthenticatorImpl.randomSalt(size: size)
   }
 
-  static func first(
+  @MainActor static func first(
     among cars: Set<Car>,
     matchingData advertisementData: Data
   ) -> CarAdvertisementMatch? {
     return match
   }
 
-  func isMatch(challenge: Data, hmac: Data) -> Bool {
+  @MainActor func isMatch(challenge: Data, hmac: Data) -> Bool {
     return Self.hmacWillMatchForChallenge
   }
 }
@@ -58,9 +58,13 @@ class ReconnectionHelperV2Test: XCTestCase {
   // The helper under test.
   private var reconnectionHelper: ReconnectionHelperV2!
 
-  @MainActor override func setUp() async throws {
+  override func setUp() async throws {
     try await super.setUp()
 
+    await setUpOnMain()
+  }
+
+  @MainActor private func setUpOnMain() {
     peripheralMock = PeripheralMock(name: "Test")
 
     let readCharacteristic = CharacteristicMock(

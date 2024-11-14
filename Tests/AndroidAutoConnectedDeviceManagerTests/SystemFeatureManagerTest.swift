@@ -36,10 +36,14 @@ class SystemFeatureManagerTest: XCTestCase {
   private var channel: SecuredCarChannelMock!
   private var manager: SystemFeatureManager!
 
-  @MainActor override func setUp() async throws {
+  override func setUp() async throws {
     try await super.setUp()
     continueAfterFailure = false
 
+    await setUpOnMain()
+  }
+
+  @MainActor private func setUpOnMain() {
     connectedCarManagerMock = ConnectedCarManagerMock()
     car = Car(id: "id", name: "name")
     channel = SecuredCarChannelMock(car: car)

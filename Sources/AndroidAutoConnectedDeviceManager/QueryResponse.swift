@@ -16,7 +16,7 @@ public import Foundation
 private import AndroidAutoCompanionProtos
 
 /// Represents a query response that can be sent to a remote car.
-public struct QueryResponse: Equatable {
+public struct QueryResponse: Equatable, Sendable {
   /// A unique identifier for a query.
   public let id: Int32
 

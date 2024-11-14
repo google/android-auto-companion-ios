@@ -17,7 +17,7 @@ internal import Foundation
 @testable private import AndroidAutoMessageStream
 
 /// Mock for compression/decompression operations.
-class DataCompressorMock: DataCompressor {
+final class DataCompressorMock: DataCompressor, @unchecked Sendable {
   // MARK: - Method call checks
   public var compressCalled = false
   public var decompressCalled = false

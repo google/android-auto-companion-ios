@@ -21,7 +21,7 @@ internal import Foundation
 
 /// Helper for handling `AssociationManager` message exchange allowing support for different
 /// versions of the association message exchange.
-protocol AssociationMessageHelper {
+@MainActor protocol AssociationMessageHelper {
   static var log: Logger { get }
 
   /// Start the message exchange.

@@ -16,7 +16,7 @@ public import AndroidAutoCoreBluetoothProtocols
 internal import Foundation
 
 /// A delegate to be notified of the result of a version exchange.
-public protocol BLEVersionResolverDelegate: AnyObject {
+@MainActor public protocol BLEVersionResolverDelegate: AnyObject {
   /// Called upon a successful version exchange.
   ///
   /// - Parameters:
@@ -54,7 +54,7 @@ public enum BLEVersionResolverError: Error {
 }
 
 /// Determines which versions of the BLE messaging stream a peripheral supports and should be used.
-public protocol BLEVersionResolver: AnyObject {
+@MainActor public protocol BLEVersionResolver: AnyObject {
   var delegate: BLEVersionResolverDelegate? { get set }
 
   /// Communicates with the given peripheral and resolves the BLE message stream version to use

@@ -39,13 +39,13 @@ private enum ResolutionExchange {
 }
 
 /// Processes one resolution exchange in a sequence of exchanges.
-private protocol ResolutionExchangeHandler {
+@MainActor private protocol ResolutionExchangeHandler {
   /// Resolve the received message.
   func resolveMessage(_: Data)
 }
 
 /// Processes message exchange.
-private protocol MessageExchangeDelegate: AnyObject {
+@MainActor private protocol MessageExchangeDelegate: AnyObject {
   var allowsCapabilitiesExchange: Bool { get }
 
   func writeMessage(_: Data)
@@ -53,7 +53,7 @@ private protocol MessageExchangeDelegate: AnyObject {
 }
 
 /// Resolver of the messaging protocol to use.
-public class BLEVersionResolverImpl: NSObject, BLEVersionResolver {
+@MainActor public class BLEVersionResolverImpl: NSObject, BLEVersionResolver {
   private static let log = Logger(for: BLEVersionResolverImpl.self)
 
   private var peripheral: (any BLEPeripheral)?
@@ -235,7 +235,7 @@ private struct VersionExchangeHandler: ResolutionExchangeHandler {
 
   // MARK: ResolutionExchangeHandler conformance
   func resolveMessage(_ message: Data) {
-    guard let versionExchange = try? VersionExchange(serializedData: message) else {
+    guard let versionExchange = try? VersionExchange(serializedBytes: message) else {
       Self.log.error("Cannot serialize a version exchange proto from message")
 
       delegate?.process(.failure(.failedToParseResponse))
@@ -392,7 +392,7 @@ private struct VersionExchangeHandler: ResolutionExchangeHandler {
 ///
 /// Sends empty capabilities to satisfy V3 security requirements. Since V4 deprecates capabilities
 /// exchange, we don't need to build it out any further.
-private struct EmptyCapabilitiesExchangeHandler: ResolutionExchangeHandler {
+@MainActor private struct EmptyCapabilitiesExchangeHandler: ResolutionExchangeHandler {
   private static let log = Logger(for: EmptyCapabilitiesExchangeHandler.self)
 
   private let resolution: ExchangeResolution

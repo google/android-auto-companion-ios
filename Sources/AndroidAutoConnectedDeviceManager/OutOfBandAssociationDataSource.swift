@@ -83,7 +83,7 @@ extension OutOfBandAssociationDataSource {
         Self.log.error("URL query out of band data could not be base64 decoded.")
         throw Error.invalidBase64Encoding
       }
-      let outOfBandData = try OutOfBandAssociationData(serializedData: oobTokenData)
+      let outOfBandData = try OutOfBandAssociationData(serializedBytes: oobTokenData)
 
       Self.log("Parsed out of band data from URL for car: \(outOfBandData.deviceIdentifier.hex)")
 

@@ -54,7 +54,7 @@ internal import CoreBluetooth
   private static let log = Logger(for: ReconnectionHelperV2.self)
 
   let authenticatorType: CarAuthenticator.Type
-  let peripheral: AnyPeripheral
+  let peripheral: any AutoPeripheral
   var car: Car? = nil
   var carId: String? { car?.id }
   var onReadyForHandshake: (() -> Void)?
@@ -78,7 +78,7 @@ internal import CoreBluetooth
   ///   - authenticatorType: Authenticator to use.
   /// - Returns: `nil` if none of the cars are successfully matched against the advertisement.
   init(
-    peripheral: AnyPeripheral,
+    peripheral: any AutoPeripheral,
     cars: Set<Car>,
     authenticatorType: CarAuthenticator.Type
   ) {
@@ -104,7 +104,7 @@ internal import CoreBluetooth
   ///   - authenticatorType: Authenticator to use.
   /// - Returns: `nil` if none of the cars are successfully matched against the advertisement.
   init?(
-    peripheral: AnyPeripheral,
+    peripheral: any AutoPeripheral,
     advertisementData: Data,
     cars: Set<Car>,
     authenticatorType: CarAuthenticator.Type

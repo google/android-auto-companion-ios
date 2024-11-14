@@ -39,7 +39,7 @@ public enum SecureBLEChannelState {
 }
 
 /// Token used for verification when securing a channel.
-public protocol SecurityVerificationToken {
+@MainActor public protocol SecurityVerificationToken {
   /// Full backing data.
   var data: Data { get }
 
@@ -49,7 +49,7 @@ public protocol SecurityVerificationToken {
 
 /// The delegate that will be notified of various events during the establishment of a secure
 /// channel.
-public protocol SecureBLEChannelDelegate: AnyObject {
+@MainActor public protocol SecureBLEChannelDelegate: AnyObject {
   /// Invoked when a verification code from the peripheral needs to be verified on device.
   ///
   /// After confirmation of the verification token, notify this secure channel of that event by
@@ -90,7 +90,7 @@ public protocol SecureBLEChannelDelegate: AnyObject {
 
 /// A channel that supports secure communication between the current device and a given BLE
 /// peripheral.
-public protocol SecureBLEChannel: AnyObject {
+@MainActor public protocol SecureBLEChannel: AnyObject {
   /// The current state of the secure channel.
   var state: SecureBLEChannelState { get }
 

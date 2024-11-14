@@ -1,15 +1,15 @@
 // swift-interface-format-version: 1.0
-// swift-compiler-version: Apple Swift version 5.10 (swiftlang-5.10.0.13 clang-1500.3.9.4)
-// swift-module-flags: -target x86_64-apple-ios15.0-simulator -enable-objc-interop -enable-library-evolution -enforce-exclusivity=checked -Onone -module-alias SwiftProtobuf=AndroidAutoInternalSwiftProtobuf -enable-experimental-feature AccessLevelOnImport -enable-bare-slash-regex -module-name AndroidAutoAccountTransferCore -package-name third_party/swift/AndroidAutoCompanion/Frameworks/AndroidAutoAccountTransferCore
+// swift-compiler-version: Apple Swift version 6.0 (swiftlang-6.0.0.7.6 clang-1600.0.24.1)
+// swift-module-flags: -target x86_64-apple-ios16.0-simulator -enable-objc-interop -enable-library-evolution -swift-version 6 -enforce-exclusivity=checked -Onone -module-alias SwiftProtobuf=AndroidAutoInternalSwiftProtobuf -enable-experimental-feature AccessLevelOnImport -enable-bare-slash-regex -module-name AndroidAutoAccountTransferCore -package-name third_party/swift/AndroidAutoCompanion/Frameworks/AndroidAutoAccountTransferCore
 import Foundation
 import Swift
 import UIKit
 import _Concurrency
 import _StringProcessing
 import _SwiftConcurrencyShims
-public struct AccountTransferMessageHandler<M> where M : AndroidAutoAccountTransferCore.Messenger {
-  public init(_ messenger: M)
-  public func handleMessage(_ message: Foundation.Data, from car: M.Remote) throws
+@_Concurrency.MainActor public struct AccountTransferMessageHandler<M> where M : AndroidAutoAccountTransferCore.Messenger {
+  @_Concurrency.MainActor public init(_ messenger: M)
+  @_Concurrency.MainActor public func handleMessage(_ message: Foundation.Data, from car: M.Remote) throws
 }
 public enum AccountTransferMessageHandlerError : Swift.Error {
   case malformedRequest(Swift.String)
@@ -19,18 +19,18 @@ extension AndroidAutoAccountTransferCore.AccountTransferMessageHandlerError : Fo
     get
   }
 }
-public protocol Messenger : AnyObject {
-  associatedtype Remote : Swift.Equatable
-  func sendMessage(_ message: Foundation.Data, to car: Self.Remote, completion: ((Swift.Bool) -> Swift.Void)?) throws
+@_Concurrency.MainActor public protocol Messenger : AnyObject {
+  associatedtype Remote : Swift.Equatable, Swift.Sendable
+  @_Concurrency.MainActor func sendMessage(_ message: Foundation.Data, to car: Self.Remote, completion: (@_Concurrency.MainActor @Sendable (Swift.Bool) -> Swift.Void)?) throws
 }
-public struct SecondDeviceSignInURLMessageHandler<M> where M : AndroidAutoAccountTransferCore.Messenger {
-  public var connectedCar: M.Remote? {
+@_Concurrency.MainActor public struct SecondDeviceSignInURLMessageHandler<M> where M : AndroidAutoAccountTransferCore.Messenger {
+  @_Concurrency.MainActor public var connectedCar: M.Remote? {
     get
   }
-  public init(_ messenger: M)
-  public mutating func startSignIn(from uiViewController: UIKit.UIViewController) -> Swift.Bool
-  public mutating func handleMessage(_ message: Foundation.Data, from car: M.Remote) throws -> AndroidAutoAccountTransferCore.SecondDeviceSignInURLMessageHandler<M>.Event
-  public mutating func notifyFailure() throws
+  @_Concurrency.MainActor public init(_ messenger: M)
+  @_Concurrency.MainActor public mutating func startSignIn(from uiViewController: UIKit.UIViewController) -> Swift.Bool
+  @_Concurrency.MainActor public mutating func handleMessage(_ message: Foundation.Data, from car: M.Remote) throws -> AndroidAutoAccountTransferCore.SecondDeviceSignInURLMessageHandler<M>.Event
+  @_Concurrency.MainActor public mutating func notifyFailure() throws
 }
 extension AndroidAutoAccountTransferCore.SecondDeviceSignInURLMessageHandler {
   public enum Error : Swift.Error {
@@ -56,4 +56,6 @@ extension AndroidAutoAccountTransferCore.SecondDeviceSignInURLMessageHandler {
     }
   }
 }
+extension AndroidAutoAccountTransferCore.AccountTransferMessageHandler : Swift.Sendable {}
+extension AndroidAutoAccountTransferCore.SecondDeviceSignInURLMessageHandler : Swift.Sendable {}
 extension AndroidAutoAccountTransferCore.SecondDeviceSignInURLMessageHandler.Event : Swift.Hashable {}

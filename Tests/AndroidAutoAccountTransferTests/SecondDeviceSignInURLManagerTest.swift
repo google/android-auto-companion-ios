@@ -27,9 +27,14 @@ class SecondDeviceSignInURLManagerTest: XCTestCase {
 
   private var secondDeviceSignInURLManager: SecondDeviceSignInURLManager!
 
-  @MainActor override func setUp() {
-    super.setUp()
+  override func setUp() async throws {
+    try await super.setUp()
     continueAfterFailure = false
+
+    await setUpOnMain()
+  }
+
+  @MainActor private func setUpOnMain() {
     connectedCarManagerMock = ConnectedCarManagerMock()
     channelMock = SecuredCarChannelMock(id: "id", name: "mock")
 

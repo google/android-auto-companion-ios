@@ -16,7 +16,7 @@ internal import CoreBluetooth
 internal import Foundation
 
 /// A manager for discovering and connecting to BLE peripheral devices.
-public protocol ConnectedCarManager: AnyObject, FeatureSupportStatusProvider {
+@MainActor public protocol ConnectedCarManager: AnyObject, FeatureSupportStatusProvider, Sendable {
   /// The currently available channels for car communication.
   var securedChannels: [SecuredCarChannel] { get }
 
@@ -36,7 +36,8 @@ public protocol ConnectedCarManager: AnyObject, FeatureSupportStatusProvider {
   /// - Returns: A token that can be used to cancel the observation.
   @discardableResult
   func observeStateChange(
-    using observation: @escaping (ConnectedCarManager, RadioState) -> Void
+    using observation: @escaping @MainActor @Sendable (any ConnectedCarManager, any RadioState) ->
+      Void
   ) -> ObservationHandle
 
   /// Observe when a device has been connected to this manager.
@@ -50,7 +51,7 @@ public protocol ConnectedCarManager: AnyObject, FeatureSupportStatusProvider {
   /// - Returns: A token that can be used to cancel the observation.
   @discardableResult
   func observeConnection(
-    using observation: @escaping (ConnectedCarManager, Car) -> Void
+    using observation: @escaping @MainActor @Sendable (any ConnectedCarManager, Car) -> Void
   ) -> ObservationHandle
 
   /// Observe when a secure channel has been set up with a given device.
@@ -65,7 +66,9 @@ public protocol ConnectedCarManager: AnyObject, FeatureSupportStatusProvider {
   /// - Returns: A token that can be used to cancel the observation.
   @discardableResult
   func observeSecureChannelSetUp(
-    using observation: @escaping (ConnectedCarManager, SecuredCarChannel) -> Void
+    using observation: @escaping @MainActor @Sendable (
+      any ConnectedCarManager, any SecuredCarChannel
+    ) -> Void
   ) -> ObservationHandle
 
   /// Observe when a device has been disconnected from this manager.
@@ -77,7 +80,7 @@ public protocol ConnectedCarManager: AnyObject, FeatureSupportStatusProvider {
   /// - Returns: A token that can be used to cancel the observation.
   @discardableResult
   func observeDisconnection(
-    using observation: @escaping (ConnectedCarManager, Car) -> Void
+    using observation: @escaping @MainActor @Sendable (any ConnectedCarManager, Car) -> Void
   ) -> ObservationHandle
 
   /// Observe when a car has been dissociated from this manager.
@@ -89,7 +92,7 @@ public protocol ConnectedCarManager: AnyObject, FeatureSupportStatusProvider {
   /// - Returns: A token that can be used to cancel the observation.
   @discardableResult
   func observeDissociation(
-    using observation: @escaping (ConnectedCarManager, Car) -> Void
+    using observation: @escaping @MainActor @Sendable (any ConnectedCarManager, Car) -> Void
   ) -> ObservationHandle
 
   /// Observe when a car has been associated to this manager.
@@ -98,6 +101,6 @@ public protocol ConnectedCarManager: AnyObject, FeatureSupportStatusProvider {
   /// - Returns: A token that can be used to cancel the observation.
   @discardableResult
   func observeAssociation(
-    using observation: @escaping (ConnectedCarManager, Car) -> Void
+    using observation: @escaping @MainActor @Sendable (any ConnectedCarManager, Car) -> Void
   ) -> ObservationHandle
 }

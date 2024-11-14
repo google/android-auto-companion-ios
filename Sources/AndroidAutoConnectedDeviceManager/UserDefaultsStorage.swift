@@ -16,7 +16,7 @@ internal import Foundation
 
 /// Convenience abstraction over `UserDefaults` that ensures all values set through this class
 /// will have keys namespaced to this library.
-class UserDefaultsStorage {
+final class UserDefaultsStorage: Sendable {
   private static let keyPrefix = "com.google.trustagent."
 
   public static let shared = UserDefaultsStorage()

@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-public import AndroidAutoConnectedDeviceTransport
-public import AndroidAutoCoreBluetoothProtocols
-public import AndroidAutoCoreBluetoothProtocolsMocks
-public import Foundation
+private import AndroidAutoConnectedDeviceTransport
+private import AndroidAutoCoreBluetoothProtocols
+private import AndroidAutoCoreBluetoothProtocolsMocks
+private import Foundation
 
 @testable public import AndroidAutoConnectedDeviceManager
 

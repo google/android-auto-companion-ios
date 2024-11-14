@@ -163,7 +163,7 @@ public class ConnectionHowitzerManagerV2: FeatureManager {
   }
 
   private func handleConfigAckMessage(_ message: Data, from car: Car) {
-    guard let howitzerMessage = try? HowitzerMessage(serializedData: message) else {
+    guard let howitzerMessage = try? HowitzerMessage(serializedBytes: message) else {
       Self.log.error("Failed to decode message from serialized data.")
       onTestFailed()
       return
@@ -206,7 +206,7 @@ public class ConnectionHowitzerManagerV2: FeatureManager {
   }
 
   private func handleResult(_ message: Data, from car: Car) {
-    guard let howitzerMessage = try? HowitzerMessage(serializedData: message) else {
+    guard let howitzerMessage = try? HowitzerMessage(serializedBytes: message) else {
       Self.log.error("Failed to decode message from serialized data.")
       onTestFailed()
       return
@@ -337,7 +337,7 @@ public class ConnectionHowitzerManagerV2: FeatureManager {
   }
 
   private func handleResultAck(_ message: Data, from car: Car) {
-    guard let howitzerMessage = try? HowitzerMessage(serializedData: message) else {
+    guard let howitzerMessage = try? HowitzerMessage(serializedBytes: message) else {
       Self.log.error("Failed to decode message from serialized data.")
       onTestFailed()
       return

@@ -13,9 +13,7 @@
 // limitations under the License.
 
 /// A generator of unique IDs for messages.
-///
-/// This class is not thread-safe.
-class MessageIDGenerator {
+@MainActor final class MessageIDGenerator {
   static let shared = MessageIDGenerator()
 
   /// An ID that can be used to uniquely identify a message.
@@ -26,8 +24,6 @@ class MessageIDGenerator {
   var messageID: Int32 = 0
 
   /// Returns a new, unique ID for identifying messages.
-  ///
-  /// This method is not thread-safe.
   func next() -> Int32 {
     let currentMessageID = messageID
 

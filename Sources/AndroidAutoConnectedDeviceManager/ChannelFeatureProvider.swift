@@ -22,7 +22,7 @@ public enum UserRole: Equatable {
 }
 
 /// Provides for channel specific feature requests.
-public protocol ChannelFeatureProvider {
+@MainActor public protocol ChannelFeatureProvider {
   /// Request the user role (driver/passenger) with the specified channel.
   ///
   /// After the secure channel connection is established, the feature provider can be used to query

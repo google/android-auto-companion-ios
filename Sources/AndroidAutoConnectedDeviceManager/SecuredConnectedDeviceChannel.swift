@@ -16,7 +16,7 @@ internal import AndroidAutoSecureChannel
 internal import Foundation
 
 /// Additional internal requirements for a channel that can be used to send encrypted messages.
-protocol SecuredConnectedDeviceChannel: SecuredCarChannel {
+@MainActor protocol SecuredConnectedDeviceChannel: SecuredCarChannel {
   /// Complete configuration of the channel with the specified feature provider.
   ///
   /// After the secure channel connection is established, use the feature provider to query for

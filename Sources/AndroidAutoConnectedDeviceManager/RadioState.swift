@@ -14,8 +14,12 @@
 
 internal import Foundation
 
-/// Abstraction of the state of a transport's radio.
-public protocol RadioState: CustomStringConvertible {
+/// Abstraction of the state of a transport's radio using `CBManagerState` as a reference.
+public protocol RadioState: Equatable, Sendable {
+  static var poweredOn: Self { get }
+  static var poweredOff: Self { get }
+  static var unknown: Self { get }
+
   /// Indicates whether the radio is powered on.
   var isPoweredOn: Bool { get }
 
@@ -27,4 +31,39 @@ public protocol RadioState: CustomStringConvertible {
 
   /// Indicates whether the radio is in another custom state.
   var isOther: Bool { get }
+}
+
+// MARK: - Default implementations
+extension RadioState {
+  public var isPoweredOn: Bool {
+    self == .poweredOn
+  }
+
+  public var isPoweredOff: Bool {
+    self == .poweredOff
+  }
+
+  public var isUnknown: Bool {
+    self == .unknown
+  }
+
+  public var isOther: Bool {
+    !isPoweredOn && !isPoweredOff && !isUnknown
+  }
+}
+
+// MARK: - Default CustomStringConvertible Conformance
+extension RadioState where Self: CustomStringConvertible {
+  public var description: String {
+    switch self {
+    case .poweredOn:
+      return "poweredOn"
+    case .poweredOff:
+      return "poweredOff"
+    case .unknown:
+      return "unknown"
+    default:
+      return "other"
+    }
+  }
 }

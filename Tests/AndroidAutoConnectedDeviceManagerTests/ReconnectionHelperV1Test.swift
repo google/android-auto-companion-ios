@@ -32,6 +32,10 @@ class ReconnectionHelperV1Test: XCTestCase {
   override func setUp() async throws {
     try await super.setUp()
 
+    await setUpOnMain()
+  }
+
+  @MainActor private func setUpOnMain() {
     peripheralMock = PeripheralMock(name: "Test")
 
     let readCharacteristic = CharacteristicMock(

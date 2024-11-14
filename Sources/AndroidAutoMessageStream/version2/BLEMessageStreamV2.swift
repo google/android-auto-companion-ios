@@ -72,7 +72,7 @@ extension BLEMessageStreamV2Error: LocalizedError {
 }
 
 /// Version 2 of the message stream.
-class BLEMessageStreamV2: NSObject {
+@MainActor class BLEMessageStreamV2: NSObject {
   private static let log = Logger(for: BLEMessageStreamV2.self)
 
   /// The maximum number of bytes that can be sent each time across BLE.
@@ -375,7 +375,7 @@ class BLEMessageStreamV2: NSObject {
   private func handleCompletePayload(_ payload: Data, messageID: Int32) {
     receivedMessages[messageID] = nil
 
-    guard let deviceMessage = try? BleDeviceMessage(serializedData: payload) else {
+    guard let deviceMessage = try? BleDeviceMessage(serializedBytes: payload) else {
       Self.log.error(
         "Unable to deserialize received message (id: \(messageID)) into a BleDeviceMessage")
       delegate?.messageStreamEncounteredUnrecoverableError(self)
@@ -523,7 +523,7 @@ extension BLEMessageStreamV2: BLEPeripheralDelegate {
       return
     }
 
-    guard let blePacket = try? MessagePacket(serializedData: message) else {
+    guard let blePacket = try? MessagePacket(serializedBytes: message) else {
       Self.log.error(
         """
         Received message for characteristic (\(characteristic.uuid.uuidString)), \

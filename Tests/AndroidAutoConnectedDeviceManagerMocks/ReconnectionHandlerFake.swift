@@ -13,7 +13,7 @@
 // limitations under the License.
 
 public import AndroidAutoCoreBluetoothProtocols
-public import Foundation
+private import Foundation
 
 @testable public import AndroidAutoConnectedDeviceManager
 

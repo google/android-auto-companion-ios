@@ -15,10 +15,10 @@
 /// A handle that uniquely identifies an observation subscription.
 ///
 /// This handle can be used later on to cancel the observation.
-public class ObservationHandle {
-  private let cancellation: () -> Void
+@MainActor final public class ObservationHandle: Sendable {
+  private let cancellation: @MainActor @Sendable () -> Void
 
-  init(cancellation: @escaping () -> Void) {
+  init(cancellation: @escaping @MainActor @Sendable () -> Void) {
     self.cancellation = cancellation
   }
 

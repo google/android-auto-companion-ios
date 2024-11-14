@@ -33,12 +33,12 @@ class UUIDConfigTest: XCTestCase {
 
   // MARK: - Association UUID tests
 
-  func testAssociationUUID_returnsDefaultValue() {
+  @MainActor func testAssociationUUID_returnsDefaultValue() {
     let uuidConfig = UUIDConfig(plistLoader: PListLoaderFake())
     XCTAssertEqual(uuidConfig.associationUUID, expectedDefaultAssociationUUID)
   }
 
-  func testAssociationUUID_returnsOverlaidValue() {
+  @MainActor func testAssociationUUID_returnsOverlaidValue() {
     let newUUID = CBUUID(string: "8a506dff-c869-43ff-a3b4-e06cb5575038")
     let plistLoader = PListLoaderFake(
       overlayValues: [UUIDConfig.associationUUIDKey: newUUID.uuidString]
@@ -50,12 +50,12 @@ class UUIDConfigTest: XCTestCase {
 
   // MARK: - Association Data UUID tests
 
-  func testAssociationDataUUID_returnsDefaultValue() {
+  @MainActor func testAssociationDataUUID_returnsDefaultValue() {
     let uuidConfig = UUIDConfig(plistLoader: PListLoaderFake())
     XCTAssertEqual(uuidConfig.associationDataUUID, expectedDefaultDataUUID)
   }
 
-  func testAssociationDataUUID_returnsOverlaidValue() {
+  @MainActor func testAssociationDataUUID_returnsOverlaidValue() {
     let newUUID = CBUUID(string: "8a506dff-c869-43ff-a3b4-e06cb5575038")
     let plistLoader = PListLoaderFake(
       overlayValues: [UUIDConfig.associationDataUUIDKey: newUUID.uuidString]
@@ -67,17 +67,17 @@ class UUIDConfigTest: XCTestCase {
 
   // MARK: - Reconnection UUID tests
 
-  func testReconnectionUUID_v1_returnsDeviceId() {
+  @MainActor func testReconnectionUUID_v1_returnsDeviceId() {
     let uuidConfig = UUIDConfig(plistLoader: PListLoaderFake())
     XCTAssertEqual(uuidConfig.reconnectionUUID(for: .v1), DeviceIdManager.deviceId)
   }
 
-  func testReconnectionUUID_v2_returnsDefaultValue() {
+  @MainActor func testReconnectionUUID_v2_returnsDefaultValue() {
     let uuidConfig = UUIDConfig(plistLoader: PListLoaderFake())
     XCTAssertEqual(uuidConfig.reconnectionUUID(for: .v2), expectedReconnectionV2UUID)
   }
 
-  func testReconnectionUUID_returnsOverlaidValueforV2() {
+  @MainActor func testReconnectionUUID_returnsOverlaidValueforV2() {
     let newUUID = CBUUID(string: "8a506dff-c869-43ff-a3b4-e06cb5575038")
     let plistLoader = PListLoaderFake(
       overlayValues: [UUIDConfig.reconnectionUUIDKey: newUUID.uuidString]
@@ -87,7 +87,7 @@ class UUIDConfigTest: XCTestCase {
     XCTAssertEqual(uuidConfig.reconnectionUUID(for: .v2), newUUID)
   }
 
-  func testReconnectionUUID_overlaidValueDoesNotAffectV1() {
+  @MainActor func testReconnectionUUID_overlaidValueDoesNotAffectV1() {
     let newUUID = CBUUID(string: "8a506dff-c869-43ff-a3b4-e06cb5575038")
     let plistLoader = PListLoaderFake(
       overlayValues: [UUIDConfig.reconnectionUUIDKey: newUUID.uuidString]
@@ -99,12 +99,12 @@ class UUIDConfigTest: XCTestCase {
 
   // MARK: - Reconnection Data UUID tests
 
-  func testReconnectionDataUUID_returnsDefaultValue() {
+  @MainActor func testReconnectionDataUUID_returnsDefaultValue() {
     let uuidConfig = UUIDConfig(plistLoader: PListLoaderFake())
     XCTAssertEqual(uuidConfig.reconnectionDataUUID, expectedDefaultDataUUID)
   }
 
-  func testReconnectionDataUUID_returnsOverlaidValue() {
+  @MainActor func testReconnectionDataUUID_returnsOverlaidValue() {
     let newUUID = CBUUID(string: "8a506dff-c869-43ff-a3b4-e06cb5575038")
     let plistLoader = PListLoaderFake(
       overlayValues: [UUIDConfig.reconnectionDataUUIDKey: newUUID.uuidString]
@@ -116,7 +116,7 @@ class UUIDConfigTest: XCTestCase {
 
   // MARK: - Everything overlaid test
 
-  func testAllOverlaidValues_returnsCorrectly() {
+  @MainActor func testAllOverlaidValues_returnsCorrectly() {
     let associationUUID = CBUUID(string: "541078e7-d6de-4ad2-b371-e443771287c7")
     let reconnectionUUID = CBUUID(string: "8a506dff-c869-43ff-a3b4-e06cb5575038")
     let dataUUID = CBUUID(string: "ef38de53-5a43-4f8f-8337-b99ce0ef755d")

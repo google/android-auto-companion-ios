@@ -24,59 +24,57 @@ class PendingCarTest: XCTestCase {
     continueAfterFailure = false
   }
 
-  func testPendingCar_sameId_samePeripheralId_areEqual() {
+  @MainActor func testPendingCar_sameId_samePeripheralId_areEqual() {
     let peripheralId = UUID(uuidString: "af90316a-ce96-41be-86d1-38ceb70f9245")!
     let carId = "id"
 
-    let peripheralMock1 = PeripheralMock(name: "car1")
-    peripheralMock1.identifier = peripheralId
+    let peripheralMock1 = PeripheralMock(identifier: peripheralId, name: "car1")
     let car1 = PendingCar(car: peripheralMock1, id: carId, secureSession: Data())
 
-    let peripheralMock2 = PeripheralMock(name: "car2")
-    peripheralMock2.identifier = peripheralId
+    let peripheralMock2 = PeripheralMock(identifier: peripheralId, name: "car2")
     let car2 = PendingCar(car: peripheralMock2, id: carId, secureSession: Data())
 
     XCTAssertEqual(car1, car2)
   }
 
-  func testPendingCar_sameId_differentPeripheralId_areNotEqual() {
+  @MainActor func testPendingCar_sameId_differentPeripheralId_areNotEqual() {
     let carId = "id"
 
-    let peripheralMock1 = PeripheralMock(name: "car1")
-    peripheralMock1.identifier = UUID(uuidString: "af90316a-ce96-41be-86d1-38ceb70f9245")!
+    let peripheralMock1 = PeripheralMock(
+      identifier: UUID(uuidString: "af90316a-ce96-41be-86d1-38ceb70f9245")!,
+      name: "car1"
+    )
     let car1 = PendingCar(car: peripheralMock1, id: carId, secureSession: Data())
 
-    let peripheralMock2 = PeripheralMock(name: "car2")
-    peripheralMock1.identifier = UUID(uuidString: "87a7d62f-910a-4b22-bd1c-6b0071dc5353")!
+    let peripheralMock2 = PeripheralMock(
+      identifier: UUID(uuidString: "87a7d62f-910a-4b22-bd1c-6b0071dc5353")!,
+      name: "car2"
+    )
     let car2 = PendingCar(car: peripheralMock2, id: carId, secureSession: Data())
 
     XCTAssertNotEqual(car1, car2)
   }
 
-  func testPendingCar_differentId_samePeripheralId_areNotEqual() {
+  @MainActor func testPendingCar_differentId_samePeripheralId_areNotEqual() {
     let peripheralId = UUID(uuidString: "af90316a-ce96-41be-86d1-38ceb70f9245")!
 
-    let peripheralMock1 = PeripheralMock(name: "car1")
-    peripheralMock1.identifier = peripheralId
+    let peripheralMock1 = PeripheralMock(identifier: peripheralId, name: "car1")
     let car1 = PendingCar(car: peripheralMock1, id: "id1", secureSession: Data())
 
-    let peripheralMock2 = PeripheralMock(name: "car2")
-    peripheralMock1.identifier = peripheralId
+    let peripheralMock2 = PeripheralMock(identifier: peripheralId, name: "car2")
     let car2 = PendingCar(car: peripheralMock2, id: "id2", secureSession: Data())
 
     XCTAssertNotEqual(car1, car2)
   }
 
-  func testPendingCar_differentSecureSession_areEqual() {
+  @MainActor func testPendingCar_differentSecureSession_areEqual() {
     let peripheralId = UUID(uuidString: "af90316a-ce96-41be-86d1-38ceb70f9245")!
     let carId = "id"
 
-    let peripheralMock1 = PeripheralMock(name: "car1")
-    peripheralMock1.identifier = peripheralId
+    let peripheralMock1 = PeripheralMock(identifier: peripheralId, name: "car1")
     let car1 = PendingCar(car: peripheralMock1, id: carId, secureSession: Data("session1".utf8))
 
-    let peripheralMock2 = PeripheralMock(name: "car2")
-    peripheralMock2.identifier = peripheralId
+    let peripheralMock2 = PeripheralMock(identifier: peripheralId, name: "car2")
     let car2 = PendingCar(car: peripheralMock2, id: carId, secureSession: Data("session2".utf8))
 
     XCTAssertEqual(car1, car2)

@@ -14,12 +14,12 @@
 
 private import AndroidAutoLogger
 internal import AndroidAutoMessageStream
-internal import CoreBluetooth
+@preconcurrency internal import CoreBluetooth
 internal import Foundation
 
 /// Holds common methods and properties related to service and characteristic UUIDs that are
 /// scanned for and inspected throughout this library.
-public class UUIDConfig {
+@MainActor public final class UUIDConfig: Sendable {
   private static let log = Logger(for: UUIDConfig.self)
 
   static let associationUUIDKey = "AssociationServiceUUID"
@@ -72,11 +72,11 @@ public class UUIDConfig {
 
   /// The UUID to use to as a key into the advertisement packet for any data needed for
   /// association.
-  let associationDataUUID: CBUUID
+  nonisolated let associationDataUUID: CBUUID
 
   /// The UUID to use to as a key into the advertisement packet for any data needed for
   /// reconnection.
-  let reconnectionDataUUID: CBUUID
+  nonisolated let reconnectionDataUUID: CBUUID
 
   /// The UUID for monitoring IHU beacon advertisement to launch the app when killed.
   let beaconUUID: UUID?

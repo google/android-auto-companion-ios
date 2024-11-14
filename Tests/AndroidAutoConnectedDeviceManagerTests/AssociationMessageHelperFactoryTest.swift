@@ -29,9 +29,21 @@ class AssociationMessageHelperFactoryTest: XCTestCase {
   /// The factory to test.
   private var helperFactory: AssociationMessageHelperFactoryImpl!
 
-  @MainActor override func setUp() async throws {
+  override func setUp() async throws {
     try await super.setUp()
 
+    await setUpOnMain()
+  }
+
+  override func tearDown() {
+    messageStreamMock = nil
+    associatorMock = nil
+    helperFactory = nil
+
+    super.tearDown()
+  }
+
+  @MainActor private func setUpOnMain() {
     associatorMock = AssociatorMock()
 
     let peripheralMock = PeripheralMock(name: "Test")
@@ -46,14 +58,6 @@ class AssociationMessageHelperFactoryTest: XCTestCase {
     )
 
     helperFactory = AssociationMessageHelperFactoryImpl()
-  }
-
-  override func tearDown() {
-    messageStreamMock = nil
-    associatorMock = nil
-    helperFactory = nil
-
-    super.tearDown()
   }
 
   @MainActor func testFactoryMakesHelperV1ForSecurityVersionV1() async {

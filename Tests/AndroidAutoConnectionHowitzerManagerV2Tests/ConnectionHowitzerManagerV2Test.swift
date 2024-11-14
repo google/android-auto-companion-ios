@@ -26,10 +26,14 @@ class ConnectionHowitzerManagerV2Test: XCTestCase {
   private let testCar1 = Car(id: "testCarId1", name: "mock car 1")
   private let testCar2 = Car(id: "testCarId2", name: "mock car 2")
 
-  @MainActor override func setUp() {
-    super.setUp()
-
+  override func setUp() async throws {
+    try await super.setUp()
     continueAfterFailure = false
+
+    await setUpOnMain()
+  }
+
+  @MainActor private func setUpOnMain() {
     connectedCarManagerMock = ConnectedCarManagerMock()
     manager = ConnectionHowitzerManagerV2(connectedCarManager: connectedCarManagerMock)
   }

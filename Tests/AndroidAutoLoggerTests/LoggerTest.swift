@@ -194,7 +194,7 @@ class LoggerTest: XCTestCase {
 }
 
 /// Mock for the Logger delegate.
-private class LoggerDelegateMock: LoggerDelegate {
+private final class LoggerDelegateMock: LoggerDelegate, @unchecked Sendable {
   var lastRecord: LogRecord? = nil
 
   func loggerDidRecordMessage(_ record: LogRecord) {

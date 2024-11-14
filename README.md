@@ -57,7 +57,7 @@ steps.
 
 The main library that supplies the ability to associate and connect to an
 Android Auto vehicle. Full usage instructions, can be found on the
-[Phone SDK Integration Guide](https://docs.partner.android.com/gas/integrate/companion_app/cd_phone_sdk).
+[Phone SDK Integration Guide](https://docs.partner.android.com/automotive/integrate/companion_app/cd_phone_sdk).
 
 ### AndroidAutoUKey2Wrapper
 

@@ -16,7 +16,7 @@ private import Foundation
 
 /// A signpost marker with a named signpost and an event role.
 @available(macOS 10.15, *)
-public struct SignpostMarker {
+public struct SignpostMarker: Sendable {
   /// Name of the signpost.
   public let name: StaticString
 
@@ -43,7 +43,7 @@ public struct SignpostMarker {
 
 /// Signpost for beginning and end markers.
 @available(macOS 10.15, *)
-public struct SignpostDuration {
+public struct SignpostDuration: Sendable {
   /// Name of the signpost.
   public let name: StaticString
 
@@ -68,7 +68,7 @@ extension SignpostMarker {
   /// Role identifying whether the signpost is a solitary event or bracketing some action.
   ///
   /// Implemented so it can referenced on systems prior to the introduction of `OSSignpostType`.
-  public enum Role {
+  public enum Role: Sendable {
     case event, begin, end
   }
 }

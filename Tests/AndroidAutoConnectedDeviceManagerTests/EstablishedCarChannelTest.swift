@@ -24,17 +24,22 @@ internal import XCTest
 /// Unit tests for `EstablishedCarChannel`.
 class EstablishedCarChannelTest: XCTestCase {
   private let carId = "carId"
-  private let car = PeripheralMock(name: "carName")
+  private var car: PeripheralMock!
   private let savedSession = SecureBLEChannelMock.mockSavedSession
 
   private var messageStream: BLEMessageStreamFake!
   private var channel: EstablishedCarChannel!
   private var connectionHandle: ConnectionHandleFake!
 
-  @MainActor override func setUp() async throws {
+  override func setUp() async throws {
     try await super.setUp()
     continueAfterFailure = false
 
+    await setUpOnMain()
+  }
+
+  @MainActor private func setUpOnMain() {
+    car = PeripheralMock(name: "carName")
     car.reset()
 
     messageStream = BLEMessageStreamFake(peripheral: car)

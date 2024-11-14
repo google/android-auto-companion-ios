@@ -13,9 +13,9 @@
 // limitations under the License.
 
 /// An adaptor that binds to a data source that is serially decoded into elements.
-public protocol SerialDecodingAdaptor {
+public protocol SerialDecodingAdaptor: Sendable {
   /// The type of element to decode.
-  associatedtype Element
+  associatedtype Element: Sendable
 
   /// Begin decoding elements from the data source.
   ///

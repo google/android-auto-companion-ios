@@ -16,7 +16,7 @@ private import Compression
 internal import Foundation
 
 /// Provide data compression/decompression operations.
-protocol DataCompressor {
+protocol DataCompressor: Sendable {
   /// Compress the specified input data.
   ///
   /// - Parameter inputData: The data to compress.

@@ -13,12 +13,15 @@
 // limitations under the License.
 
 private import AndroidAutoLogger
+internal import AndroidAutoUtils
 internal import Foundation
 internal import AndroidAutoCompanionProtos
 
+private typealias DeviceVersionsResponse = Com_Google_Companionprotos_DeviceVersionsResponse
 private typealias FeatureSupportStatus = Com_Google_Companionprotos_FeatureSupportStatus
 private typealias SystemQuery = Com_Google_Companionprotos_SystemQuery
 private typealias SystemQueryType = Com_Google_Companionprotos_SystemQueryType
+private typealias DeviceOS = Com_Google_Companionprotos_DeviceOS
 private typealias SystemUserRoleResponse = Com_Google_Companionprotos_SystemUserRoleResponse
 typealias SystemUserRole = Com_Google_Companionprotos_SystemUserRole
 typealias FeatureSupportResponse = Com_Google_Companionprotos_FeatureSupportResponse
@@ -65,7 +68,7 @@ class SystemFeatureManager: FeatureManager {
     from car: Car,
     responseHandle: QueryResponseHandle
   ) {
-    guard let systemQuery = try? SystemQuery(serializedData: query.request) else {
+    guard let systemQuery = try? SystemQuery(serializedBytes: query.request) else {
       Self.log.error("Received query from car \(car) but unable to parse. Ignoring.")
       return
     }
@@ -89,6 +92,17 @@ class SystemFeatureManager: FeatureManager {
       let deviceName = nameProvider.name
       Self.log("Received device name query. Responding with \(deviceName)")
       try responseHandle.respond(with: Data(deviceName.utf8), isSuccessful: true)
+
+    case SystemQueryType.deviceOs:
+      let responseOS = DeviceOS.ios
+      Self.log("Received device OS query. Responding with \(responseOS)")
+      let response = DeviceVersionsResponse.with {
+        $0.os = responseOS
+        $0.osVersion = nameProvider.systemVersion
+        $0.companionSdkVersion = BuildNumber.sdkVersion.description
+      }
+      Self.log("Sending response for device OS query: \(response)")
+      try responseHandle.respond(with: response.serializedData(), isSuccessful: true)
 
     case SystemQueryType.appName:
       if let appName = appNameProvider.appName {
@@ -151,7 +165,7 @@ class SystemFeatureManager: FeatureManager {
 extension SystemFeatureManager: ChannelFeatureProvider {
   /// Request the user role (driver/passenger) for the specified channel.
   func requestUserRole(
-    with channel: SecuredCarChannel,
+    with channel: any SecuredCarChannel,
     completion: @escaping (UserRole?) -> Void
   ) {
     do {
@@ -167,7 +181,7 @@ extension SystemFeatureManager: ChannelFeatureProvider {
           return
         }
         guard
-          let response = try? SystemUserRoleResponse(serializedData: queryResponse.response)
+          let response = try? SystemUserRoleResponse(serializedBytes: queryResponse.response)
         else {
           completion(nil)
           return

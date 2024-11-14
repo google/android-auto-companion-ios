@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCoreBluetoothProtocols
-import CoreBluetooth
-import Foundation
+public import AndroidAutoCoreBluetoothProtocols
+public import CoreBluetooth
 
 /// A mock for `BLECharacteristic` that allows its `uuid` and `value` to be set.
 public class CharacteristicMock: NSObject, BLECharacteristic {

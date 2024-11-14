@@ -26,9 +26,13 @@
     private var connectedCarManagerMock: ConnectedCarManagerMock!
     private var managerFactory: BeaconManagerFactory!
 
-    @MainActor override func setUp() {
-      super.setUp()
+    override func setUp() async throws {
+      try await super.setUp()
 
+      await setUpOnMain()
+    }
+
+    @MainActor private func setUpOnMain() {
       connectedCarManagerMock = ConnectedCarManagerMock()
       uuidConfig = UUIDConfig(plistLoader: PListLoaderFake())
       managerFactory = BeaconManagerFactory()

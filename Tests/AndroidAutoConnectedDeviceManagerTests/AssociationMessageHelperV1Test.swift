@@ -29,9 +29,13 @@ class AssociationMessageHelperV1Test: XCTestCase {
   // The helper under test.
   private var messageHelper: AssociationMessageHelperV1!
 
-  @MainActor override func setUp() async throws {
+  override func setUp() async throws {
     try await super.setUp()
 
+    await setUpOnMain()
+  }
+
+  @MainActor private func setUpOnMain() {
     associatorMock = AssociatorMock()
 
     let peripheralMock = PeripheralMock(name: "Test")

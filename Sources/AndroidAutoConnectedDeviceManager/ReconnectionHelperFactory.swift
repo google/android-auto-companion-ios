@@ -28,8 +28,8 @@ protocol ReconnectionHelperFactory {
   /// - Throws: An error if either the service doesn't match what's expected or none of the
   /// associated cars match against the advertisement.
   @MainActor static func makeHelper(
-    peripheral: AnyPeripheral,
-    advertisementData: [String: Any],
+    peripheral: any AutoPeripheral,
+    advertisement: Advertisement,
     associatedCars: Set<Car>,
     uuidConfig: UUIDConfig,
     authenticator: CarAuthenticator.Type
@@ -49,13 +49,13 @@ struct ReconnectionHelperFactoryImpl: ReconnectionHelperFactory {
   /// - Throws: An error if either the service doesn't match what's expected or none of the
   /// associated cars match against the advertisement.
   @MainActor static func makeHelper(
-    peripheral: AnyPeripheral,
-    advertisementData: [String: Any],
+    peripheral: any AutoPeripheral,
+    advertisement: Advertisement,
     associatedCars: Set<Car>,
     uuidConfig: UUIDConfig,
     authenticator: CarAuthenticator.Type
   ) throws -> ReconnectionHelper {
-    guard let serviceUUIDs = advertisementData[CBAdvertisementDataServiceUUIDsKey] as? NSArray
+    guard let serviceUUIDs = advertisement.serviceUUIDs
     else {
       throw CommunicationManagerError.serviceNotFound
     }
@@ -65,8 +65,7 @@ struct ReconnectionHelperFactoryImpl: ReconnectionHelperFactory {
     }
 
     // It must be version 2, so make sure the advertisement is consistent.
-    guard let dataContents = advertisementData[CBAdvertisementDataServiceDataKey] as? NSDictionary,
-      let adData = dataContents[uuidConfig.reconnectionDataUUID] as? NSData
+    guard let reconnectionData = advertisement.reconnectionData(using: uuidConfig)
     else {
       return ReconnectionHelperV2(
         peripheral: peripheral,
@@ -79,7 +78,7 @@ struct ReconnectionHelperFactoryImpl: ReconnectionHelperFactory {
     guard
       let helper = ReconnectionHelperV2(
         peripheral: peripheral,
-        advertisementData: adData as Data,
+        advertisementData: reconnectionData,
         cars: associatedCars,
         authenticatorType: authenticator
       )

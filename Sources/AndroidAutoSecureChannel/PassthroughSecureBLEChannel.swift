@@ -35,7 +35,7 @@ extension PassthroughSecureBLEChannelError: LocalizedError {
 /// in the correct order.
 ///
 /// Encrypting and decrypting a message returns the same message.
-class PassthroughSecureBLEChannel: SecureBLEChannel {
+@MainActor class PassthroughSecureBLEChannel: SecureBLEChannel {
   /// Token used for verification when establishing a UKey2 channel.
   struct VerificationToken: SecurityVerificationToken {
     /// Full backing data.

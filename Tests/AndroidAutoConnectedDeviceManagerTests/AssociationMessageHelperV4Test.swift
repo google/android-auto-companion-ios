@@ -35,9 +35,13 @@ class AssociationMessageHelperV4Test: XCTestCase {
   // The helper under test.
   private var messageHelper: AssociationMessageHelperV4!
 
-  @MainActor override func setUp() async throws {
+  override func setUp() async throws {
     try await super.setUp()
 
+    await setUpOnMain()
+  }
+
+  @MainActor private func setUpOnMain() {
     associatorMock = AssociatorMock()
     peripheralMock = PeripheralMock(name: "Test")
 
@@ -79,7 +83,7 @@ class AssociationMessageHelperV4Test: XCTestCase {
     // Visual verification code sent.
     XCTAssertEqual(peripheralMock.writeValueCalledCount, 1)
     let lastMessage = peripheralMock.writtenData.last!
-    let code = try VerificationCode(serializedData: lastMessage)
+    let code = try VerificationCode(serializedBytes: lastMessage)
     XCTAssertEqual(code.state, .visualVerification)
     messageHelper.onPairingCodeDisplayed()
 
@@ -107,7 +111,7 @@ class AssociationMessageHelperV4Test: XCTestCase {
     // Verification is sent since this is for Security V4.
     XCTAssertEqual(peripheralMock.writeValueCalledCount, 1)
     let lastMessage = peripheralMock.writtenData.last!
-    let code = try VerificationCode(serializedData: lastMessage)
+    let code = try VerificationCode(serializedBytes: lastMessage)
     XCTAssertEqual(code.state, .visualVerification)
     messageHelper.onPairingCodeDisplayed()
 
@@ -131,7 +135,7 @@ class AssociationMessageHelperV4Test: XCTestCase {
     // OOB Verification code sent.
     XCTAssertEqual(peripheralMock.writeValueCalledCount, 1)
     let lastMessage = peripheralMock.writtenData.last!
-    let code = try VerificationCode(serializedData: lastMessage)
+    let code = try VerificationCode(serializedBytes: lastMessage)
     XCTAssertEqual(code.state, .oobVerification)
 
     // The IHU sends back confirmation of the verification code.
@@ -162,7 +166,7 @@ class AssociationMessageHelperV4Test: XCTestCase {
 
     // OOB Verification code sent.
     let lastMessage = peripheralMock.writtenData.last!
-    let code = try VerificationCode(serializedData: lastMessage)
+    let code = try VerificationCode(serializedBytes: lastMessage)
     XCTAssertEqual(code.state, .oobVerification)
 
     // The IHU sends back confirmation of the verification code.

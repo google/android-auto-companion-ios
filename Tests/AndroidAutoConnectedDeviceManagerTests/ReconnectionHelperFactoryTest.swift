@@ -29,7 +29,11 @@ class ReconnectionHelperFactoryTest: XCTestCase {
     continueAfterFailure = false
   }
 
-  override func tearDown() {
+  override func tearDown() async throws {
+    await tearDownOnMain()
+  }
+
+  @MainActor private func tearDownOnMain() {
     FakeCarAuthenticator.matchingData = nil
   }
 
@@ -40,7 +44,7 @@ class ReconnectionHelperFactoryTest: XCTestCase {
     XCTAssertThrowsError(
       try ReconnectionHelperFactoryImpl.makeHelper(
         peripheral: peripheral,
-        advertisementData: [:],
+        advertisement: [:],
         associatedCars: [associatedCar],
         uuidConfig: uuidConfig,
         authenticator: FakeCarAuthenticator.self
@@ -58,7 +62,7 @@ class ReconnectionHelperFactoryTest: XCTestCase {
 
     let reconnectionHelper = try? ReconnectionHelperFactoryImpl.makeHelper(
       peripheral: peripheral,
-      advertisementData: [CBAdvertisementDataServiceUUIDsKey: [v1UUID]],
+      advertisement: [CBAdvertisementDataServiceUUIDsKey: [v1UUID]],
       associatedCars: [associatedCar],
       uuidConfig: uuidConfig,
       authenticator: FakeCarAuthenticator.self
@@ -75,14 +79,14 @@ class ReconnectionHelperFactoryTest: XCTestCase {
     let matchingData = Data("matching".utf8)
     FakeCarAuthenticator.matchingData = matchingData
 
-    let partialAdvertisementData: [String: Any] = [
+    let partialAdvertisement: Advertisement = [
       CBAdvertisementDataServiceUUIDsKey: [v2UUID],
       CBAdvertisementDataServiceDataKey: [:],
     ]
 
     let helper = try? ReconnectionHelperFactoryImpl.makeHelper(
       peripheral: peripheral,
-      advertisementData: partialAdvertisementData,
+      advertisement: partialAdvertisement,
       associatedCars: [associatedCar],
       uuidConfig: uuidConfig,
       authenticator: FakeCarAuthenticator.self
@@ -101,7 +105,7 @@ class ReconnectionHelperFactoryTest: XCTestCase {
     let dataUUID = uuidConfig.reconnectionDataUUID
     let dataContents = [dataUUID: Data()]
 
-    let advertisementData: [String: Any] = [
+    let advertisement: Advertisement = [
       CBAdvertisementDataServiceUUIDsKey: [v2UUID],
       CBAdvertisementDataServiceDataKey: dataContents,
     ]
@@ -109,7 +113,7 @@ class ReconnectionHelperFactoryTest: XCTestCase {
     XCTAssertThrowsError(
       try ReconnectionHelperFactoryImpl.makeHelper(
         peripheral: peripheral,
-        advertisementData: advertisementData,
+        advertisement: advertisement,
         associatedCars: [associatedCar],
         uuidConfig: uuidConfig,
         authenticator: FakeCarAuthenticator.self
@@ -130,14 +134,14 @@ class ReconnectionHelperFactoryTest: XCTestCase {
 
     FakeCarAuthenticator.matchingData = matchingData
 
-    let advertisementData: [String: Any] = [
+    let advertisement: Advertisement = [
       CBAdvertisementDataServiceUUIDsKey: [v2UUID],
       CBAdvertisementDataServiceDataKey: dataContents,
     ]
 
     let helper = try? ReconnectionHelperFactoryImpl.makeHelper(
       peripheral: peripheral,
-      advertisementData: advertisementData,
+      advertisement: advertisement,
       associatedCars: [associatedCar],
       uuidConfig: uuidConfig,
       authenticator: FakeCarAuthenticator.self
@@ -149,21 +153,31 @@ class ReconnectionHelperFactoryTest: XCTestCase {
   }
 }
 
-private struct FakePeripheral: AnyPeripheral {
+private struct FakePeripheral: AutoPeripheral {
   let identifier: UUID
   let name: String?
+
+  // `state` is unused but required for protocol conformance.
+  let state: State = .disconnected
+
+  enum State: Int, AutoPeripheralState {
+    case disconnected
+    case connecting
+    case connected
+    case disconnecting
+  }
 }
 
 /// A fake `CarAuthenticator` that can be configured to return a first match.
 private struct FakeCarAuthenticator: CarAuthenticator {
   /// The data to match when `first(among:matchingData:)` is called.
-  static var matchingData: Data? = nil
+  @MainActor static var matchingData: Data? = nil
 
   init(carId: String) {}
 
   /// Returns the first entry in the `cars` set if the specified `matchingData` matches the
   /// field `matchingData`.
-  static func first(
+  @MainActor static func first(
     among cars: Set<Car>,
     matchingData advertisementData: Data
   ) -> CarAdvertisementMatch? {

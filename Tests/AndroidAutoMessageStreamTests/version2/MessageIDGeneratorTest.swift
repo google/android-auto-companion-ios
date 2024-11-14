@@ -18,14 +18,14 @@ internal import XCTest
 
 /// Unit tests for `MessageIDGenerator`.
 class MessageIDGeneratorTest: XCTestCase {
-  func testNextMessageID_correctlyIncrements() {
+  @MainActor func testNextMessageID_correctlyIncrements() {
     let messageIDGenerator = MessageIDGenerator.shared
     let initialMessageID = messageIDGenerator.next()
 
     XCTAssertEqual(messageIDGenerator.next(), initialMessageID + 1)
   }
 
-  func testNextMessageID_correctlyWrapsBackToZero() {
+  @MainActor func testNextMessageID_correctlyWrapsBackToZero() {
     let messageIDGenerator = MessageIDGenerator.shared
     messageIDGenerator.messageID = Int32.max
 

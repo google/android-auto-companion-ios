@@ -17,10 +17,10 @@ internal import AndroidAutoMessageStream
 internal import Foundation
 
 /// A car that is pending establishment of a secure channel.
-class PendingCar {
-  let car: any BLEPeripheral
+@MainActor class PendingCar {
+  nonisolated let car: any BLEPeripheral
 
-  let id: String?
+  nonisolated let id: String?
   let secureSession: Data?
   var messageStream: MessageStream?
 
@@ -57,11 +57,11 @@ class PendingCar {
 }
 
 extension PendingCar: Hashable {
-  static func == (lhs: PendingCar, rhs: PendingCar) -> Bool {
+  nonisolated static func == (lhs: PendingCar, rhs: PendingCar) -> Bool {
     return lhs.id == rhs.id && lhs.car.identifier == rhs.car.identifier
   }
 
-  func hash(into hasher: inout Hasher) {
+  nonisolated func hash(into hasher: inout Hasher) {
     hasher.combine(id)
     hasher.combine(car.identifier)
   }

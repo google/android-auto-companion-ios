@@ -123,7 +123,7 @@ struct DataCompressorImpl: DataCompressor {
 }
 
 /// Some algorithms (e.g. ZLIB) have optional annotations for the compressed data.
-private protocol DataAnnotator {
+private protocol DataAnnotator: Sendable {
   /// Annotate the compressed data.
   func annotate(compressed: inout Data, input: Data)
 

@@ -1,4 +1,4 @@
-// swift-tools-version:5.10
+// swift-tools-version: 6.0
 
 // Copyright 2021 Google LLC
 //
@@ -19,7 +19,7 @@ import PackageDescription
 let package = Package(
   name: "AndroidAutoCompanion",
   platforms: [
-    .iOS(.v15), .watchOS(.v8),
+    .iOS(.v16), .watchOS(.v8),
   ],
   products: [
     .library(
@@ -38,6 +38,9 @@ let package = Package(
       name: "AndroidAutoConnectionHowitzerManagerV2",
       targets: ["AndroidAutoConnectionHowitzerManagerV2"]),
     .library(
+      name: "AndroidAutoRemoteSetup",
+      targets: ["AndroidAutoRemoteSetup"]),
+    .library(
       name: "AndroidAutoUtils",
       targets: ["AndroidAutoUtils"]),
     .plugin(
@@ -45,7 +48,7 @@ let package = Package(
       targets: ["ProtoSourceGenerator"]),
   ],
   dependencies: [
-    .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.25.0")
+    .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.27.0")
   ],
   targets: [
     .binaryTarget(
@@ -53,33 +56,21 @@ let package = Package(
       path: "Binaries/AndroidAutoUKey2Wrapper.xcframework"),
     .target(
       name: "AndroidAutoLogger",
-      dependencies: [],
-      swiftSettings: [
-        .enableExperimentalFeature("AccessLevelOnImport"),
-      ]
+      dependencies: []
     ),
     .target(
       name: "AndroidAutoCoreBluetoothProtocols",
-      dependencies: ["AndroidAutoConnectedDeviceTransport"],
-      swiftSettings: [
-        .enableExperimentalFeature("AccessLevelOnImport"),
-      ]
+      dependencies: ["AndroidAutoConnectedDeviceTransport"]
     ),
     .target(
       name: "AndroidAutoCompanionProtos",
       dependencies: [.product(name: "SwiftProtobuf", package: "swift-protobuf")],
-      swiftSettings: [
-        .enableExperimentalFeature("AccessLevelOnImport"),
-      ],
       plugins: [.plugin(name: "ProtoSourceGenerator")]
 
     ),
     .target(
       name: "AndroidAutoTrustAgentProtos",
       dependencies: [.product(name: "SwiftProtobuf", package: "swift-protobuf")],
-      swiftSettings: [
-        .enableExperimentalFeature("AccessLevelOnImport"),
-      ],
       plugins: [.plugin(name: "ProtoSourceGenerator")]
     ),
     .target(
@@ -90,9 +81,6 @@ let package = Package(
         "AndroidAutoCoreBluetoothProtocols",
         "AndroidAutoLogger",
         .product(name: "SwiftProtobuf", package: "swift-protobuf"),
-      ],
-      swiftSettings: [
-        .enableExperimentalFeature("AccessLevelOnImport"),
       ]
     ),
     .target(
@@ -101,9 +89,6 @@ let package = Package(
         "AndroidAutoCoreBluetoothProtocols",
         "AndroidAutoMessageStream",
         "AndroidAutoUKey2Wrapper",
-      ],
-      swiftSettings: [
-        .enableExperimentalFeature("AccessLevelOnImport"),
       ]
     ),
     .target(
@@ -115,9 +100,6 @@ let package = Package(
         "AndroidAutoSecureChannel",
         "AndroidAutoTrustAgentProtos",
         "AndroidAutoUtils",
-      ],
-      swiftSettings: [
-        .enableExperimentalFeature("AccessLevelOnImport"),
       ]
     ),
     .plugin(name: "ProtoSourceGenerator", capability: .buildTool()),
@@ -129,39 +111,24 @@ let package = Package(
         "AndroidAutoCoreBluetoothProtocolsMocks",
         "AndroidAutoSecureChannel",
       ],
-      path: "Tests/AndroidAutoConnectedDeviceManagerMocks",
-      swiftSettings: [
-        .enableExperimentalFeature("AccessLevelOnImport"),
-      ]
+      path: "Tests/AndroidAutoConnectedDeviceManagerMocks"
     ),
     .target(
       name: "AndroidAutoConnectedDeviceTransport",
-      dependencies: ["AndroidAutoLogger"],
-      swiftSettings: [
-        .enableExperimentalFeature("AccessLevelOnImport"),
-      ]
+      dependencies: ["AndroidAutoLogger"]
     ),
     .target(
       name: "AndroidAutoConnectedDeviceTransportFakes",
-      dependencies: ["AndroidAutoConnectedDeviceTransport"],
-      swiftSettings: [
-        .enableExperimentalFeature("AccessLevelOnImport"),
-      ]
+      dependencies: ["AndroidAutoConnectedDeviceTransport"]
     ),
     .target(
       name: "AndroidAutoCoreBluetoothProtocolsMocks",
       dependencies: ["AndroidAutoCoreBluetoothProtocols"],
-      path: "Tests/AndroidAutoCoreBluetoothProtocolsMocks",
-      swiftSettings: [
-        .enableExperimentalFeature("AccessLevelOnImport"),
-      ]
+      path: "Tests/AndroidAutoCoreBluetoothProtocolsMocks"
     ),
     .testTarget(
       name: "AndroidAutoLoggerTests",
-      dependencies: ["AndroidAutoLogger"],
-      swiftSettings: [
-        .enableExperimentalFeature("AccessLevelOnImport"),
-      ]
+      dependencies: ["AndroidAutoLogger"]
     ),
     .testTarget(
       name: "AndroidAutoMessageStreamTests",
@@ -169,9 +136,6 @@ let package = Package(
         "AndroidAutoCoreBluetoothProtocols",
         "AndroidAutoCoreBluetoothProtocolsMocks",
         "AndroidAutoMessageStream",
-      ],
-      swiftSettings: [
-        .enableExperimentalFeature("AccessLevelOnImport"),
       ]
     ),
     .target(
@@ -180,9 +144,6 @@ let package = Package(
         "AndroidAutoAccountTransferCore",
         "AndroidAutoConnectedDeviceManager",
         "AndroidAutoLogger",
-      ],
-      swiftSettings: [
-        .enableExperimentalFeature("AccessLevelOnImport"),
       ]
     ),
     .binaryTarget(
@@ -194,22 +155,27 @@ let package = Package(
       plugins: [.plugin(name: "ProtoSourceGenerator")]
     ),
     .target(
+      name: "AndroidAutoRemoteSetup",
+      dependencies: [
+        "RemoteSetup",
+        "AndroidAutoConnectedDeviceManager",
+        "AndroidAutoLogger",
+      ]
+    ),
+    .binaryTarget(
+      name: "RemoteSetup",
+      path: "Binaries/RemoteSetup.xcframework"),
+    .target(
       name: "AndroidAutoConnectionHowitzerManagerV2",
       dependencies: [
         "AndroidAutoConnectedDeviceManager",
         "AndroidAutoLogger",
         "AndroidAutoConnectionHowitzerV2Protos",
-      ],
-      swiftSettings: [
-        .enableExperimentalFeature("AccessLevelOnImport"),
       ]
     ),
     .target(
       name: "AndroidAutoUtils",
-      dependencies: ["AndroidAutoLogger"],
-      swiftSettings: [
-        .enableExperimentalFeature("AccessLevelOnImport"),
-      ]
+      dependencies: ["AndroidAutoLogger"]
     ),
     .testTarget(
       name: "AndroidAutoSecureChannelTests",
@@ -219,9 +185,6 @@ let package = Package(
         "AndroidAutoMessageStream",
         "AndroidAutoSecureChannel",
         "AndroidAutoUKey2Wrapper",
-      ],
-      swiftSettings: [
-        .enableExperimentalFeature("AccessLevelOnImport"),
       ]
     ),
     .testTarget(
@@ -232,9 +195,6 @@ let package = Package(
         "AndroidAutoCoreBluetoothProtocols",
         "AndroidAutoCoreBluetoothProtocolsMocks",
         "AndroidAutoSecureChannel",
-      ],
-      swiftSettings: [
-        .enableExperimentalFeature("AccessLevelOnImport"),
       ]
     ),
     .testTarget(
@@ -244,17 +204,11 @@ let package = Package(
         "AndroidAutoConnectionHowitzerManagerV2",
         "AndroidAutoConnectedDeviceManager",
         "AndroidAutoConnectedDeviceManagerMocks",
-      ],
-      swiftSettings: [
-        .enableExperimentalFeature("AccessLevelOnImport"),
       ]
     ),
     .testTarget(
       name: "AndroidAutoUtilsTests",
-      dependencies: ["AndroidAutoUtils"],
-      swiftSettings: [
-        .enableExperimentalFeature("AccessLevelOnImport"),
-      ]
+      dependencies: ["AndroidAutoUtils"]
     ),
   ]
 )

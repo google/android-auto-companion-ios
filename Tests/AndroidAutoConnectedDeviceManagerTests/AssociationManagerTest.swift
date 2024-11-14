@@ -23,22 +23,18 @@ internal import XCTest
 
 /// Unit tests for `AssociationManager`.
 class AssociationManagerTest: XCTestCase {
-  private let associatedCarsManagerMock = AssociatedCarsManagerMock()
-  private let secureSessionManagerMock = SecureSessionManagerMock()
-  private let secureBLEChannelMock = SecureBLEChannelMock()
-  private let messageHelperFactoryProxy = AssociationMessageHelperFactoryProxy()
-  private let bleVersionResolverFake = BLEVersionResolverFake()
+  /// Addition time in seconds to wait for a timeout to complete to prevent test flakiness.
+  private static let timeoutBuffer = 0.1
+
+  private var associatedCarsManagerMock: AssociatedCarsManagerMock!
+  private var secureSessionManagerMock: SecureSessionManagerMock!
+  private var secureBLEChannelMock: SecureBLEChannelMock!
+  private var messageHelperFactoryProxy: AssociationMessageHelperFactoryProxy!
+  private var bleVersionResolverFake: BLEVersionResolverFake!
 
   // Valid mocks for happy path tests.
-  private let clientWriteCharacteristicMock = CharacteristicMock(
-    uuid: UUIDConfig.writeCharacteristicUUID,
-    value: nil
-  )
-
-  private let serverWriteCharacteristicMock = CharacteristicMock(
-    uuid: UUIDConfig.readCharacteristicUUID,
-    value: nil
-  )
+  private var clientWriteCharacteristicMock: CharacteristicMock!
+  private var serverWriteCharacteristicMock: CharacteristicMock!
 
   private var uuidConfig: UUIDConfig!
   private var connectionHandle: ConnectionHandleFake!
@@ -47,9 +43,30 @@ class AssociationManagerTest: XCTestCase {
   // The manager under test.
   private var associationManager: AssociationManager!
 
-  @MainActor override func setUp() {
-    super.setUp()
+  override func setUp() async throws {
+    try await super.setUp()
+
     continueAfterFailure = false
+
+    await setUpOnMain()
+  }
+
+  @MainActor private func setUpOnMain() {
+    associatedCarsManagerMock = AssociatedCarsManagerMock()
+    secureSessionManagerMock = SecureSessionManagerMock()
+    secureBLEChannelMock = SecureBLEChannelMock()
+    messageHelperFactoryProxy = AssociationMessageHelperFactoryProxy()
+    bleVersionResolverFake = BLEVersionResolverFake()
+
+    clientWriteCharacteristicMock = CharacteristicMock(
+      uuid: UUIDConfig.writeCharacteristicUUID,
+      value: nil
+    )
+
+    serverWriteCharacteristicMock = CharacteristicMock(
+      uuid: UUIDConfig.readCharacteristicUUID,
+      value: nil
+    )
 
     uuidConfig = UUIDConfig(plistLoader: PListLoaderFake())
     associatedCarsManagerMock.reset()
@@ -329,7 +346,8 @@ class AssociationManagerTest: XCTestCase {
     // `didDiscoverServices` is not invoked, so the association should time out.
     delegate.errorExpectation = expectation(description: "Delegate notified with error.")
 
-    waitForExpectations(timeout: associationManager.timeoutDuration.toSeconds())
+    waitForExpectations(
+      timeout: associationManager.timeoutDuration.toSeconds() + Self.timeoutBuffer)
     XCTAssertEqual(delegate.error, .timedOut)
   }
 
@@ -459,7 +477,8 @@ class AssociationManagerTest: XCTestCase {
 
     delegate.errorExpectation = expectation(description: "Delegate notified with error.")
 
-    waitForExpectations(timeout: associationManager.timeoutDuration.toSeconds())
+    waitForExpectations(
+      timeout: associationManager.timeoutDuration.toSeconds() + Self.timeoutBuffer)
     XCTAssertEqual(delegate.error, .timedOut)
   }
 

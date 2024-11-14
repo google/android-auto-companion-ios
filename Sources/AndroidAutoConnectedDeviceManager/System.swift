@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /// Common device requirements.
-protocol AnyDevice {
+@MainActor protocol AnyDevice {
   var name: String { get }
   var model: String { get }
   var localizedModel: String { get }
@@ -23,7 +23,7 @@ protocol AnyDevice {
 }
 
 /// Common system requirements.
-private protocol SomeSystem {
+@MainActor private protocol SomeSystem {
   /// System specific device type.
   associatedtype Device: AnyDevice
 
