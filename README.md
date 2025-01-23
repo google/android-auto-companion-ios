@@ -56,8 +56,7 @@ steps.
 ### AndroidAutoConnectedDeviceManager
 
 The main library that supplies the ability to associate and connect to an
-Android Auto vehicle. Full usage instructions, can be found on the
-[Phone SDK Integration Guide](https://docs.partner.android.com/automotive/integrate/companion_app/cd_phone_sdk).
+Android Auto vehicle.
 
 ### AndroidAutoUKey2Wrapper
 
