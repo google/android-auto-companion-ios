@@ -12,26 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-internal import XCTest
+internal import Testing
 
 @testable private import AndroidAutoLogger
 
-class SignpostMetricsTest: XCTestCase {
-  func testIsAvailable() {
-    XCTAssertTrue(SignpostMetrics.isSystemSupported)
+struct SignpostMetricsTests {
+  @Test("SignpostMetrics is available")
+  func isAvailable() {
+    #expect(SignpostMetrics.isSystemSupported)
   }
 
-  func testPost_CallsHandler() {
+  @Test("Posting a marker calls the handler")
+  func postCallsHandler() {
     let handler = SignpostMetricsHandlerMock(category: "Test")
     let metrics = SignpostMetrics(handler: handler)
     let marker = SignpostMarker("Test")
 
     metrics.post(marker)
 
-    XCTAssertTrue(handler.postCalled)
+    #expect(handler.postCalled)
   }
 
-  func testPostIfAvailable_CallsHandler_isAvailable() {
+  @Test("Posting a marker if available calls the handler if valid")
+  func postIfAvailableCallsHandlerIfValid() {
     let handler = SignpostMetricsHandlerMock(category: "Test")
     handler.isValid = true
 
@@ -40,9 +43,10 @@ class SignpostMetricsTest: XCTestCase {
 
     metrics.postIfAvailable(marker)
 
-    XCTAssertTrue(handler.postCalled)
+    #expect(handler.postCalled)
   }
 
+  @Test("Posting a marker if available doesn't call the handler if invalid")
   func testPostIfAvailable_DoesNotCallHandler_isNotAvailable() {
     let handler = SignpostMetricsHandlerMock(category: "Test")
     handler.isValid = false
@@ -52,7 +56,7 @@ class SignpostMetricsTest: XCTestCase {
 
     metrics.postIfAvailable(marker)
 
-    XCTAssertFalse(handler.postCalled)
+    #expect(!handler.postCalled)
   }
 }
 

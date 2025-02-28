@@ -128,7 +128,7 @@ private enum ConnectionManagerSignposts {
 
 extension BuildNumber {
   /// The version of this SDK.
-  static let sdkVersion = BuildNumber(major: 5, minor: 0, patch: 0)
+  static let sdkVersion = BuildNumber(major: 5, minor: 1, patch: 0)
 
   /// The key for storing the SDK version in `UserDefaults`.
   fileprivate static let sdkVersionStorageKey = "AndroidAutoSDKVersion"
@@ -369,6 +369,15 @@ private struct ConnectionRetryState {
       log.error("No saved encryption session information for device: \(peripheral.logName).")
     } catch {
       log.error("Unknown error during establishment of secure channel.")
+    }
+  }
+
+  override func registerDisconnectRequestObserver(on channel: SecuredCarChannel) {
+    channel.observeDisconnectRequestReceived {
+      if let peripheral = self.peripheral(from: channel) {
+        self.log("Received request to disconnect \(peripheral.logName)")
+        self.disconnect(peripheral)
+      }
     }
   }
 }
@@ -949,6 +958,9 @@ where CentralManager: SomeCentralManager {
   /// peripheral using `communicationManager`.
   func setupSecureChannel(with peripheral: Peripheral) {}
 
+  /// Subclasses should override this method to register a listener for request to disconnect.
+  func registerDisconnectRequestObserver(on channel: SecuredCarChannel) {}
+
   /// Subclasses should override this method to get the specified channel's peripheral.
   func peripheral(from channel: SecuredCarChannel) -> Peripheral? {
     return nil
@@ -1133,6 +1145,7 @@ extension ConnectionManager: CommunicationManagerDelegate {
   ) {
     self.securedChannels.append(securedCarChannel)
     self.registerServiceObserver(on: securedCarChannel)
+    self.registerDisconnectRequestObserver(on: securedCarChannel)
 
     self.observations.securedChannel.values.forEach { observation in
       observation(self, securedCarChannel)
@@ -1176,6 +1189,7 @@ extension ConnectionManager: AssociationManagerDelegate {
 
     self.securedChannels.append(securedCarChannel)
     self.registerServiceObserver(on: securedCarChannel)
+    self.registerDisconnectRequestObserver(on: securedCarChannel)
 
     self.associationDelegate?.connectionManager(
       self, didCompleteAssociationWithCar: car)

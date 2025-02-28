@@ -12,18 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-internal import XCTest
-private import os.log
+internal import Testing
+internal import os.log
 
-@testable private import AndroidAutoLogger
+@testable internal import AndroidAutoLogger
 
-/// Unit tests for the `SystemLogHandler`.
-class SystemLogHandlerTest: XCTestCase {
-  func testOSLogTypeConversions() {
-    XCTAssertEqual(Logger.Level.debug.osLogType, OSLogType.debug)
-    XCTAssertEqual(Logger.Level.info.osLogType, OSLogType.info)
-    XCTAssertEqual(Logger.Level.standard.osLogType, OSLogType.default)
-    XCTAssertEqual(Logger.Level.error.osLogType, OSLogType.error)
-    XCTAssertEqual(Logger.Level.fault.osLogType, OSLogType.fault)
-  }
+@Test(
+  "Logger level matches system log type",
+  arguments: [
+    (Logger.Level.debug, OSLogType.debug),
+    (Logger.Level.info, OSLogType.info),
+    (Logger.Level.standard, OSLogType.default),
+    (Logger.Level.error, OSLogType.error),
+    (Logger.Level.fault, OSLogType.fault),
+  ]
+)
+func loggerLevelMatchesSystemLogType(level: AndroidAutoLogger.Logger.Level, osLogType: OSLogType) {
+  #expect(level.osLogType == osLogType)
 }

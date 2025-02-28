@@ -12,39 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-internal import XCTest
+internal import Testing
 
 @testable internal import AndroidAutoLogger
 
 /// Unit tests for `LoggingHandlers`.
-
-class LoggingHandlersTest: XCTestCase {
-  func testSharedIsStandard() {
-    XCTAssertTrue(LoggingHandlers.shared === LoggingHandlers.standard)
+struct LoggingHandlersTests {
+  @Test("Shared handler is standard")
+  func sharedIsStandard() {
+    #expect(LoggingHandlers.shared === LoggingHandlers.standard)
   }
-}
 
-/// Unit tests for `CompoundLogHandler`.
-
-class CompoundLogHandlerTest: XCTestCase {
-  public func testForwardingToChildHandlers() {
+  @Test("Compound handler forwards to child handlers")
+  public func compoundHandlerForwardsToChildHandlers() {
     let mockChild1 = LogHandlerMock()
     let mockChild2 = LogHandlerMock()
     let handler = CompoundLogHandler(handlers: [mockChild1, mockChild2])
     let logger = Logger.default.delegate(handler)
 
-    XCTAssertFalse(mockChild1.didLogRecord)
-    XCTAssertFalse(mockChild2.didLogRecord)
-
     logger.log("Test")
 
-    XCTAssertTrue(mockChild1.didLogRecord)
-    XCTAssertTrue(mockChild2.didLogRecord)
+    #expect(mockChild1.didLogRecord)
+    #expect(mockChild2.didLogRecord)
   }
 }
 
 /// Mock for testing handler calls.
-
 private final class LogHandlerMock: LoggerDelegate, @unchecked Sendable {
   fileprivate private(set) var didLogRecord = false
 

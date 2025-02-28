@@ -20,7 +20,7 @@ private import Foundation
 /// notation for integers:
 /// https://docs.swift.org/swift-book/ReferenceManual/LexicalStructure.html#ID414
 @available(macOS 10.15, *)
-public enum RadixFormat {
+public enum RadixFormat: Sendable {
   /// Formats as just binary digits.
   case rawBinary
 
@@ -61,7 +61,7 @@ public enum RadixFormat {
 
 /// Formats numbers in various decimal notations.
 @available(macOS 12.0, *)
-public enum DecimalFormat {
+public enum DecimalFormat: Sendable {
   /// Applies no format to the number.
   case none
 

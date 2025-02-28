@@ -85,6 +85,7 @@ public class ConnectionManagerObservable: ConnectionManager<CentralManagerMock> 
   public var failedConnectionError: NSError?
 
   public var registerServiceObserverCalled = false
+  public var registerDisconnectRequestObserverCalled = false
   public var observedChannel: SecuredCarChannel?
 
   public var setupSecureChannelCalled = false
@@ -118,6 +119,10 @@ public class ConnectionManagerObservable: ConnectionManager<CentralManagerMock> 
 
   public override func setupSecureChannel(with peripheral: Peripheral) {
     setupSecureChannelCalled = true
+  }
+
+  public override func registerDisconnectRequestObserver(on channel: SecuredCarChannel) {
+    registerDisconnectRequestObserverCalled = true
   }
 
   public override func associate(peripheral: Peripheral) {

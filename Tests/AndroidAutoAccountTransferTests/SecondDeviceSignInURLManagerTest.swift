@@ -20,7 +20,7 @@ internal import XCTest
 @testable private import AndroidAutoAccountTransfer
 
 class SecondDeviceSignInURLManagerTest: XCTestCase {
-  private let validURL = "https://accounts.google.com/signin/continue"
+  private let validURL = "https://accounts.google.com/v3/signin/continue"
 
   private var connectedCarManagerMock: ConnectedCarManagerMock!
   private var channelMock: SecuredCarChannelMock!

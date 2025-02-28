@@ -12,21 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-internal import XCTest
+internal import Testing
 
 @testable private import AndroidAutoLogger
 
-class SignpostMarkerTest: XCTestCase {
-  func testDefaultRole_isEvent() {
+struct SignpostMarkerTests {
+  @Test("Default role of a marker should be .event")
+  func signpostMarkerDefaultRoleIsEvent() {
     let marker = SignpostMarker("Test")
 
-    XCTAssertEqual(marker.role, .event)
+    #expect(marker.role == .event)
   }
 
-  func testDurationMarkerRoles() {
+  @Test("Duration signpost should have roles of .begin and .end")
+  func durationSignpostHasBeginEndRoles() {
     let duration = SignpostDuration("Test")
 
-    XCTAssertEqual(duration.begin.role, .begin)
-    XCTAssertEqual(duration.end.role, .end)
+    #expect(duration.begin.role == .begin)
+    #expect(duration.end.role == .end)
   }
 }

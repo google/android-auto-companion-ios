@@ -24,6 +24,7 @@ public class SecuredCarChannelMock: SecuredCarChannelPeripheral {
   private var receivedMessageObservations: [UUID: (any SecuredCarChannel, Data) -> Void] =
     [:]
   private var messageRecipientToObservations: [UUID: UUID] = [:]
+  private var disconnectRequestObserver: (() -> Void)? = nil
 
   public var queryID: Int32 = 0
   private var receivedQueryObservations: [UUID: (Int32, UUID, Query) -> Void] = [:]
@@ -66,6 +67,7 @@ public class SecuredCarChannelMock: SecuredCarChannelPeripheral {
   public func reset() {
     receivedMessageObservations.removeAll()
     messageRecipientToObservations.removeAll()
+    disconnectRequestObserver = nil
     writtenMessages = []
   }
 
@@ -89,9 +91,11 @@ public class SecuredCarChannelMock: SecuredCarChannelPeripheral {
   }
 
   public func triggerQueryResponse(_ queryResponse: QueryResponse) {
-    if let handler = queryResponseHandlers[queryResponse.id] {
-      handler(queryResponse)
-    }
+    queryResponseHandlers[queryResponse.id]?(queryResponse)
+  }
+
+  public func triggerDisconnectRequest() {
+    disconnectRequestObserver?()
   }
 
   private func makeMockError() -> Error {
@@ -178,5 +182,9 @@ extension SecuredCarChannelMock: SecuredConnectedDeviceChannel {
       self.receivedQueryObservations.removeValue(forKey: id)
       self.queryRecipientToObservations[recipient] = nil
     }
+  }
+
+  public func observeDisconnectRequestReceived(using observation: @escaping () -> Void) {
+    disconnectRequestObserver = observation
   }
 }

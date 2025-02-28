@@ -15,6 +15,14 @@
 public import Foundation
 internal import AndroidAutoCompanionProtos
 
+/// Possible errors that can result from creating a MessageStreamParams.
+public enum MessageStreamParamsError: Error, Equatable {
+  /// An error that indicates the mobile side is requesting IHU to disconnect.
+  ///
+  /// A request to disconnect should only be sent from IHU to mobile.
+  case disconnectRequestRejected
+}
+
 /// Possible operation types for a message.
 public enum StreamOperationType {
   /// This message is meant to set up an encrypted channel.
@@ -29,10 +37,13 @@ public enum StreamOperationType {
   /// This message is as response to a previous query.
   case queryResponse
 
+  /// This message is a request to initiate a disconnection.
+  case disconnect
+
   /// Converts this operation to its analogous `Com_Google_Companionprotos_OperationType`.
   ///
   /// - Returns: A `Com_Google_Companionprotos_OperationType`.
-  func toOperationType() -> Com_Google_Companionprotos_OperationType {
+  func toOperationType() throws -> Com_Google_Companionprotos_OperationType {
     switch self {
     case .encryptionHandshake:
       return .encryptionHandshake
@@ -42,6 +53,9 @@ public enum StreamOperationType {
       return .query
     case .queryResponse:
       return .queryResponse
+    case .disconnect:
+      // A disconnect request should not be sent from the mobile side.
+      throw MessageStreamParamsError.disconnectRequestRejected
     }
   }
 }

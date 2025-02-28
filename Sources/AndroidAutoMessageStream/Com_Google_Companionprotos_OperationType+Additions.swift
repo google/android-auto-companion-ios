@@ -28,6 +28,8 @@ extension Com_Google_Companionprotos_OperationType {
       return .query
     case .queryResponse:
       return .queryResponse
+    case .disconnect:
+      return .disconnect
     default:
       // Note: defaulting to `clientMessage` for all OperationTypes because the details of the
       // other operations should not be exposed to clients. For example, the operation type of

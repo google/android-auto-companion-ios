@@ -60,6 +60,8 @@ private typealias QueryResponseProto = Com_Google_Companionprotos_QueryResponse
   /// The key in this map is the recipient UUID and the value is the observation UUID.
   private var queryRecipientToObservations: [UUID: UUID] = [:]
 
+  private var disconnectRequestObserver: (() -> Void)? = nil
+
   /// A map of query IDs to responders that should be invoked when a response to the query has come
   /// back.
   private var queryResponseHandlers: [Int32: ((QueryResponse) -> Void)] = [:]
@@ -167,6 +169,10 @@ extension EstablishedCarChannel: SecuredCarChannel {
       self.receivedQueryObservations.removeValue(forKey: id)
       self.queryRecipientToObservations[recipient] = nil
     }
+  }
+
+  func observeDisconnectRequestReceived(using observation: @escaping () -> Void) {
+    disconnectRequestObserver = observation
   }
 
   public func writeEncryptedMessage(
@@ -321,6 +327,9 @@ extension EstablishedCarChannel: MessageStreamDelegate {
     case .query:
       Self.log.debug("Received query for recipient with UUID \(params.recipient)")
       handleQuery(message, for: params.recipient)
+    case .disconnect:
+      Self.log.debug("Received request to disconnect.")
+      handleDisconnectRequest()
     default:
       Self.log.error(
         "Received message of unexpected operation type: \(params.operationType). Ignoring")
@@ -385,6 +394,10 @@ extension EstablishedCarChannel: MessageStreamDelegate {
     }
 
     missedQueriesForRecipients[recipient]?.append((query.id, query.senderUUID, query.toQuery()))
+  }
+
+  private func handleDisconnectRequest() {
+    disconnectRequestObserver?()
   }
 
   public func messageStreamDidWriteMessage(

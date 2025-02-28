@@ -206,6 +206,33 @@ class ConnectionManagerTest: XCTestCase {
     XCTAssert(connectionManager.observedChannel === secureChannel)
   }
 
+  @MainActor func testCentralManager_registerDisconnectRequestObserver_onAssociationComplete() {
+    let peripheralMock = PeripheralMock(name: "Test")
+    let car = Car(id: "id", name: "test")
+    let secureChannel = SecuredCarChannelMock(id: car.id, name: car.name)
+
+    connectionManager.associationManager(
+      makeAssociationManagerMock(),
+      didCompleteAssociationWithCar: car,
+      securedCarChannel: secureChannel,
+      peripheral: peripheralMock)
+
+    XCTAssertTrue(connectionManager.registerDisconnectRequestObserverCalled)
+    XCTAssert(connectionManager.observedChannel === secureChannel)
+  }
+
+  @MainActor func testCentralManager_registerDisconnectRequestObserver_onSecureChannelEstablished()
+  {
+    let secureChannel = SecuredCarChannelMock(id: "id", name: "Test")
+
+    connectionManager.communicationManager(
+      makeCommunicationManager(),
+      didEstablishSecureChannel: secureChannel)
+
+    XCTAssertTrue(connectionManager.registerDisconnectRequestObserverCalled)
+    XCTAssert(connectionManager.observedChannel === secureChannel)
+  }
+
   // MARK: CentralManagerDelegate calls
 
   @MainActor func testCentralManagerDidUpdateState() {

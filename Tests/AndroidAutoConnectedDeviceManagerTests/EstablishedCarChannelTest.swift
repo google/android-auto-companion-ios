@@ -609,6 +609,31 @@ class EstablishedCarChannelTest: XCTestCase {
     XCTAssertEqual(messageStream.writtenEncryptedMessages[0].params, expectedParams)
   }
 
+  // MARK: - Observe disconnection request test
+
+  @MainActor func testObserveDisconnectRequest_notifiesObserver() {
+    let handlerCalledExpectation = expectation(description: "Completion handler called.")
+
+    channel.observeDisconnectRequestReceived {
+      handlerCalledExpectation.fulfill()
+    }
+    messageStream.triggerMessageReceived(
+      Data(),
+      params: MessageStreamParams(
+        // The recipient is ignored by observer so any value works here.
+        recipient: UUID(),
+        operationType: .disconnect
+      )
+    )
+
+    // Waiting for 1 second because the message should notify immediately.
+    waitForExpectations(timeout: 1) { error in
+      if let error = error {
+        XCTFail("waitForExpectationsWithTimeout encountered error: \(error)")
+      }
+    }
+  }
+
   // MARK: - Helper functions
 
   private func makeFakeError() -> Error {

@@ -85,6 +85,9 @@ enum SecuredCarChannelError: Error {
     using observation: @escaping ((Int32, UUID, Query) -> Void)
   ) throws -> ObservationHandle
 
+  /// Observe when a request to disconnect has been received.
+  func observeDisconnectRequestReceived(using observation: @escaping () -> Void)
+
   /// Writes an encrypted message to the recipient on the car associated with this class.
   ///
   /// Upon completion, the passed closure is passed a boolean of `true` if successful.

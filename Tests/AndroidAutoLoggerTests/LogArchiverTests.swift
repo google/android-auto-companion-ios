@@ -12,26 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+internal import Testing
 internal import XCTest
 
 @testable private import AndroidAutoLogger
 
 /// Unit tests for `LogArchiver`.
+struct LogArchiverTests {
+  private let logger = Logger(for: Self.self)
 
-class LogArchiverTest: XCTestCase {
-  private let logger = Logger(for: LogArchiverTest.self)
+  private var archiver: LogArchiver
+  private var storeFactory: MockLogStoreFactory
 
-  private var archiver: LogArchiver!
-  private var storeFactory: MockLogStoreFactory!
-
-  override func setUp() {
-    super.setUp()
-
+  init() {
     storeFactory = MockLogStoreFactory()
     archiver = LogArchiver(persistentStoreFactory: storeFactory)
   }
 
-  func testLogMakesStoreCall() {
+  @Test("Logging a record makes store call")
+  func logMakesStoreCall() {
     let makeStoreExpectation = XCTestExpectation(description: "Store Factory Makes Store")
     storeFactory.makeStoreExpectation = makeStoreExpectation
 
@@ -43,9 +42,10 @@ class LogArchiverTest: XCTestCase {
     let record = makeLogRecord(logger: logger, date: date)
     archiver.loggerDidRecordMessage(record)
 
-    wait(for: [makeStoreExpectation, writeRecordExpectation], timeout: 2)
+    let waiter = XCTWaiter()
+    waiter.wait(for: [makeStoreExpectation, writeRecordExpectation], timeout: 2)
 
-    XCTAssertNotNil(storeFactory.storeForDate(date))
+    #expect(storeFactory.storeForDate(date) != nil)
   }
 
   func testMultipleLogsWithSameDateShareSameStore() {
@@ -67,10 +67,11 @@ class LogArchiverTest: XCTestCase {
       archiver.loggerDidRecordMessage(record)
     }
 
-    wait(for: [makeStoreExpectation, writeRecordExpectation], timeout: 2)
+    let waiter = XCTWaiter()
+    waiter.wait(for: [makeStoreExpectation, writeRecordExpectation], timeout: 2)
 
-    XCTAssertEqual(storeFactory.stores.count, 1)
-    XCTAssertNotNil(storeFactory.storeForDate(date))
+    #expect(storeFactory.stores.count == 1)
+    #expect(storeFactory.storeForDate(date) != nil)
   }
 
   func testLogsForDifferentDatesMakeDifferentStores() {
@@ -92,7 +93,8 @@ class LogArchiverTest: XCTestCase {
     let record2 = makeLogRecord(logger: logger, date: tomorrow)
     archiver.loggerDidRecordMessage(record2)
 
-    wait(
+    let waiter = XCTWaiter()
+    waiter.wait(
       for: [makeStoreExpectation, todayWriteRecordExpectation, tomorrowWriteRecordExpectation],
       timeout: 2
     )
