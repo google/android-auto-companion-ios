@@ -70,8 +70,8 @@ extension HowitzerResultProto {
 
     self.isValid = result.isValid
     self.payloadReceivedTimestamps = result.payloadReceivedTimestamps.map {
-      Timestamp(timeIntervalSince1970: $0)
+      Timestamp(roundingTimeIntervalSince1970: $0)
     }
-    self.testStartTimestamp = Timestamp(timeIntervalSince1970: result.testStartTime)
+    self.testStartTimestamp = Timestamp(roundingTimeIntervalSince1970: result.testStartTime)
   }
 }

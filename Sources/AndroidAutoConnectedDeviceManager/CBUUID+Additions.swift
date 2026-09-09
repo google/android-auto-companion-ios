@@ -46,4 +46,15 @@ extension CBUUID {
 
     self.init(data: carId)
   }
+
+  /// Copy the data's backing bytes for safe use beyond the lifetime of this instance.
+  ///
+  /// `data` references the internal bytes held by this instance, so when this instance is released
+  ///  so is that data. We need to make a copy if we want to use that data beyond the lifetime of
+  ///  this instance hence the need for this method.
+  ///
+  ///  - Returns a copy of the data that can be safeiy held beyond the lifetime of this instance.
+  func copiedData() -> Data {
+    data.withUnsafeBytes { Data($0) }
+  }
 }

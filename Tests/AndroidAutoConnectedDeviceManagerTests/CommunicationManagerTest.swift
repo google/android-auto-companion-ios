@@ -798,7 +798,7 @@ class CommunicationManagerTest: XCTestCase {
     // Send back the car's device id.
     communicationManager.messageStream(
       pendingCar.messageStream!,
-      didReceiveMessage: id.data,
+      didReceiveMessage: id.copiedData(),
       params: MessageStreamParams(
         recipient: Config.defaultRecipientUUID,
         operationType: .encryptionHandshake
@@ -1009,7 +1009,7 @@ class CommunicationManagerTest: XCTestCase {
     // Send back the car's device id.
     communicationManager.messageStream(
       pendingCar.messageStream!,
-      didReceiveMessage: id.data,
+      didReceiveMessage: id.copiedData(),
       params: MessageStreamParams(
         recipient: Config.defaultRecipientUUID,
         operationType: .encryptionHandshake

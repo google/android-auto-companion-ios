@@ -1,6 +1,7 @@
 // swift-interface-format-version: 1.0
-// swift-compiler-version: Apple Swift version 6.0 (swiftlang-6.0.0.7.6 clang-1600.0.24.1)
-// swift-module-flags: -target arm64-apple-ios16.0 -enable-objc-interop -enable-library-evolution -swift-version 6 -enforce-exclusivity=checked -Onone -module-alias SwiftProtobuf=AndroidAutoInternalSwiftProtobuf -enable-experimental-feature AccessLevelOnImport -enable-bare-slash-regex -module-name RemoteSetup -package-name third_party/swift/AndroidAutoCompanion/Frameworks/RemoteSetup
+// swift-compiler-version: Apple Swift version 6.2.3 (swiftlang-6.2.3.3.21 clang-1700.6.3.2)
+// swift-module-flags: -target arm64-apple-ios17.0 -enable-objc-interop -enable-library-evolution -swift-version 6 -Onone -enable-experimental-feature AccessLevelOnImport -module-alias SwiftProtobuf=AndroidAutoInternalSwiftProtobuf -module-name RemoteSetup -package-name third_party/swift/AndroidAutoCompanion/Frameworks/RemoteSetup
+// swift-module-flags-ignorable: -no-verify-emitted-module-interface -formal-cxx-interoperability-mode=off -interface-compiler-version 6.2.3
 import Foundation
 import SafariServices
 import Swift
@@ -9,13 +10,25 @@ import _StringProcessing
 import _SwiftConcurrencyShims
 @_Concurrency.MainActor public protocol Messenger : AnyObject {
   associatedtype Remote : Swift.Equatable
+  #if compiler(>=5.3) && $NonescapableTypes
   @_Concurrency.MainActor func sendMessage(_ message: Foundation.Data, to car: Self.Remote, completion: (@_Concurrency.MainActor @Sendable (Swift.Bool) -> Swift.Void)?) throws
+  #endif
 }
 public protocol RemoteSetupLogger {
   init(for type: any Any.Type, context: Swift.String)
+  #if compiler(>=5.3) && $NonescapableTypes
   func log(_ messageGenerator: @autoclosure () -> Swift.String, redacting redactableMessage: @autoclosure () -> Swift.String?, backtraceOffset: Swift.UInt, file: Swift.String, line: Swift.Int, function: Swift.String)
+  #endif
 }
-@objc @_Concurrency.MainActor public class RemoteSetupManagerCore : ObjectiveC.NSObject {
+@_Concurrency.MainActor public protocol RemoteSetupManagerCoreProtocol : AnyObject {
+  @_Concurrency.MainActor var isWebAppLaunched: Swift.Bool { get }
+  #if compiler(>=5.3) && $NonescapableTypes
+  @_Concurrency.MainActor func startRemoteSetup(_ uiViewController: UIKit.UIViewController, vehicle: RemoteSetup.RemoteSetupVehicle, configure: ((inout RemoteSetup.RemoteSetupManagerCore.SafariViewWrapper) -> Swift.Void)?)
+  #endif
+  @discardableResult
+  @_Concurrency.MainActor func finishRemoteSetup(redirectURL: Foundation.URL) -> Swift.Bool
+}
+@objc @_Concurrency.MainActor public class RemoteSetupManagerCore : ObjectiveC.NSObject, RemoteSetup.RemoteSetupManagerCoreProtocol {
   public enum Logo {
     public static let googleGColor: UIKit.UIImage
     public static let googleGDark: UIKit.UIImage
@@ -31,7 +44,10 @@ public protocol RemoteSetupLogger {
     get
   }
   @_Concurrency.MainActor public init(logger: any RemoteSetup.RemoteSetupLogger.Type)
+  #if compiler(>=5.3) && $NonescapableTypes
   @_Concurrency.MainActor public func startRemoteSetup(_ uiViewController: UIKit.UIViewController, vehicle: RemoteSetup.RemoteSetupVehicle, configure: ((inout RemoteSetup.RemoteSetupManagerCore.SafariViewWrapper) -> Swift.Void)? = nil)
+  #endif
+  @discardableResult
   @_Concurrency.MainActor public func finishRemoteSetup(redirectURL: Foundation.URL) -> Swift.Bool
   @objc deinit
 }
@@ -48,8 +64,12 @@ extension RemoteSetup.RemoteSetupManagerCore {
   }
 }
 @_Concurrency.MainActor public protocol RemoteSafariView : AnyObject {
+  #if compiler(>=5.3) && $NonescapableTypes
   @_Concurrency.MainActor var preferredBarTintColor: UIKit.UIColor? { get set }
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
   @_Concurrency.MainActor var preferredControlTintColor: UIKit.UIColor? { get set }
+  #endif
 }
 extension SafariServices.SFSafariViewController : RemoteSetup.RemoteSafariView {
 }
@@ -61,14 +81,27 @@ public enum RemoteSetupPreferenceMessageHandlerError : Swift.Error {
   case malformedRequest(Swift.String)
 }
 extension RemoteSetup.RemoteSetupPreferenceMessageHandlerError : Foundation.LocalizedError {
+  #if compiler(>=5.3) && $NonescapableTypes
   public var errorDescription: Swift.String? {
     get
   }
+  #endif
 }
-public struct RemoteSetupVehicle {
+public struct RemoteSetupVehicle : Swift.Equatable {
+  #if compiler(>=5.3) && $NonescapableTypes
+  public var redirectURL: Foundation.URL? {
+    get
+  }
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  public func with(redirectURL: Foundation.URL?) -> RemoteSetup.RemoteSetupVehicle
+  #endif
+  public static func == (a: RemoteSetup.RemoteSetupVehicle, b: RemoteSetup.RemoteSetupVehicle) -> Swift.Bool
 }
 extension RemoteSetup.RemoteSetupVehicle {
-  public init?(make: Swift.String? = nil, model: Swift.String? = nil, year: Swift.String? = nil, redirectURL: Swift.String? = nil, brand: Swift.String? = nil, product: Swift.String? = nil, device: Swift.String? = nil, buildFingerprint: Swift.String? = nil)
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init?(make: Swift.String? = nil, model: Swift.String? = nil, year: Swift.String? = nil, redirectURL: Swift.String? = nil, brand: Swift.String? = nil, product: Swift.String? = nil, device: Swift.String? = nil, buildFingerprint: Swift.String? = nil, oemKey1: Swift.String? = nil)
+  #endif
 }
 extension RemoteSetup.RemoteSetupManagerCore : Swift.Sendable {}
 extension RemoteSetup.RemoteSetupPreferenceMessageHandler : Swift.Sendable {}

@@ -128,7 +128,7 @@ private enum ConnectionManagerSignposts {
 
 extension BuildNumber {
   /// The version of this SDK.
-  static let sdkVersion = BuildNumber(major: 5, minor: 1, patch: 0)
+  static let sdkVersion = BuildNumber(major: 5, minor: 2, patch: 0)
 
   /// The key for storing the SDK version in `UserDefaults`.
   fileprivate static let sdkVersionStorageKey = "AndroidAutoSDKVersion"
@@ -283,11 +283,10 @@ private struct ConnectionRetryState {
   }
 
   override fileprivate func resolveError(_ error: NSError) -> Error {
-    guard isAssociating else { return error }
-
     switch error.code {
     case CBError.peerRemovedPairingInformation.rawValue where error.domain == CBErrorDomain:
-      return AssociationError.peerRemovedPairingInfo
+      return isAssociating
+        ? AssociationError.peerRemovedPairingInfo : ConnectionError.peerRemovedPairingInfo
     default:
       return super.resolveError(error)
     }
@@ -442,6 +441,9 @@ where CentralManager: SomeCentralManager {
   fileprivate var observations = (
     state: [UUID: @MainActor @Sendable (any ConnectedCarManager, any RadioState) -> Void](),
     connected: [UUID: @MainActor @Sendable (any ConnectedCarManager, Car) -> Void](),
+    connectionError: [
+      UUID: @MainActor @Sendable (any ConnectedCarManager, Car, Error) -> Void
+    ](),
     securedChannel: [
       UUID: @MainActor @Sendable (any ConnectedCarManager, any SecuredCarChannel) -> Void
     ](),
@@ -816,8 +818,7 @@ where CentralManager: SomeCentralManager {
   /// Make the central out of band token provider which coalesces registed token providers.
   ///
   /// The central token provider can register any out of band token provider. It is initialized
-  /// with the external token provider and if supported will also register the accessory oob token
-  /// provider.
+  /// with the external token provider.
   ///
   /// - Returns: The new out of band token provider.
   private func makeCentralOutOfBandTokenProvider()
@@ -825,16 +826,6 @@ where CentralManager: SomeCentralManager {
   {
     CoalescingOutOfBandTokenProvider {
       $0.register(wrapping: externalAssociationTokenProvider)
-      let accessoryOutOfBandTokenProviderFactory = AccessoryOutOfBandTokenProviderFactory()
-      guard
-        let accessoryOutOfBandTokenProvider =
-          accessoryOutOfBandTokenProviderFactory.makeProvider()
-      else {
-        log("SPP Out of Band token provider is unavailable.")
-        return
-      }
-      log("Registered SPP Out of Band token provider.")
-      $0.register(wrapping: accessoryOutOfBandTokenProvider)
     }
   }
 
@@ -1023,7 +1014,8 @@ extension ConnectionManager: ConnectedCarManager {
   /// Observe when the `state` of the connection manager has changed.
   @discardableResult
   public func observeStateChange(
-    using observation: @escaping @MainActor @Sendable (any ConnectedCarManager, any RadioState) ->
+    using observation:
+      @escaping @MainActor @Sendable (any ConnectedCarManager, any RadioState) ->
       Void
   ) -> ObservationHandle {
     let id = UUID()
@@ -1049,12 +1041,27 @@ extension ConnectionManager: ConnectedCarManager {
     }
   }
 
+  /// Observe when an error has occurred during the connection.
+  @discardableResult
+  public func observeConnectionError(
+    using observation: @escaping @MainActor @Sendable (any ConnectedCarManager, Car, Error) -> Void
+  ) -> ObservationHandle {
+    let id = UUID()
+    observations.connectionError[id] = observation
+
+    return ObservationHandle { [weak self] in
+      guard let self else { return }
+      self.observations.connectionError.removeValue(forKey: id)
+    }
+  }
+
   /// Observe when a secure channel has been set up with a given device.
   @discardableResult
   public func observeSecureChannelSetUp(
-    using observation: @escaping @MainActor @Sendable (
-      any ConnectedCarManager, any SecuredCarChannel
-    ) -> Void
+    using observation:
+      @escaping @MainActor @Sendable (
+        any ConnectedCarManager, any SecuredCarChannel
+      ) -> Void
   ) -> ObservationHandle {
     let id = UUID()
     observations.securedChannel[id] = observation
@@ -1557,6 +1564,17 @@ extension ConnectionManager: CentralManagerDelegate {
       associationDelegate?.connectionManager(self, didEncounterError: resolvedError)
       isAssociating = false
       clearCurrentAssociation()
+    } else {
+      guard let carId = communicationManager.reconnectionHelpers[peripheral.identifier]?.carId
+      else {
+        // This should never happen - a non-associating peripheal should have been recognized as
+        // an associated device.
+        return
+      }
+      let car = Car(id: carId, name: peripheral.name)
+      self.observations.connectionError.values.forEach { observation in
+        observation(self, car, resolvedError)
+      }
     }
   }
 

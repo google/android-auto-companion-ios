@@ -48,13 +48,13 @@ internal import Foundation
   }
 
   private func sendDeviceId() {
-    let deviceId = DeviceIdManager.deviceId
+    let deviceID = DeviceIDManager.deviceID
     try? messageStream.writeMessage(
-      deviceId.data,
+      deviceID.copiedData(),
       params: Self.encryptionSetUpParams
     )
 
-    Self.log("Sending device id:", redacting: "\(deviceId.uuidString)")
+    Self.log("Sending device id:", redacting: "\(deviceID.uuidString)")
   }
 }
 

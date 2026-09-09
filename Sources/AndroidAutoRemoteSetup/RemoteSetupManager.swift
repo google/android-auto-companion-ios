@@ -21,11 +21,19 @@ public import UIKit
 /// A manager for the remote setup feature which allows the user to setup their car from their
 /// phone.
 @MainActor public class RemoteSetupManager {
-  private let managerCore: RemoteSetupManagerCore
+  private let managerCore: any RemoteSetupManagerCoreProtocol
   private let preferenceManager: RemoteSetupPreferenceManager
 
   public init(connectedCarManager: any ConnectedCarManager) {
-    managerCore = RemoteSetupManagerCore(logger: Logger.self)
+    self.managerCore = RemoteSetupManagerCore(logger: Logger.self)
+    self.preferenceManager = RemoteSetupPreferenceManager(connectedCarManager: connectedCarManager)
+  }
+
+  internal init(
+    connectedCarManager: any ConnectedCarManager,
+    managerCore: any RemoteSetupManagerCoreProtocol
+  ) {
+    self.managerCore = managerCore
     preferenceManager = RemoteSetupPreferenceManager(connectedCarManager: connectedCarManager)
   }
 
@@ -46,11 +54,15 @@ public import UIKit
   /// Dismisses the web application if one is open.
   /// The redirectURL should be the complete URL sent to the companion app when the remote setup
   /// web app has successfully completed.
+  ///
+  /// - Returns: `true` if the remote setup was successfully finished and dismissed, `false` otherwise.
+  ///   Returns `false` if the URL is missing the validation UUID, the UUID is not recognized,
+  ///   the redirect URL does not match the expected pattern, or there is no active web app to dismiss.
+  @discardableResult
   public func finishRemoteSetup(redirectURL: URL) -> Bool {
-    managerCore.finishRemoteSetup(redirectURL: redirectURL)
+    return managerCore.finishRemoteSetup(redirectURL: redirectURL)
   }
 }
-
 // MARK: - Logger conformance to RemoteSetupLogger
 
 extension Logger: RemoteSetupLogger {}

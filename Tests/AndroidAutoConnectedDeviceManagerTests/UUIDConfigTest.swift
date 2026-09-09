@@ -69,7 +69,7 @@ class UUIDConfigTest: XCTestCase {
 
   @MainActor func testReconnectionUUID_v1_returnsDeviceId() {
     let uuidConfig = UUIDConfig(plistLoader: PListLoaderFake())
-    XCTAssertEqual(uuidConfig.reconnectionUUID(for: .v1), DeviceIdManager.deviceId)
+    XCTAssertEqual(uuidConfig.reconnectionUUID(for: .v1), DeviceIDManager.deviceID)
   }
 
   @MainActor func testReconnectionUUID_v2_returnsDefaultValue() {
@@ -94,7 +94,7 @@ class UUIDConfigTest: XCTestCase {
     )
     let uuidConfig = UUIDConfig(plistLoader: plistLoader)
 
-    XCTAssertEqual(uuidConfig.reconnectionUUID(for: .v1), DeviceIdManager.deviceId)
+    XCTAssertEqual(uuidConfig.reconnectionUUID(for: .v1), DeviceIDManager.deviceID)
   }
 
   // MARK: - Reconnection Data UUID tests
@@ -131,7 +131,7 @@ class UUIDConfigTest: XCTestCase {
 
     let uuidConfig = UUIDConfig(plistLoader: plistLoader)
 
-    XCTAssertEqual(uuidConfig.reconnectionUUID(for: .v1), DeviceIdManager.deviceId)
+    XCTAssertEqual(uuidConfig.reconnectionUUID(for: .v1), DeviceIDManager.deviceID)
     XCTAssertEqual(uuidConfig.reconnectionUUID(for: .v2), reconnectionUUID)
     XCTAssertEqual(uuidConfig.associationUUID, associationUUID)
     XCTAssertEqual(uuidConfig.reconnectionDataUUID, dataUUID)

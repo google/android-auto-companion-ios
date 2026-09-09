@@ -102,7 +102,14 @@ let package = Package(
         "AndroidAutoUtils",
       ]
     ),
-    .plugin(name: "ProtoSourceGenerator", capability: .buildTool()),
+    .plugin(
+      name: "ProtoSourceGenerator",
+      capability: .buildTool(),
+      dependencies: [
+        .product(name: "protoc", package: "swift-protobuf"),
+        .product(name: "protoc-gen-swift", package: "swift-protobuf"),
+      ]
+    ),
     .target(
       name: "AndroidAutoConnectedDeviceManagerMocks",
       dependencies: [
@@ -205,6 +212,14 @@ let package = Package(
         "AndroidAutoConnectedDeviceManager",
         "AndroidAutoConnectedDeviceManagerMocks",
       ]
+    ),
+    .testTarget(
+      name: "AndroidAutoRemoteSetupTests",
+      dependencies: [
+        "AndroidAutoRemoteSetup",
+        "AndroidAutoConnectedDeviceManagerMocks",
+      ],
+      path: "Tests/AndroidAutoRemoteSetupTests"
     ),
     .testTarget(
       name: "AndroidAutoUtilsTests",

@@ -14,14 +14,7 @@ the rules for building with SPM.
 This project includes several [protobuf](https://developers.google.com/protocol-buffers)
 files. For each raw `proto` file, a corresponding Swift source file must be
 generated. An included Swift Package Manager plugin is configured to generate
-the required source files. The `protoc` and `protoc-gen-swift` executables are
-expected to be installed (symbolic links are fine) at `/usr/local/bin`. These
-tools may be installed using [Homebrew](https://github.com/Homebrew/brew):
-```
-brew install protobuf
-brew install swift-protobuf
-````
-Then create symbolic links in `/usr/local/bin` to `protoc` and `protoc-gen-swift`.
+the required source files.
 
 When executing the build with `xcodebuild`, pass the option, `-skipPackagePluginValidation`
 to automatically trust the plugin.

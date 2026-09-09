@@ -85,7 +85,7 @@ class ReconnectionHelperV1Test: XCTestCase {
     XCTAssertNoThrow(try testHelper.startHandshake(messageStream: messageStreamMock))
 
     XCTAssertEqual(peripheralMock.writeValueCalledCount, 1)
-    XCTAssertEqual(peripheralMock.writtenData[0], DeviceIdManager.deviceId.data)
+    XCTAssertEqual(peripheralMock.writtenData[0], DeviceIDManager.deviceID.copiedData())
   }
 
   @MainActor func testHandleMessageAuthenticatesMessage_CompletesHandshake() throws {
