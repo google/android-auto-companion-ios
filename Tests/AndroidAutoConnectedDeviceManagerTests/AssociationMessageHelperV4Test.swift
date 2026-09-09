@@ -196,9 +196,9 @@ class AssociationMessageHelperV4Test: XCTestCase {
     )
 
     messageHelper.onEncryptionEstablished()
-    let carId = UUID().uuidString
-    let carIdMessage = CBUUID(string: carId).data
-    messageHelper.handleMessage(carIdMessage, params: params)
+    let carID = UUID().uuidString
+    let carIDMessage = makeCarIDMessage(carID: carID)
+    messageHelper.handleMessage(carIDMessage, params: params)
 
     associatorMock.carId = nil
 
@@ -222,9 +222,9 @@ class AssociationMessageHelperV4Test: XCTestCase {
     )
 
     messageHelper.onEncryptionEstablished()
-    let carId = UUID().uuidString
-    let carIdMessage = CBUUID(string: carId).data
-    messageHelper.handleMessage(carIdMessage, params: params)
+    let carID = UUID().uuidString
+    let carIDMessage = makeCarIDMessage(carID: carID)
+    messageHelper.handleMessage(carIDMessage, params: params)
 
     // This should trigger the sending of the deviceId and authentication key. Acknowledge that
     // this completes successfully
@@ -260,16 +260,16 @@ class AssociationMessageHelperV4Test: XCTestCase {
     )
 
     messageHelper.onEncryptionEstablished()
-    let carId = UUID().uuidString
-    let carIdMessage = CBUUID(string: carId).data
-    messageHelper.handleMessage(carIdMessage, params: params)
+    let carID = UUID().uuidString
+    let carIDMessage = makeCarIDMessage(carID: carID)
+    messageHelper.handleMessage(carIDMessage, params: params)
 
     // This should trigger the sending of the deviceId and authentication key. Acknowledge that
     // this completes successfully
     messageHelper.messageDidSendSuccessfully()
 
     XCTAssertNotNil(associatorMock.carId)
-    XCTAssertEqual(associatorMock.carId!, carId)
+    XCTAssertEqual(associatorMock.carId!, carID)
     XCTAssertNil(associatorMock.associationError)
     XCTAssertTrue(associatorMock.establishEncryptionCalled)
     XCTAssertNil(associatorMock.associationError)
@@ -302,5 +302,12 @@ private class MockOutOfBandToken: OutOfBandToken {
   func decrypt(_ message: Data) throws -> Data {
     decryptCalled = true
     return Data(message.reversed())
+  }
+}
+
+// MARK: - Helper methods.
+extension AssociationMessageHelperV4Test {
+  private func makeCarIDMessage(carID: String) -> Data {
+    CBUUID(string: carID).copiedData()
   }
 }

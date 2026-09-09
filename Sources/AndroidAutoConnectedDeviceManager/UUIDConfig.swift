@@ -115,7 +115,7 @@ internal import Foundation
     switch version {
     case .v1:
       // For version 1, the device ID serves as the service UUID to scan for.
-      return DeviceIdManager.deviceId
+      return DeviceIDManager.deviceID
     case .v2, .v3, .v4:
       return reconnectionV2UUID
     }

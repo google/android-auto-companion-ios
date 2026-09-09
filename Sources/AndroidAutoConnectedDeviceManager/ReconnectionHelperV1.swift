@@ -71,11 +71,11 @@ extension ReconnectionHelperV1: ReconnectionHelper {
   func startHandshake(messageStream: MessageStream) throws {
     Self.log(
       "Begin reconnection handshake. Sending device id to car.",
-      redacting: "id: (\(DeviceIdManager.deviceId))"
+      redacting: "id: (\(DeviceIDManager.deviceID))"
     )
 
     try messageStream.writeMessage(
-      DeviceIdManager.deviceId.data,
+      DeviceIDManager.deviceID.copiedData(),
       params: MessageStreamParams(
         recipient: Config.defaultRecipientUUID,
         operationType: .encryptionHandshake

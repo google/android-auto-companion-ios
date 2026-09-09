@@ -3,20 +3,29 @@
 **NOTE:** Entries are ordered chronologically with the newest entries at the
 top.
 
+## iOS Companion 6.0.0
+
+The following changes have been made:
+
+- Removed support for External Accessory Protocol (EAP).
+
 ## iOS Companion 5.0.0
 
 The following changes have been made:
+
 - The minimimum iOS supported version is now iOS 16.
 - Adopted Swift 6.
 
 ## iOS Companion 4.3.0
 
 The following changes have been made:
+
 - Addressed concurrency correctness for Swift 6 compatibility.
 
 ## iOS Companion 4.2.0
 
 The following changes have been made:
+
 - Introduced `UserDefaultsPropertyListStore` for exporting to and importing from
 `UserDefaults`.
 - `BuildNumber` was moved from `Logger` to `AndroidUtils`.
@@ -27,24 +36,28 @@ The following changes have been made:
 ## iOS Companion 4.1.0
 
 The following changes have been made:
+
 - Change experimental watchOS support to version 8.0.
 - General version cleanup.
 
 ## iOS Companion 4.0.0
 
 The following changes have been made:
+
 - The Swift package now requires Swift 5.9 or later and targets iOS 15 or later.
 - Introduced an experimental `AccountTransfer` framework.
 
 ## iOS Companion 3.4.0
 
 The following changes have been made:
+
 - Added missing `info.plist` entries to the UKey2Wrapper framework for Xcode 15
 distribution compatibility.
 
 ## iOS Companion 3.3.0
 
 The following changes have been made:
+
 - Added the Heartbeat feature to handle periodic pings from the connected IHU.
 - Added the Howitzer feature for evaluating bandwidth.
 - Removed unused generic transport components.
@@ -54,11 +67,13 @@ The following changes have been made:
 ## iOS Companion 3.2.1
 
 The following changes have been made:
+
 - Internal cleanup.
 
 ## iOS Companion 3.2.0
 
 The following changes have been made:
+
 - The Swift package now requires Swift 5.8 or later for building.
 - The `CarAuthenticator` now uses `CryptoKit` for watchOS 8 or later and
 currently supported iOS.
@@ -67,6 +82,7 @@ currently supported iOS.
 ## iOS Companion 3.1.0
 
 The following API changes have been made:
+
 - Added a `FeatureManager` API to check whether a feature is supported by the
 Companion platform.
 - Implemented an async variant of the `sendQuery` method in `SecuredCarChannel`.

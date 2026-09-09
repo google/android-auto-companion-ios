@@ -707,7 +707,7 @@ class ConnectionManagerTest: XCTestCase {
     connectionManager.centralManager(
       centralManagerMock,
       didDiscover: peripheralMock,
-      advertisement: [CBAdvertisementDataServiceUUIDsKey: [DeviceIdManager.deviceId]],
+      advertisement: [CBAdvertisementDataServiceUUIDsKey: [DeviceIDManager.deviceID]],
       rssi: 1.0)
     setUpValidConnection(for: peripheralMock)
 
@@ -717,7 +717,7 @@ class ConnectionManagerTest: XCTestCase {
     connectionManager.centralManager(
       centralManagerMock,
       didDiscover: peripheralMock,
-      advertisement: [CBAdvertisementDataServiceUUIDsKey: [DeviceIdManager.deviceId]],
+      advertisement: [CBAdvertisementDataServiceUUIDsKey: [DeviceIDManager.deviceID]],
       rssi: 1.0)
 
     XCTAssertFalse(centralManagerMock.cancelPeripheralConnectionCalled)
@@ -736,7 +736,7 @@ class ConnectionManagerTest: XCTestCase {
     connectionManager.centralManager(
       centralManagerMock,
       didDiscover: peripheralMock,
-      advertisement: [CBAdvertisementDataServiceUUIDsKey: [DeviceIdManager.deviceId]],
+      advertisement: [CBAdvertisementDataServiceUUIDsKey: [DeviceIDManager.deviceID]],
       rssi: 1.0)
     setUpValidConnection(for: peripheralMock)
 
@@ -744,7 +744,7 @@ class ConnectionManagerTest: XCTestCase {
     connectionManager.centralManager(
       centralManagerMock,
       didDiscover: peripheralMock,
-      advertisement: [CBAdvertisementDataServiceUUIDsKey: [DeviceIdManager.deviceId]],
+      advertisement: [CBAdvertisementDataServiceUUIDsKey: [DeviceIDManager.deviceID]],
       rssi: 1.0)
 
     // Peripheral should not have been disconnected, but connected.
@@ -769,7 +769,7 @@ class ConnectionManagerTest: XCTestCase {
     connectionManager.centralManager(
       centralManagerMock,
       didDiscover: peripheralMock,
-      advertisement: [CBAdvertisementDataServiceUUIDsKey: [DeviceIdManager.deviceId]],
+      advertisement: [CBAdvertisementDataServiceUUIDsKey: [DeviceIDManager.deviceID]],
       rssi: 1.0)
     setUpValidConnection(for: peripheralMock)
 
@@ -777,7 +777,7 @@ class ConnectionManagerTest: XCTestCase {
     connectionManager.centralManager(
       centralManagerMock,
       didDiscover: peripheralMock,
-      advertisement: [CBAdvertisementDataServiceUUIDsKey: [DeviceIdManager.deviceId]],
+      advertisement: [CBAdvertisementDataServiceUUIDsKey: [DeviceIDManager.deviceID]],
       rssi: 1.0)
 
     // Peripheral should have been disconnected, but no connection called.
@@ -839,6 +839,28 @@ class ConnectionManagerTest: XCTestCase {
     peripheralMock.state = .disconnected
 
     connectionManager.disconnect(peripheralMock)
+
+    // Only a 2 second timeout since this call should happen immediately.
+    wait(for: [observerCalledExpectation], timeout: 2.0)
+  }
+
+  @MainActor
+  func testNotifiesObserver_whenConnectionFailsDueToPeerRemovedPairingInfo() {
+    let peripheralMock = PeripheralMock(name: "peerRemovedPairingInfo")
+    let error = CBError(.peerRemovedPairingInformation)
+
+    let observerCalledExpectation = XCTestExpectation(
+      description: "Connection Error observer called")
+    observerCalledExpectation.isInverted = true
+
+    connectionManager.observeConnectionError { _, car, error in
+      observerCalledExpectation.fulfill()
+    }
+
+    connectionManager.centralManager(
+      centralManagerMock,
+      didFailToConnect: peripheralMock,
+      error: error)
 
     // Only a 2 second timeout since this call should happen immediately.
     wait(for: [observerCalledExpectation], timeout: 2.0)

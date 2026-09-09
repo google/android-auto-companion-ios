@@ -82,7 +82,7 @@ class HowitzerMessageProtoTest: XCTestCase {
   func testResultMessageProto() {
     let isValid = true
     let testStartTime = Date().timeIntervalSince1970
-    let testStartTimestamp = Timestamp(timeIntervalSince1970: testStartTime)
+    let testStartTimestamp = Timestamp(roundingTimeIntervalSince1970: testStartTime)
     let payloadReceivedTimeIntervals = [testStartTime]
     let payloadReceivedTimestamps = [testStartTimestamp]
     let result = HowitzerResult(

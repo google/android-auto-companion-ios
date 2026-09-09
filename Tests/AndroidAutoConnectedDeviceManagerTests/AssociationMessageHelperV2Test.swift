@@ -107,16 +107,16 @@ class AssociationMessageHelperV2Test: XCTestCase {
     )
 
     messageHelper.onEncryptionEstablished()
-    let carId = UUID().uuidString
-    let carIdMessage = CBUUID(string: carId).data
-    messageHelper.handleMessage(carIdMessage, params: params)
+    let carID = UUID().uuidString
+    let carIDMessage = makeCarIDMessage(carID: carID)
+    messageHelper.handleMessage(carIDMessage, params: params)
 
     // This should trigger the sending of the deviceId and authentication key. Acknowledge that
     // this completes successfully
     messageHelper.messageDidSendSuccessfully()
 
     XCTAssertNotNil(associatorMock.carId)
-    XCTAssertEqual(associatorMock.carId!, carId)
+    XCTAssertEqual(associatorMock.carId!, carID)
     XCTAssertNil(associatorMock.associationError)
     XCTAssertTrue(associatorMock.establishEncryptionCalled)
     XCTAssertNil(associatorMock.associationError)
@@ -135,9 +135,9 @@ class AssociationMessageHelperV2Test: XCTestCase {
     )
 
     messageHelper.onEncryptionEstablished()
-    let carId = UUID().uuidString
-    let carIdMessage = CBUUID(string: carId).data
-    messageHelper.handleMessage(carIdMessage, params: params)
+    let carID = UUID().uuidString
+    let carIDMessage = makeCarIDMessage(carID: carID)
+    messageHelper.handleMessage(carIDMessage, params: params)
 
     // Clear any set car id
     associatorMock.carId = nil
@@ -162,9 +162,9 @@ class AssociationMessageHelperV2Test: XCTestCase {
     )
 
     messageHelper.onEncryptionEstablished()
-    let carId = UUID().uuidString
-    let carIdMessage = CBUUID(string: carId).data
-    messageHelper.handleMessage(carIdMessage, params: params)
+    let carID = UUID().uuidString
+    let carIDMessage = makeCarIDMessage(carID: carID)
+    messageHelper.handleMessage(carIDMessage, params: params)
 
     // This should trigger the sending of the deviceId and authentication key. Acknowledge that
     // this completes successfully
@@ -192,4 +192,11 @@ private struct FakeVerificationToken: SecurityVerificationToken {
 
   /// Human-readable visual pairing code.
   let pairingCode: String
+}
+
+// MARK: - Helper methods.
+extension AssociationMessageHelperV2Test {
+  private func makeCarIDMessage(carID: String) -> Data {
+    CBUUID(string: carID).copiedData()
+  }
 }

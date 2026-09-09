@@ -3,9 +3,6 @@ import Foundation
 
 /// Swift Package Manager Plugin that generates Swift sources for corresponding proto files.
 ///
-/// The `protoc` and `protoc-gen-swift` executables must be installed at `/usr/local/bin`. These
-/// tools may be installed through https://github.com/Homebrew/brew.
-///
 /// The Swift sources will be output to the plugin's working directory. The generated types will
 /// have `public` access and belong to a module whose name matches the target containing the proto
 /// files. For example, if the plugin is applied to `AndroidAutoCompanionProtos` then a Swift file
@@ -18,27 +15,37 @@ import Foundation
   ) async throws -> [PackagePlugin.Command] {
     print("ProtoSourceGenerator generating Swift source files for the proto files.")
 
+    guard let protoc = try? context.tool(named: "protoc") else {
+      print("Cannot generate due to missing protoc binary.")
+      return []
+    }
+
+    guard let swiftGen = try? context.tool(named: "protoc-gen-swift") else {
+      print("Cannot generate due to missing protoc-gen-swift binary.")
+      return []
+    }
+
     guard let target = target as? SourceModuleTarget else {
       print("ProtoSourceGenerator bailing due to non source module target: \(target).")
       return []
     }
 
     return target.sourceFiles(withSuffix: "proto").map { proto in
-      let input = proto.path
-      print("Generating Swift Source for proto: \(input)")
-      let output = context.pluginWorkDirectory.appending(["\(input.stem).pb.swift"])
-      let executable = Path("/usr/local/bin/protoc")
-      let protoDir = input.removingLastComponent()
+      let input = proto.url
+      print("Generating Swift Source for proto: \(input.path)")
+      let protoName = input.deletingPathExtension().lastPathComponent
+      let output = context.pluginWorkDirectoryURL.appendingPathComponent("\(protoName).pb.swift")
+      let protoDir = input.deletingLastPathComponent()
       let arguments = [
         "--swift_opt=Visibility=Public",
-        "--plugin=protoc-gen-swift=/usr/local/bin/protoc-gen-swift",
-        "\(input.lastComponent)",
-        "--swift_out=\(context.pluginWorkDirectory)/.",
-        "--proto_path=\(protoDir)"
+        "--plugin=protoc-gen-swift=\(swiftGen.url.path)",
+        "\(input.lastPathComponent)",
+        "--swift_out=\(context.pluginWorkDirectoryURL.path)/.",
+        "--proto_path=\(protoDir.path)"
       ]
       return .buildCommand(
-        displayName: "Generating Swift for: \(input)",
-        executable: executable,
+        displayName: "Generating Swift for: \(input.path)",
+        executable: protoc.url,
         arguments: arguments,
         inputFiles: [input],
         outputFiles: [output]

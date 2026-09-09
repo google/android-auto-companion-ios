@@ -75,12 +75,12 @@ class AssociationMessageHelperV1Test: XCTestCase {
       operationType: .encryptionHandshake
     )
 
-    let carId = UUID().uuidString
-    let carIdMessage = CBUUID(string: carId).data
-    messageHelper.handleMessage(carIdMessage, params: params)
+    let carID = UUID().uuidString
+    let carIDMessage = makeCarIDMessage(carID: carID)
+    messageHelper.handleMessage(carIDMessage, params: params)
 
     XCTAssertNotNil(associatorMock.carId)
-    XCTAssertEqual(associatorMock.carId!, carId)
+    XCTAssertEqual(associatorMock.carId!, carID)
     XCTAssertNil(associatorMock.associationError)
     XCTAssertTrue(associatorMock.establishEncryptionCalled)
 
@@ -102,9 +102,9 @@ class AssociationMessageHelperV1Test: XCTestCase {
       operationType: .encryptionHandshake
     )
 
-    let carId = UUID().uuidString
-    let carIdMessage = CBUUID(string: carId).data
-    messageHelper.handleMessage(carIdMessage, params: params)
+    let carID = UUID().uuidString
+    let carIDMessage = makeCarIDMessage(carID: carID)
+    messageHelper.handleMessage(carIDMessage, params: params)
 
     let pairingMessage = Data("bad".utf8)
     messageHelper.handleMessage(pairingMessage, params: params)
@@ -128,9 +128,9 @@ class AssociationMessageHelperV1Test: XCTestCase {
       operationType: .encryptionHandshake
     )
 
-    let carId = UUID().uuidString
-    let carIdMessage = CBUUID(string: carId).data
-    messageHelper.handleMessage(carIdMessage, params: params)
+    let carID = UUID().uuidString
+    let carIDMessage = makeCarIDMessage(carID: carID)
+    messageHelper.handleMessage(carIDMessage, params: params)
 
     let pairingMessage = Data(AssociationManager.pairingCodeConfirmationValue.utf8)
     messageHelper.handleMessage(pairingMessage, params: params)
@@ -160,5 +160,12 @@ class AssociationMessageHelperV1Test: XCTestCase {
     XCTAssertNotNil(associatorMock.associationError)
     XCTAssertEqual(associatorMock.associationError, AssociationError.cannotStoreAssociation)
     XCTAssertFalse(associatorMock.completeAssociationCalled)
+  }
+}
+
+// MARK: - Helper methods.
+extension AssociationMessageHelperV1Test {
+  private func makeCarIDMessage(carID: String) -> Data {
+    CBUUID(string: carID).copiedData()
   }
 }

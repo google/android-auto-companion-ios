@@ -16,21 +16,21 @@ private import AndroidAutoLogger
 internal import CoreBluetooth
 internal import Foundation
 
-/// Manager for a id that will uniquely identify the current device.
-enum DeviceIdManager {
-  private static let log = Logger(for: DeviceIdManager.self)
+/// Manager for an id that will uniquely identify the current device.
+enum DeviceIDManager {
+  private static let log = Logger(for: DeviceIDManager.self)
 
-  private static let deviceIdKey = "deviceIdKey"
+  private static let deviceIDKey = "deviceIdKey"
 
   /// An id that uniquely identifies the current device.
-  static var deviceId: CBUUID {
-    if let deviceIdString = UserDefaultsStorage.shared.string(forKey: deviceIdKey) {
-      return CBUUID(string: deviceIdString)
+  static var deviceID: CBUUID {
+    if let deviceIDString = UserDefaultsStorage.shared.string(forKey: deviceIDKey) {
+      return CBUUID(string: deviceIDString)
     }
 
     // CBUUID generates all 0 uuid by default, so need to use UUID first. >:(
     let randomUUID = CBUUID(string: UUID().uuidString)
-    UserDefaultsStorage.shared.set(randomUUID.uuidString, forKey: deviceIdKey)
+    UserDefaultsStorage.shared.set(randomUUID.uuidString, forKey: deviceIDKey)
 
     log.debug("No previous device id found. Creating a new one: \(randomUUID.uuidString)")
 

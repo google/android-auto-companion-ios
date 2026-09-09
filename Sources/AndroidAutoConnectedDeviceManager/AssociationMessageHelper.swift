@@ -91,14 +91,14 @@ extension AssociationMessageHelper {
   ///
   /// - Parameter keyData Data for the authentication key to send.
   func sendDeviceIdPlusAuthenticationKey(keyData: Data, on messageStream: MessageStream) {
-    let deviceId = DeviceIdManager.deviceId
-    var payload = deviceId.data
+    let deviceID = DeviceIDManager.deviceID
+    var payload = deviceID.copiedData()
     payload.append(keyData)
     try? messageStream.writeEncryptedMessage(
       payload,
       params: Self.handshakeMessageParams
     )
 
-    Self.log("Sending device id: <\(deviceId.uuidString)> plus authentication key.")
+    Self.log("Sending device id: <\(deviceID.uuidString)> plus authentication key.")
   }
 }
