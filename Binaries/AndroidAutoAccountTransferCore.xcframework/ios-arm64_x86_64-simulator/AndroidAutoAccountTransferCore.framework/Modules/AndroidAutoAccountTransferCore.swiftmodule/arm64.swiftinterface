@@ -1,6 +1,7 @@
 // swift-interface-format-version: 1.0
-// swift-compiler-version: Apple Swift version 6.0 (swiftlang-6.0.0.7.6 clang-1600.0.24.1)
-// swift-module-flags: -target arm64-apple-ios16.0-simulator -enable-objc-interop -enable-library-evolution -swift-version 6 -enforce-exclusivity=checked -Onone -module-alias SwiftProtobuf=AndroidAutoInternalSwiftProtobuf -enable-experimental-feature AccessLevelOnImport -enable-bare-slash-regex -module-name AndroidAutoAccountTransferCore -package-name third_party/swift/AndroidAutoCompanion/Frameworks/AndroidAutoAccountTransferCore
+// swift-compiler-version: Apple Swift version 6.3.1 (swiftlang-6.3.1.1.2 clang-2100.0.123.102)
+// swift-module-flags: -target arm64-apple-ios17.0-simulator -enable-objc-interop -enable-library-evolution -swift-version 6 -Onone -enable-experimental-feature AccessLevelOnImport -module-alias SwiftProtobuf=AndroidAutoInternalSwiftProtobuf -module-name AndroidAutoAccountTransferCore -package-name third_party/swift/AndroidAutoCompanion/Frameworks/AndroidAutoAccountTransferCore
+// swift-module-flags-ignorable: -no-verify-emitted-module-interface -formal-cxx-interoperability-mode=off -interface-compiler-version 6.3.1
 import Foundation
 import Swift
 import UIKit
@@ -49,8 +50,8 @@ extension AndroidAutoAccountTransferCore.SecondDeviceSignInURLMessageHandler {
     case receivedURL
     case receivedCredential
     case cancelSignIn
-    public func hash(into hasher: inout Swift.Hasher)
     public static func == (a: AndroidAutoAccountTransferCore.SecondDeviceSignInURLMessageHandler<M>.Event, b: AndroidAutoAccountTransferCore.SecondDeviceSignInURLMessageHandler<M>.Event) -> Swift.Bool
+    public func hash(into hasher: inout Swift.Hasher)
     public var hashValue: Swift.Int {
       get
     }

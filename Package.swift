@@ -19,7 +19,7 @@ import PackageDescription
 let package = Package(
   name: "AndroidAutoCompanion",
   platforms: [
-    .iOS(.v16), .watchOS(.v8),
+    .iOS(.v17), .watchOS(.v9),
   ],
   products: [
     .library(
